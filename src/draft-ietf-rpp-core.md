@@ -1327,31 +1327,52 @@ The mapping strategy is to use a specific HTTP status code for common and well-d
 
 The classes of RPP result codes are designed to match the classes of HTTP status codes, to facilitate mapping between RPP result codes and HTTP status codes. The classes of RPP result codes are defined as follows:
 
-- 11xxx: Informational
-- 12xxx: Success
-- 13xxx: Reserved for future use (for EPP backwards compatibility)
-- 14xxx: Client error
-- 15xxx: Server error
+- x1yzz: Success response
+- x2yzz: Error response
 
-Table (#tbl-rpp-result-codes) lists the RPP result codes and their mapping to HTTP status codes, any RPP result code not listed in the table MUST be mapped to a generic HTTP status code as defined in Table (#tbl-rpp-unknown-result-codes).
+Table (#tbl-rpp-result-codes) lists the RPP result codes and their mapping to specific HTTP status codes, any RPP result code not listed in the table MUST be mapped to a generic HTTP status code as defined in Table (#tbl-rpp-unknown-result-codes).
 
 | RPP Result Code | HTTP Status Code | Description | 
 |-----------------|------------------|-------------|
-| 12000           | 200 (OK)           | Command completed successfully |
-| 12001           | 201 (Created)      | Command completed successfully and a new resource was created |
-Table: RPP Result Codes
+| x1000           | 200 (OK)           | Request completed successfully |
+| 02002           | 409 (Conflict)     | Command use error |
+| 02101           | 501 (Not Implemented) | Unimplemented command |
+| 02102           | 501 (Not Implemented) | Unimplemented option |
+| 02103           | 501 (Not Implemented) | Unimplemented extension |
+| 02104           | 402 (Payment Required) | Billing failure |
+| 02105           | 409 (Conflict)     | Object is not eligible for renewal |
+| 02106           | 409 (Conflict)     | Object is not eligible for transfer |
+| 02200           | 401 (Unauthorized) | Authentication error |
+| 02201           | 403 (Forbidden)    | Authorization error |
+| 02202           | 401 (Unauthorized) | Invalid authorization information |
+| 02300           | 409 (Conflict)     | Object pending transfer |
+| 02301           | 409 (Conflict)     | Object not pending transfer |
+| 02302           | 409 (Conflict)     | Object exists |
+| 02303           | 404 (Not Found)    | Object does not exist |
+| 02304           | 409 (Conflict)     | Object status prohibits operation |
+| 02305           | 409 (Conflict)     | Object association prohibits operation |
+| 02306           | 422 (Unprocessable Content) | Parameter value policy error |
+| 02307           | 501 (Not Implemented) | Unimplemented object service |
+| 02308           | 422 (Unprocessable Content) | Data management policy violation |
+| 02501           | 401 (Unauthorized) | Authentication error; server closing connection |
+| 02502           | 429 (Too Many Requests) | Session limit exceeded; server closing connection |
+Table: Mapping RPP Result Codes to specific HTTP Status Codes
 {#tbl-rpp-result-codes}
 
-<!-- TODO: add more result codes here -->
+The RPP result codes listed in Table (#tbl-rpp-result-codes) are derived from the EPP result codes defined in [@!RFC5730, Section 3], using the leading "0" digit to indicate an [@!RFC5730]-derived result code, as described above. Only EPP result codes for which a more specific HTTP status code applies than the generic class-based mapping in Table (#tbl-rpp-unknown-result-codes) are listed; all other EPP result codes MUST use the generic mapping.
+
+ Table (#tbl-rpp-unknown-result-codes) lists the RPP result codes that are not directly mapped to specific HTTP status codes and MUST be mapped to the generic HTTP status codes as indicated.
 
 | RPP Result Code | HTTP Status Code | Description | 
 |-----------------|------------------|-------------|
-| 11xxx:          | 200 (OK)           | Command completed successfully |
-| 12xxx:          | 200 (OK)           | Command completed successfully |
-| 13xxx:          | 200 (OK)           | Command completed successfully |
-| 14xxx:          | 400 (Bad Request)  | Client error |
-| 15xxx:          | 500 (Internal Server Error) | Server error |
-Table: RPP Unknown Result Codes
+| x1xxx:          | 200 (OK)           | Command completed successfully |
+| x20xx:          | 400 (Bad Request)  | Client error |
+| x21xx:          | 400 (Bad Request)  | Client error |
+| x22xx:          | 400 (Bad Request)  | Client error |
+| x23xx:          | 400 (Bad Request)  | Client error |
+| x24xx:          | 500 (Internal Server Error) | Server error |
+| x25xx:          | 500 (Internal Server Error) | Server error |
+Table: Mapping RPP Result Codes to generic HTTP Status Codes
 {#tbl-rpp-unknown-result-codes}
 
 # Authentication and Authorization
@@ -1456,6 +1477,47 @@ Fields to be registered:
 
 - `code`: The RPP result code, for example "12000".
 - `description`: A human-readable description of the result code and its intended use.
+
+The registry MUST be initially populated with the RPP result codes listed in Table (#tbl-rpp-iana-result-codes-initial), which are derived from the EPP result codes defined in [@!RFC5730, Section 3] by prepending the leading digit "0", as described in the Result Codes section above.
+
+| RPP Result Code | Description |
+|------------------|-------------|
+| 01000            | Command completed successfully |
+| 01001            | Command completed successfully; action pending |
+| 01300            | Command completed successfully; no messages |
+| 01301            | Command completed successfully; ack to dequeue |
+| 01500            | Command completed successfully; ending session |
+| 02000            | Unknown command |
+| 02001            | Command syntax error |
+| 02002            | Command use error |
+| 02003            | Required parameter missing |
+| 02004            | Parameter value range error |
+| 02005            | Parameter value syntax error |
+| 02100            | Unimplemented protocol version |
+| 02101            | Unimplemented command |
+| 02102            | Unimplemented option |
+| 02103            | Unimplemented extension |
+| 02104            | Billing failure |
+| 02105            | Object is not eligible for renewal |
+| 02106            | Object is not eligible for transfer |
+| 02200            | Authentication error |
+| 02201            | Authorization error |
+| 02202            | Invalid authorization information |
+| 02300            | Object pending transfer |
+| 02301            | Object not pending transfer |
+| 02302            | Object exists |
+| 02303            | Object does not exist |
+| 02304            | Object status prohibits operation |
+| 02305            | Object association prohibits operation |
+| 02306            | Parameter value policy error |
+| 02307            | Unimplemented object service |
+| 02308            | Data management policy violation |
+| 02400            | Command failed |
+| 02500            | Command failed; server closing connection |
+| 02501            | Authentication error; server closing connection |
+| 02502            | Session limit exceeded; server closing connection |
+Table: Initial RPP Result Codes registrations, derived from [@!RFC5730] result codes
+{#tbl-rpp-iana-result-codes-initial}
 
 ## Link Relation Type: rpp-process
 
