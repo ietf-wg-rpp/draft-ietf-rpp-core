@@ -131,6 +131,18 @@ Example:
 Link: <https://rpp.example/rpp/v1/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
 ```
 
+# Cross-Origin Resource Sharing
+
+RPP servers MAY be accessed directly by browser-based clients. To support such clients, RPP servers SHOULD implement Cross-Origin Resource Sharing (CORS) as defined in [@!FETCH].
+
+When responding to a CORS preflight (`OPTIONS`) request, the server SHOULD include the following in its response:
+
+- `Access-Control-Allow-Methods`: The HTTP methods supported for the requested endpoint.
+- `Access-Control-Allow-Headers`: All request headers defined in this specification in addition to `Content-Type` and `Accept`.
+- `Access-Control-Expose-Headers`: All request and response headers defined in this specification.
+
+The server MUST allow the `application/rpp+json` media type to be used in the `Content-Type` and `Accept` headers of cross-origin requests.
+
 # Error handling and relation between HTTP status codes and RPP codes
 
 RPP leverages standard HTTP status codes to reflect the outcome of RPP operations. The RPP result codes are based on the EPP result codes defined in [@!RFC5730]. This allows clients to handle responses generically using common HTTP patterns. While the HTTP status code provides the primary, high-level outcome, the specific RPP result code MUST still be provided in the `RPP-Code` HTTP header for detailed diagnostics.
@@ -1528,6 +1540,7 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 ## Version 00 to 01
 
+- Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
@@ -1607,5 +1620,15 @@ The authors would like to thank the following people for their helpful text cont
     <author>
       <organization>Semantic Versioning</organization>
     </author>
+  </front>
+</reference>
+
+<reference anchor="FETCH" target="https://fetch.spec.whatwg.org/">
+  <front>
+    <title>Fetch - Living Standard</title>
+    <author>
+      <organization>WHATWG</organization>
+    </author>
+    <date/>
   </front>
 </reference>
