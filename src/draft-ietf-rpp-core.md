@@ -88,7 +88,7 @@ Some RPP concepts are functionally similar to EPP concepts, but they are not dir
 
 # Headers
 
-HTTP headers defined for RPP MUST use the "RPP-" prefix and MUST be defined as Structured Header Fields [@!RFC9651].
+HTTP headers defined for RPP MUST use the "RPP-" prefix and SHOULD be defined as Structured Header Fields [@!RFC9651].
 
 ## Request Headers
 
@@ -108,9 +108,21 @@ RPP-Authorization: authinfo value=TXkgU2VjcmFRva2Vu, roid=REG-X-123
 
 ## Response Headers
 
-- `RPP-Svtrid`:  A server-assigned transaction identifier. The server MUST include this header in every response. It provides a unique, server-side audit-trail reference for the processed request. `RPP-Svtrid` is an Item Structured Header Field [@!RFC9651]. Its value MUST be an String (Section 3.3.3 of [@!RFC9651])
+- `RPP-Svtrid`: A server-assigned transaction identifier. The server MUST include this header in every response, providing a unique, server-side audit-trail reference for the processed request. Because this header maps the EPP `svTRID` element, whose syntax differs from the String type defined in [@!RFC9651, Section 3.3.3], `RPP-Svtrid` MUST NOT be defined as a Structured Header Field.
 
-- `RPP-Cltrid`: The server MUST echo the client transaction identifier from the request back to the client in this response header. This allows the client to correlate responses to their originating requests. `RPP-Cltrid` is an Item Structured Header Field [@!RFC9651]. Its value MUST be an String (Section 3.3.3 of [@!RFC9651])
+Example use of the RPP-Svtrid header:
+
+ ```http
+RPP-Svtrid: 12345-XYZ
+ ```
+
+- `RPP-Cltrid`: The server MUST echo the client transaction identifier from the request back to the client in this response header. This allows the client to correlate responses to their originating requests. Because this header maps the EPP `clTRID` element, whose syntax differs from the String type defined in [@!RFC9651, Section 3.3.3], `RPP-Cltrid` MUST NOT be defined as a Structured Header Field.
+
+Example use of the RPP-Cltrid header:
+
+ ```http
+RPP-Cltrid: 12345-ABC
+ ```
   
 - `RPP-Code`: This header is the equivalent of the EPP result code defined in [@!RFC5730] and MUST be used accordingly. This header MUST be added to all responses and MAY be used by the client for easy access to the result code, without having to parse the HTTP response message body. `RPP-Code` is an Item Structured Header Field [@!RFC9651]. Its value MUST be an String (Section 3.3.3 of [@!RFC9651])
 
@@ -498,7 +510,7 @@ The example profile definition shown in (#profile-example) uses the "base-profil
 
 ## Signalling
 
-The client and the server MUST use media type parameters in the Accept and Content-Type headers to indicate the name and version of the profile used in the request. The media type parameters MUST be defined as follows:
+The client and the server both use media type parameters in the Accept and Content-Type headers to indicate the name and version of the profile used in the request. The media type parameters MUST be defined as follows:
 
 - `profile`: The value of this parameter MUST uniquely identify the profile, for example `urn:ietf:params:rpp:profile:example-profile`.
 - `version`: The value of this parameter MUST indicate the version of the profile used in the request.
