@@ -44,7 +44,7 @@ This document describes the endpoints for the RESTful Provisioning Protocol, use
 
 # Introduction
 
-This document describes an Application Programming Interface (API) API based on HTTP as defined in [@!HTTP] and the principles of [@!REST]. Conforming to the REST constraints is generally referred to as being "RESTful". Hence the API is dubbed: "'RESTful Provisioning Protocol" or "RPP" for short.
+This document describes an Application Programming Interface (API) based on HTTP as defined in [@!HTTP] and the principles of [@!REST]. Conforming to the REST constraints is generally referred to as being "RESTful". Hence the API is dubbed: "RESTful Provisioning Protocol" or "RPP" for short.
 
 The RPP API is designed to be used for the provisioning and management of objects in a shared database, such as domain names, hosts, and entities.
 
