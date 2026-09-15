@@ -76,7 +76,7 @@ In examples, indentation and white space in examples are provided only to illust
 
 All example requests assume a RPP server using HTTP version 2 is listening on the standard HTTPS port on host rpp.example. An authorization token has been provided by an out of band process and MUST be used by the client to authenticate each request.
 
-This document does not mandate any particular authority (host and port) or path prefix for an RPP server. The `rpp.example` authority and the `/rpp/v1` path prefix used throughout the examples in this document are purely illustrative. As described in (#discoverability), the authority and path prefix actually used by a deployment are entirely deployment-defined and are discovered by the client at run time from the `base_url` field of the `.well-known/rpp.json` discovery document; no normative requirement in this document depends on the literal `/rpp/v1` segment.
+This document does not mandate any particular authority (host and port) or path prefix for an RPP server. The `rpp.example` authority and the `/rpp` path prefix used throughout the examples in this document are purely illustrative. All URLs used in examples are presumed to be relative to the value defined for the `base_url` field of the well-known discovery document.
 
 # Mapping to EPP
 
@@ -132,7 +132,7 @@ When a uniform interface operation implicitly creates a process object as a side
 Example:
 
 ```
-Link: <https://rpp.example/rpp/v1/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
+Link: <https://rpp.example/rpp/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
 ```
 
 # Error handling and relation between HTTP status codes and RPP codes
@@ -274,7 +274,7 @@ In this example, the well-known endpoint URL is `https://rpp-svr2.registry.examp
 
 RPP server capabilities MUST be discoverable by clients. The server MUST provide a well-known endpoint at `/.well-known/rpp.json` at the root of the RPP server, this endpoint MUST return a JSON document containing the capabilities of the RPP server. The well-known endpoint MUST be accessible without authentication, and the client MUST be able to access this endpoint before authenticating with the server. The well-known endpoint MUST be accessible using the HTTP GET method and MUST return an HTTP status code 200 (OK) if the request was successful. The response message body MUST contain a JSON document describing the capabilities of the RPP server using the following fields:
 
-- `base_url`: (required, string) The base URL for the RPP API, this is the URL that MUST be used as the base for all endpoint URL templates.
+- `base_url`: (required, string) The base URL for the RPP API, used as the base for all endpoint URL templates.
 - `version`: (required, string) The version of the RPP API supported by the server, for example "1.0".
 - `tlds`: (required, array of strings) A list of TLDs supported by the server, for example "example", "org".
 - `extensions`: (optional, array of extension objects) A list of supported extensions, each extension object MUST contain the following fields:
@@ -306,11 +306,9 @@ The following template variables are defined for use in RPP endpoint URL templat
 
 <!-- TODO: Include appendix with example discovery response document. -->
 
-Example discovery response document. The `https://rpp.example/rpp/v1` value of `base_url` is illustrative only; it is not part of the protocol, and a deployment MAY publish a `base_url` using any authority and path prefix (or no path prefix at all):
-
 ```json
 {
-  "base_url": "https://rpp.example/rpp/v1",
+  "base_url": "https://rpp.example/rpp",
   "version": "1.0",
   "tlds": ["example", "org"],
   "extensions": [
@@ -375,7 +373,7 @@ RPP is designed to be extensible and backward compatible, the server MUST suppor
 
 The following RPP elements include versioning support:
 
-- Endpoints: The server MUST support at least one version of the RPP API, and MUST return a 404 Not Found status code for requests using an unsupported version.
+- Endpoints (optional): If the RPP version is included in the URL, then `base_url` MUST include the version segment.
 - Messages: A request and response message MUST include the version of the RPP API it is compatible with.
 - Extensions: RPP extensions MUST include the version of the RPP API they are compatible with.
 - Profiles: RPP profiles MUST include the version of the RPP API they are compatible with.
@@ -384,8 +382,7 @@ The following RPP elements include versioning support:
 
 ## Endpoints
 
-The `base_url` element of the RPP Discovery response MAY include the version of the RPP API supported by the server. The client MUST use this `base_url` for all subsequent requests to the server. For example, if the version is 1.2.3, a server MAY publish a `base_url` such as `https://rpp.example/rpp/v1/` (the `rpp.example` authority and `/rpp/v1` prefix being illustrative only); whatever `base_url` is published, the client MUST use that URL for all subsequent requests to the server, and MUST NOT substitute a different version in the URL path.
-
+The `base_url` element of the RPP Discovery response may include a version segment indicating the version of the RPP API supported by the server. A server MAY publish a `base_url` such as `https://rpp.example/rpp/v1/` (the `rpp.example` authority and `/rpp/v1` prefix being illustrative only).
 
 ## Messages
 
@@ -575,12 +572,12 @@ If multiple process objects are created, the server MUST include one `Link` head
 Example:
 
 ```http-message
-Link: <https://rpp.example/rpp/v1/domainNames/foo.example/processes/transferProcesses/XYZ-12345>; rel="rpp-process"; process="transferProcess"; processId="XYZ-12345"; latest=true
+Link: <https://rpp.example/rpp/domainNames/foo.example/processes/transferProcesses/XYZ-12345>; rel="rpp-process"; process="transferProcess"; processId="XYZ-12345"; latest=true
 ```
 
 # Endpoints
 
-Endpoints are described using URI Templates [@!RFC6570] relative to a discoverable base URL, as recommended by [@!RFC9205]. The base URL, including its authority and any path prefix, is not defined by this document; it is deployment-defined and discovered by the client from the `base_url` field of the well-known discovery document, as described in (#discoverability). The URL paths given in the rules and examples below (e.g. `/{collection}/{id}`) are relative to that discovered base URL; the `rpp.example` authority and `/rpp/v1` path prefix used in examples throughout this document are illustrative only and carry no normative meaning. Some RPP endpoints do not require a request and/or response message.
+Endpoints are described using URI Templates [@!RFC6570] relative to a discoverable base URL. The base URL, including its authority and any path prefix, is not defined by this specification; it is deployment-defined and discoverable by the client using the `base_url` field of the well-known discovery document, as described in (#discoverability). The URL paths used in the rules and examples below (e.g. `/{collection}/{id}`) are relative to the discovered base URL; the `rpp.example` authority and `/rpp` path prefix used in examples throughout this document are illustrative only and carry no normative meaning.
 
 ## HTTP Mapping Rules
 
@@ -869,7 +866,7 @@ Server: Example RPP server v1.0
 Content-Language: en
 Content-Length: 642
 Content-Type: application/rpp+json
-Location: https://rpp.example/rpp/v1/domainNames/foo.example
+Location: https://rpp.example/rpp/domainNames/foo.example
 RPP-code: 01000
 
 TODO
@@ -883,8 +880,8 @@ Date: Wed, 24 Jan 2024 12:00:00 UTC
 Server: Example RPP server v1.0
 Content-Language: en
 Content-Type: application/rpp+json
-Location: https://rpp.example/rpp/v1/domainNames/foo.example
-Link: <https://rpp.example/rpp/v1/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
+Location: https://rpp.example/rpp/domainNames/foo.example
+Link: <https://rpp.example/rpp/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
 RPP-code: 01000
 
 TODO
@@ -1051,7 +1048,7 @@ Content-Language: en
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
 Content-Length: 85
-Location: https://rpp.example/rpp/v1/domainNames/foo.example/processes/renewProcesses/XYZ-12345
+Location: https://rpp.example/rpp/domainNames/foo.example/processes/renewProcesses/XYZ-12345
 Content-Type: application/rpp+json
 RPP-code: 01000
 
@@ -1113,7 +1110,7 @@ Server: Example RPP server v1.0
 Content-Language: en
 Content-Length: 182
 Content-Type: application/rpp+json
-Location: https://rpp.example/rpp/v1/domainNames/foo.example/processes/transferProcesses/latest
+Location: https://rpp.example/rpp/domainNames/foo.example/processes/transferProcesses/latest
 RPP-code: 01001
 
 {
@@ -1540,6 +1537,10 @@ RPP relies on the security of the underlying HTTP transport, hence the best comm
 Data confidentiality and integrity MUST be enforced. Every client and server interaction MUST be encrypted using TLS version 1.3 [@!RFC8446]. Future versions of TLS MAY be used as they become available and are deemed secure.
 
 # Change History
+
+## Version 00 to 01
+
+- Removed hardcoded version segment from examples (Issue #97)
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
