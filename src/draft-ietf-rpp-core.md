@@ -423,7 +423,7 @@ The RPP server MUST include the version for each profile in the RPP Discovery re
 
 # Media types
 
-RPP media types are used to indicate the format of the request and response messages, and MUST include a parameter indicating the name of the profile they are compatible with. The server MUST use the profile information in the media type to determine which features, extensions and versions to use when processing the request, and to ensure that it returns a response that is compatible with the client. The client MUST use the profile information in the media type to determine which features, extensions and versions to use when processing the response, and to ensure that it can correctly interpret the response.
+RPP media types MUST include the name and version of the used profile. The server MUST use the profile information in the media type to determine which features, extensions and versions to use when processing the request, and to ensure that it returns a response that is compatible with the client. The client MUST use the profile information in the media type to determine which features, extensions and versions to use when processing the response, and to ensure that it can correctly interpret the response.
 
 The definition of profile parameters in media types is described in section ....
 
@@ -1505,15 +1505,22 @@ The IANA is requested to add the following RPP media type to the "Media Types" r
 ```text
 Type name: application
 Subtype name: rpp+json
-Required parameters: version
-Optional parameters: profile, profile-version
+Required parameters: "N/A"
+Optional parameters: profile, version
 Encoding considerations: "N/A"
-Security considerations: "N/A"
+Security considerations: This type has all of the security
+               considerations described in [@!RFC8259] plus the
+               considerations specified in the Security Considerations
+               section of this document.
 Interoperability considerations: "N/A"
 Published specification: This document
 Applications that use this media type: RPP protocol and extensions
 Fragment identifier considerations: "N/A"
-Additional information: "N/A"
+Additional information:
+   Deprecated alias names for this type: "N/A"
+   Magic number(s): "N/A"
+   File extension(s): "N/A"
+   Macintosh file type code(s): "N/A"
 Person & email address to contact for further information: Author's email address
 Intended usage: COMMON
 Restrictions on usage: "N/A"
@@ -1522,7 +1529,7 @@ Change controller: Document authors
 Provisional registration: No
 ```
 
-<!-- TODO: Add additional parameters when needed, for example for content negotiation -->
+<!-- TODO: make profile, version mandatory params?  -->
 <!-- see: https://www.iana.org/assignments/media-types/media-types.xhtml#application -->
 <!-- Post request to media-types@iana.org list for review prior to submission  -->
 
@@ -1536,11 +1543,13 @@ RPP relies on the security of the underlying HTTP transport, hence the best comm
 
 Data confidentiality and integrity MUST be enforced. Every client and server interaction MUST be encrypted using TLS version 1.3 [@!RFC8446]. Future versions of TLS MAY be used as they become available and are deemed secure.
 
+RPP does not mandate a single data format; media types for RPP messages MAY use JSON, XML, or other any other data format. Each registered RPP media type MUST document the security considerations applicable to its underlying format (e.g. [@!RFC8259] for JSON), in addition to the considerations described in this section.
+
 # Change History
 
 ## Version 00 to 01
 
-- Added optional parameters to the RPP media type registration template (Issue #101)
+- Added "profile" and "version" parameters to the RPP media type registration template (Issue #101)
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
