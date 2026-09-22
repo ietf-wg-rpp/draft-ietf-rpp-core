@@ -423,11 +423,9 @@ The RPP server MUST include the version for each profile in the RPP Discovery re
 
 # Media types
 
-RPP media types MUST include the name and version of the used profile. The server MUST use the profile information in the media type to determine which features, extensions and versions to use when processing the request, and to ensure that it returns a response that is compatible with the client. The client MUST use the profile information in the media type to determine which features, extensions and versions to use when processing the response, and to ensure that it can correctly interpret the response.
+The HTTP media type headers "Accept" and "Content-Type" are used to indicate the media types that the client can process and the media type of the request and response data, respectively. The value of these headers includes the used profile name and version. The server uses the profile information to determine which features, extensions and versions to use when processing the request, and to ensure that it returns a response that is compatible with the client. The client uses the profile information in the media type to determine which features, extensions and versions to use when processing the response.
 
-The definition of profile parameters in media types is described in section ....
-
-<!-- TODO: add reference to the media type style of profile signalling defined in Issue #43 -->
+Profile signalling using media types is described in section [Media type parameter signalling](#media-type-parameter-signalling).
 
 # Profiles
 
@@ -530,7 +528,7 @@ Example:
 RPP-Profile: profile=urn:ietf:params:rpp:profile:example-profile;version=1.0
 ```
 
-### Media type parameter signalling
+### Media type parameter signalling {#media-type-parameter-signalling}
 
 When using Media type parameter signalling, the client and the server MUST use media type parameters in the Accept and Content-Type headers to indicate the name and version of the profile used in the request. The media type parameters MUST be defined as follows:
 
@@ -552,6 +550,7 @@ Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profi
 Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; version="1.0"
 ```
 
+Media types used for RPP MUST include OPTIONAL support for the `profile` and `version` media type parameters as defined above.
 
 <!--
  TODO: use media type parameters to signal the profile in the Accept and Content-Type headers?
@@ -1497,41 +1496,6 @@ Description:   Identifies a process resource that was implicitly created as a
                mnemonic).
 Reference:     This document
 ```
-
-## RPP Media Type (application/rpp+json)
-
-The IANA is requested to add the following RPP media type to the "Media Types" registry, following the template in [@!RFC6838]:
-
-```text
-Type name: application
-Subtype name: rpp+json
-Required parameters: "N/A"
-Optional parameters: profile, version
-Encoding considerations: "N/A"
-Security considerations: This type has all of the security
-               considerations described in [@!RFC8259] plus the
-               considerations specified in the Security Considerations
-               section of this document.
-Interoperability considerations: "N/A"
-Published specification: This document
-Applications that use this media type: RPP protocol and extensions
-Fragment identifier considerations: "N/A"
-Additional information:
-   Deprecated alias names for this type: "N/A"
-   Magic number(s): "N/A"
-   File extension(s): "N/A"
-   Macintosh file type code(s): "N/A"
-Person & email address to contact for further information: Author's email address
-Intended usage: COMMON
-Restrictions on usage: "N/A"
-Author: Document authors
-Change controller: Document authors
-Provisional registration: No
-```
-
-<!-- TODO: make profile, version mandatory params?  -->
-<!-- see: https://www.iana.org/assignments/media-types/media-types.xhtml#application -->
-<!-- Post request to media-types@iana.org list for review prior to submission  -->
 
 # Internationalization Considerations
 
