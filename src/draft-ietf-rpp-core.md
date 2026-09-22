@@ -272,6 +272,9 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
 
 - `base_url`: (required, string) The base URL for the RPP API, this is the URL that MUST be used as the base for all endpoint URL templates.
 - `version`: (required, string) The version of the RPP API supported by the server, for example "1.0".
+- `environment`: (required, object) An object containing information about the RPP server, with the following fields:
+  - `name`: (required, string) The name of the RPP server, for example "rpp.example".
+  - `status`: (required, string) The operational status of the RPP server, for example "production", "test", or "development".
 - `tlds`: (required, array of strings) A list of TLDs supported by the server, for example "example", "org".
 - `extensions`: (optional, array of extension objects) A list of supported extensions, each extension object MUST contain the following fields:
   - `name`: (required, string) A short name for the extension, for example "registry fee extension".
