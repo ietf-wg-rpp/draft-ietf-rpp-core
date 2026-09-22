@@ -385,11 +385,9 @@ Example of how the version information for a profile can be included in the RPP 
 
 # Media types
 
-RPP media types are used to indicate the format of the request and response messages, and MUST include a parameter indicating the name of the profile they are compatible with. The server MUST use the profile information in the media type to determine which features, extensions and versions to use when processing the request, and to ensure that it returns a response that is compatible with the client. The client MUST use the profile information in the media type to determine which features, extensions and versions to use when processing the response, and to ensure that it can correctly interpret the response.
+The HTTP media type headers "Accept" and "Content-Type" are used to indicate the media types that the client can process and the media type of the request and response data, respectively. The value of these headers includes the used profile name and version. The server uses the profile information to determine which features, extensions and versions to use when processing the request, and to ensure that it returns a response that is compatible with the client. The client uses the profile information in the media type to determine which features, extensions and versions to use when processing the response.
 
-The definition of profile parameters in media types is described in section ....
-
-<!-- TODO: add reference to the media type style of profile signalling defined in Issue #43 -->
+Profile signalling using media types is described in section [Media type parameter signalling](#media-type-parameter-signalling).
 
 # Profiles
 
@@ -492,7 +490,7 @@ Example:
 RPP-Profile: profile=urn:ietf:params:rpp:profile:example-profile;version=1.0
 ```
 
-### Media type parameter signalling
+### Media type parameter signalling {#media-type-parameter-signalling}
 
 When using Media type parameter signalling, the client and the server MUST use media type parameters in the Accept and Content-Type headers to indicate the name and version of the profile used in the request. The media type parameters MUST be defined as follows:
 
@@ -514,6 +512,7 @@ Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profi
 Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"; version="1.1"
 ```
 
+Media types used for RPP MUST include OPTIONAL support for the `profile` and `version` media type parameters as defined above.
 
 <!--
  TODO: use media type parameters to signal the profile in the Accept and Content-Type headers?
@@ -1541,34 +1540,6 @@ Description:   Identifies a process resource that was implicitly created as a
 Reference:     This document
 ```
 
-## RPP Media Type (application/rpp+json)
-
-The IANA is requested to add the following RPP media type to the "Media Types" registry, following the template in [@!RFC6838]:
-
-```text
-Type name: application
-Subtype name: rpp+json
-Required parameters: version
-Optional parameters: "N/A"
-Encoding considerations: "N/A"
-Security considerations: "N/A"
-Interoperability considerations: "N/A"
-Published specification: This document
-Applications that use this media type: RPP protocol and extensions
-Fragment identifier considerations: "N/A"
-Additional information: "N/A"
-Person & email address to contact for further information: Author's email address
-Intended usage: COMMON
-Restrictions on usage: "N/A"
-Author: Document authors
-Change controller: Document authors
-Provisional registration: No
-```
-
-<!-- TODO: Add additional parameters when needed, for example for content negotiation -->
-<!-- see: https://www.iana.org/assignments/media-types/media-types.xhtml#application -->
-<!-- Post request to media-types@iana.org list for review prior to submission  -->
-
 # Internationalization Considerations
 
 TODO
@@ -1579,10 +1550,13 @@ RPP relies on the security of the underlying HTTP transport, hence the best comm
 
 Data confidentiality and integrity MUST be enforced. Every client and server interaction MUST be encrypted using TLS version 1.3 [@!RFC8446]. Future versions of TLS MAY be used as they become available and are deemed secure.
 
+RPP does not mandate a single data format; media types for RPP messages MAY use JSON, XML, or other any other data format. Each registered RPP media type MUST document the security considerations applicable to its underlying format (e.g. [@!RFC8259] for JSON), in addition to the considerations described in this section.
+
 # Change History
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Added "profile" and "version" parameters to the RPP media type registration template (Issue #101)
 - Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
