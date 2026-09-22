@@ -72,9 +72,7 @@ JWT - JSON Web Token as defined in [@!RFC7519].
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT","SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [@!RFC2119].
 
-In examples, indentation and white space in examples are provided only to illustrate element relationships and are not REQUIRED features of the protocol.
-
-All example requests assume a RPP server using HTTP version 2 is listening on the standard HTTPS port on host rpp.example. An authorization token has been provided by an out of band process and MUST be used by the client to authenticate each request.
+All example requests assume an RPP server is available on the standard HTTPS port on host `rpp.example`. An authorization token has been provided by an out of band process and MUST be used by the client to authenticate each request.
 
 # Mapping to EPP
 
@@ -123,6 +121,18 @@ Example:
 ```
 Link: <https://rpp.example/rpp/v1/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
 ```
+
+# Cross-Origin Resource Sharing
+
+RPP servers MAY be accessed directly by browser-based clients. To support such clients, RPP servers SHOULD implement Cross-Origin Resource Sharing (CORS) as defined in [@!FETCH].
+
+When responding to a CORS preflight (`OPTIONS`) request, the server SHOULD include the following in its response:
+
+- `Access-Control-Allow-Methods`: The HTTP methods supported for the requested endpoint.
+- `Access-Control-Allow-Headers`: All request headers defined in this specification in addition to `Content-Type` and `Accept`.
+- `Access-Control-Expose-Headers`: All request and response headers defined in this specification.
+
+The server MUST allow the `application/rpp+json` media type to be used in the `Content-Type` and `Accept` headers of cross-origin requests.
 
 # Problem Detail responses for errors
 
@@ -233,6 +243,9 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
 
 - `base_url`: (required, string) The base URL for the RPP API, this is the URL that MUST be used as the base for all endpoint URL templates.
 - `version`: (required, string) The version of the RPP API supported by the server, for example "1.0".
+- `environment`: (required, object) An object containing information about the RPP server, with the following fields:
+  - `name`: (required, string) The name of the RPP server, for example "rpp.example".
+  - `status`: (required, string) The operational status of the RPP server, for example "production", "test", or "development".
 - `tlds`: (required, array of strings) A list of TLDs supported by the server, for example "example", "org".
 - `extensions`: (optional, array of extension objects) A list of supported extensions, each extension object MUST contain the following fields:
   - `name`: (required, string) A short name for the extension, for example "registry fee extension".
@@ -275,7 +288,7 @@ Example discovery response document:
       "name": "RPP example extension",
       "id": "urn:ietf:params:rpp:extension:example-extension",
       "version": "1.0",
-      "url": "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension-1.0"
+      "url": "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension"
     }
   ],
   "profiles": [
@@ -283,7 +296,7 @@ Example discovery response document:
       "name": "EPP compatibility profile",
       "id": "urn:ietf:params:rpp:profile:epp-compatibility",
       "version": "1.0",
-      "url": "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-provisioning-profile-1.0"
+      "url": "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-profile"
     }
   ],
   "objects": ["domains", "hosts", "entities"],
@@ -321,7 +334,7 @@ Example discovery response document:
 
 The steps for a typical workflow of provisioning an object using RPP without knowing the location and capabilities of the server are as follows, the first three steps are optional, the client can choose to skip any of these steps if it already has the required information from a previous interaction or configuration.
 
-1. Bootstrap (optional): The client discovers the location of the RPP server by looking up the IANA registry for RPP servers or by performing a DNS SRV lookup as defined in [@!RFC2782].
+1. Bootstrap (optional): The client discovers the location of the RPP server by looking up the IANA registry for RPP servers or by performing a DNS HTTPS lookup as defined in [@!RFC9460].
 2. Discover capabilities (optional):  The client retrieves the capabilities of the RPP server by sending a GET request to the well-known endpoint at `/.well-known/rpp.json`.
 3. Extract RPP URLs (optional): The client extracts the base URL and endpoint URL templates from the discovery response, and uses this information to construct the URLs for the desired operations.
 4. Perform provisioning operations: The client performs provisioning operations by sending HTTP requests to the appropriate endpoint URLs, using the HTTP method and request message body as required by the specific operation.
@@ -330,24 +343,12 @@ The steps for a typical workflow of provisioning an object using RPP without kno
 
 RPP is designed to be extensible and backward compatible. The version of the RPP API is indicated in the URL path, for example: `https://rpp.example/rpp/v1/`. The server MUST support at least one version of the RPP API, and MUST return a 404 Not Found status code for requests using an unsupported version. The versioning scheme uses the Semantic Versioning format defined in [@!SemVer], but only the major version number is used to indicate breaking changes. The minor and patch version numbers are not used in an URL path, but can be used in the media type or in the message body to indicate non-breaking changes.
 
-The following RPP elements include versioning support:
+The client MUST indicate the version of RPP it is using by including the RPP Media Type `application/rpp+json` in the HTTP Accept header of each request, a "version" parameter MUST also be used for the media type, for example: `application/rpp+json; version=1.0`. The server MUST include the media type used in the request in its response to the client. The server MUST reject requests using an unsupported version of RPP, and MUST return a 406 Not Acceptable status code.
 
-- Endpoints: The server MUST support at least one version of the RPP API, and MUST return a 404 Not Found status code for requests using an unsupported version.
-- Messages: A request and response message MUST include the version of the RPP API it is compatible with.
+The following additional RPP elements include versioning support:
+
 - Extensions: RPP extensions MUST include the version of the RPP API they are compatible with.
 - Profiles: RPP profiles MUST include the version of the RPP API they are compatible with.
-- Media types: RPP media types MUST include the version of the RPP API they are compatible with.
-- Result codes: RPP result codes may be added by extensions or updates to the core RPP specification.
-
-## Endpoints
-
-The `base_url` element of the RPP Discovery response MAY include the version of the RPP API supported by the server. The client MUST use this `base_url` for all subsequent requests to the server. For example, if the version is 1.2.3, the `base_url` is `https://rpp.example/rpp/v1/`, then the client MUST use this URL for all subsequent requests to the server, and MUST not use a different version in the URL path.
-
-## Messages
-
-The `version` element of the RPP request and response messages MUST include the version of the RPP API that the message is compatible with. The server MUST reject requests with a version that is not supported by the server, and MUST return a RPP Client error code.
-
-<!-- TODO: see media type below, this version element may be redundant -->
 
 ## Extensions
 
@@ -358,16 +359,18 @@ A request using an extension MUST include the version of the extension. The serv
 "extensions": [
     {
       "name": "RPP example extension",
-      "id": "urn:ietf:params:rpp:extension:example-extension",
+      "id": "urn:ietf:params:rpp:extension:example-extension-1.0",
       "version": "1.0",
-      "url": "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension-1.0"
+      "url": "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension"
     }
   ],
 ```
 
 ## Profiles
 
-The RPP server MUST include the version for each profile in the RPP Discovery response. The client MUST use this version information to determine which profiles are supported by the server, and to ensure that it uses the correct version of the profile when making requests to the server. A request using a profile MUST include the version of the profile. The server MUST reject requests using profiles with a version that is not supported by the server, and MUST return a RPP Client error code. The following is an example of how the version information for a profile can be included in the RPP Discovery response:
+The RPP server MUST include the version for each profile in the RPP Discovery response. The client MUST use this version information to determine which profiles are supported by the server, and to ensure that it uses the correct version of the profile when making requests to the server. A request using a profile MUST include the version of the profile. The server MUST reject requests using profiles with a version that is not supported by the server, and MUST return a RPP Client error code.
+
+Example of how the version information for a profile can be included in the RPP Discovery response:
 
 ```json
 "profiles": [
@@ -375,7 +378,7 @@ The RPP server MUST include the version for each profile in the RPP Discovery re
       "name": "EPP compatibility profile",
       "id": "urn:ietf:params:rpp:profile:epp-compatibility",
       "version": "1.0",
-      "url": "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-provisioning-profile-1.0"
+      "url": "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-profile"
     }
   ]
 ```
@@ -494,21 +497,21 @@ RPP-Profile: profile=urn:ietf:params:rpp:profile:example-profile;version=1.0
 When using Media type parameter signalling, the client and the server MUST use media type parameters in the Accept and Content-Type headers to indicate the name and version of the profile used in the request. The media type parameters MUST be defined as follows:
 
 - `profile`: The value of this parameter MUST uniquely identify the profile, for example `urn:ietf:params:rpp:profile:example-profile`.
-- `version`: The value of this parameter MUST indicate the version of the profile used in the request.
+- `profile-version`: The value of this parameter MUST indicate the version of the profile used in the request.
 
 The ABNF for media type parameter signalling is as follows:
 
 ```abnf
-profile-parameter = "profile" "=" profile-name ";" OWS "version" "=" version
+profile-parameter = "profile" "=" profile-name ";" OWS "profile-version" "=" version
 profile-name      = token
 version           = 1*DIGIT "." 1*DIGIT
 ```
 
-Example for the media type `application/rpp+json` with profile parameters indicating the use of the "example-profile" profile version 1.0.:
+Example for the media type `application/rpp+json` with profile parameters indicating the use of the "example-profile" profile version 1.0. and RPP version 1.1:
 
 ```http
-Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; version="1.0"
-Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; version="1.0"
+Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"; version="1.1"
+Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"; version="1.1"
 ```
 
 
@@ -1442,7 +1445,7 @@ Fields to be registered:
 
 - `name`: The name of the extension, for example "RPP example extension".
 - `version`: The version of the extension, for example "1.0".
-- `url`: The URL for the extension specification, for example "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension-1.0".
+- `url`: The URL for the extension specification, for example "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension".
 - `description`: A human-readable description of the extension and its intended use.
 
 ## RPP Profile registry
@@ -1458,10 +1461,10 @@ Registration procedure: Expert Review
 Fields to be registered:
 
 - `name`: The name of the profile, for example "EPP compatibility profile".
-- `id`: A unique URN identifier for the profile, for example "urn:ietf:params:rpp:profile:epp-compatibility-1.0".
+- `id`: A unique URN identifier for the profile, for example "urn:ietf:params:rpp:profile:epp-compatibility".
 - `version`: The version of the profile, for example "1.0".
-- `url`: The URL for the profile specification, for example "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-provisioning-profile-1.0".
-- `description`: A human-readable description of the profile and its intended use. 
+- `url`: The URL for the profile specification, for example "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-profile".
+- `description`: A human-readable description of the profile and its intended use.
 
 ## RPP Result Codes Registry {rpp-result-codes-registry}
 
@@ -1578,9 +1581,11 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 # Change History
 
-## Version 00 to 01
+## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
 - Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
+- Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
+- Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
@@ -1659,5 +1664,15 @@ The authors would like to thank the following people for their helpful text cont
     <author>
       <organization>Semantic Versioning</organization>
     </author>
+  </front>
+</reference>
+
+<reference anchor="FETCH" target="https://fetch.spec.whatwg.org/">
+  <front>
+    <title>Fetch - Living Standard</title>
+    <author>
+      <organization>WHATWG</organization>
+    </author>
+    <date/>
   </front>
 </reference>
