@@ -121,7 +121,7 @@ For RPP result codes the leading digit MUST be "1". For avoidance of confusion R
 
 For RPP codes the remaining 4 digits MUST keep the same semantics as [@!RFC5730] Result Codes.
 
-- `RPP-Queue-Size`: Return the number of unacknowledged messages in the client message queue. The server MAY include this header in all RPP responses.
+- `RPP-Queue-Size`: The number of messages with the status "queued" that are currently in the message queue. The server MAY include this header in all RPP responses.
 
 When a uniform interface operation implicitly creates a process object as a side effect, the server MUST communicate the URL of the created process resource using the `Link` response header [@!RFC8288] with the `rpp-process` relation type. If multiple process objects are created, the server MUST include one `Link` header field per created process resource, each with `rel="rpp-process"`.
 
@@ -1280,12 +1280,12 @@ Notwithstanding the guarantees described in this section, the server MAY delete 
 
 The server MAY include the `RPP-Queue-Size` header (see (#response-headers)) in any RPP response, not only in responses to Messages requests, to inform the client of the current number of unacknowledged messages in its queue without requiring a dedicated Retrieve request.
 
-Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "deleted". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a delivery timeout with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing SHOULD be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
+Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "deleted". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing SHOULD be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
 
 The following diagram illustrates the message state transitions described above, including the server-initiated deletion of a message, which MAY occur from either state:
 
 ```
-                               insert
+                               Insert
                                  |
                                  v
                          +---------------+
@@ -1294,16 +1294,16 @@ The following diagram illustrates the message state transitions described above,
                  |       |               |-------+
                  |       +-------+-------+       |
                  |               |               |
-        delivery |      Retrieve |               |  
-        timeout  |               |               |
+        Ack      |      Retrieve |               |  
+        Timeout  |               |               |
                  |               v               |
-                 |       +---------------+       | server delete
+                 |       +---------------+       | Server Delete
                  |       |               |       |
                  +-------+   delivered   +-------+
                          |               |       |
                          +-------+-------+       |
                                  |               |
-                      Ack/delete |               |
+                      Ack/Delete |               |
                                  v               |
                          +---------------+       | 
                          |               |       |
@@ -1330,7 +1330,7 @@ Query parameters are used here for simplicity. A future revision of this documen
 
 The server SHOULD return the human-readable content of a message in the language requested by the client's `Accept-Language` header. Not every message type may support every language; if the requested language is not available for a given message, the server MUST fall back to returning that message in its own default language.
 
-Every message returned in the response MUST transition from "queued" to "delivered" as described above, and MUST include its status. The server MUST use RPP headers to return the RPP result code and the number of messages remaining in the queue.
+Every message returned in the response transitions from "queued" to "delivered" as described above.
 
 Example request for retrieving messages of type `transfer` only and returning a maximum of 10 messages:
 
