@@ -266,6 +266,10 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
   - `start_time`: (required, string) The start time of the maintenance window in ISO 8601 format.
   - `end_time`: (required, string) The end time of the maintenance window in ISO 8601 format.
   - `description`: (optional, string) A human-readable description of the maintenance window.
+- `idn_tables`: (optional, array) Indicates whether the server supports Internationalized Domain Names (IDN). each entry in the array MUST contain the following fields:
+  - `tld`: (required, string) The top-level domain (TLD) to which the IDN table applies.
+  - `name`: (required, string) The IANA-registered name of the IDN table, as listed in the [IDN-Tables] registry.
+  - `url`: (required, string) The location (URL) for the IDN table specification in the [IDN-Tables] registry.
 
 The following template variables are defined for use in RPP endpoint URL templates. They are data object independent; the same variables are used regardless of which Data Object or Process Object the endpoint acts on.
 
@@ -324,6 +328,13 @@ Example discovery response document:
       "start_time": "2026-06-01T00:00:00Z",
       "end_time": "2026-06-01T06:00:00Z",
       "description": "Planned maintenance for server upgrades"
+    }
+  ],
+  "idn_tables": [
+    {
+      "name": "Example Latin IDN Table",
+      "tld": "example",
+      "url": "https://www.iana.org/domains/idn-tables/tables/example_latn_1.0.txt"
     }
   ]
 
@@ -710,6 +721,20 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Processes: list | `"GET"` | `"/{collection}/{id}/processes"` |
 
 A> TODO: add availability and message queue 
+
+## Internationalized Domain Names (IDN)
+
+When an Internationalized Domain Name (IDN) is used to identify a Domain Name Data Object or Host Data Object instance in a URL, in particular as the `{id}` path segment described in Rule 2, the ASCII Compatible Encoding (ACE) A-label form of the name, as defined in [@!RFC5890], MUST be used. This requirement ensures that the resulting URL remains a valid URI as defined in [@!RFC3986], since the A-label form is composed exclusively of ASCII characters and therefore requires no percent-encoding or additional Unicode normalization when used as a URL path segment.
+
+The Unicode (U-label) form of an internationalized name MUST NOT be used to address a resource in a URL. A client MAY submit or receive the U-label form as a separate data element as part of a resource representation, but this Unicode representation of the name as a whole MUST NOT be used when constructing or matching a URL.
+
+This is consistent with the use of IDN in the DNS, the actual DNS name is naturally represented using its A-label form. This also avoids ambiguity: the URL identifies the DNS domain name rather than a particular Unicode representation of it.
+
+For example, to address the domain name whose U-label is `"bücher.example"`, a client MUST use the corresponding A-label, `"xn--bcher-kva.example"`, when constructing the `{id}` path segment:
+
+```
+GET /domainNames/xn--bcher-kva.example
+```
 
 ## Availability for Creation
 
@@ -1583,6 +1608,7 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Added support for Internationalized Domain Names (IDN) (Issue #126)
 - Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
@@ -1674,5 +1700,14 @@ The authors would like to thank the following people for their helpful text cont
       <organization>WHATWG</organization>
     </author>
     <date/>
+  </front>
+</reference>
+
+<reference anchor="IDN-Tables" target="https://www.iana.org/assignments/idn-tables">
+  <front>
+    <title>Repository of IDN Practices</title>
+    <author>
+      <organization>Internet Assigned Numbers Authority (IANA)</organization>
+    </author>
   </front>
 </reference>
