@@ -266,15 +266,19 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
   - `start_time`: (required, string) The start time of the maintenance window in ISO 8601 format.
   - `end_time`: (required, string) The end time of the maintenance window in ISO 8601 format.
   - `description`: (optional, string) A human-readable description of the maintenance window.
+- `links`: (optional, array of link objects) A list of links to documents related to the use of RPP with this server, such as policies and terms. Each link object MUST contain the following fields:
+  - `rel`: (required, string) The relation type of the link, this document uses the following values:
+    - `privacy-policy`: The privacy policy of the server operator, describing how personal data is collected, used, retained and disclosed. A server SHOULD provide this link.
+    - `terms-of-service`: The terms of service that apply to the use of the RPP server. A server SHOULD provide this link.
+  - `href`: (required, string) An absolute HTTPS URL of the linked document. The document MUST be accessible to the client without authentication.
 
+<!-- TODO: create IANA registry for link relation types used in RPP? -->
 The following template variables are defined for use in RPP endpoint URL templates. They are data object independent; the same variables are used regardless of which Data Object or Process Object the endpoint acts on.
 
 - `collection`: The resource collection path segment, derived per Rule 1.
 - `id`: The Unique Identifier value (as defined in [@!I-D.ietf-rpp-data-objects]) of the resource instance within `collection`.
 - `process-collection`: The process collection path segment, derived per Rule 3.
 - `process-id`: The Unique Identifier value (as defined in [@!I-D.ietf-rpp-data-objects]) of a specific process instance, scoped to its owner Data Object instance.
-
-<!-- TODO: Include appendix with example discovery response document. -->
 
 Example discovery response document:
 
@@ -324,6 +328,16 @@ Example discovery response document:
       "start_time": "2026-06-01T00:00:00Z",
       "end_time": "2026-06-01T06:00:00Z",
       "description": "Planned maintenance for server upgrades"
+    }
+  ],
+  "links": [
+    {
+      "rel": "privacy-policy",
+      "href": "https://registry.example/privacy"
+    },
+    {
+      "rel": "terms-of-service",
+      "href": "https://registry.example/terms"
     }
   ]
 
@@ -1583,6 +1597,7 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Added support for the `links` array in the discovery document (Issue #130)
 - Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
