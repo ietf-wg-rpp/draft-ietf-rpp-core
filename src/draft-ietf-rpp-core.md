@@ -266,6 +266,7 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
   - `start_time`: (required, string) The start time of the maintenance window in ISO 8601 format.
   - `end_time`: (required, string) The end time of the maintenance window in ISO 8601 format.
   - `description`: (optional, string) A human-readable description of the maintenance window.
+- `datetime`: (required, string) The current date and time of the server as an RFC 3339 [@!RFC3339] `date-time` value. The server MUST express the value in UTC, using the `Z` suffix (for example `2026-06-01T10:00:00Z`), and MUST NOT use a numeric UTC offset or any other time zone.
 
 The following template variables are defined for use in RPP endpoint URL templates. They are data object independent; the same variables are used regardless of which Data Object or Process Object the endpoint acts on.
 
@@ -325,7 +326,8 @@ Example discovery response document:
       "end_time": "2026-06-01T06:00:00Z",
       "description": "Planned maintenance for server upgrades"
     }
-  ]
+  ],
+  "datetime": "2026-05-31T12:30:00Z"
 
 }
 ```
