@@ -48,7 +48,7 @@ This document describes an Application Programming Interface (API) API based on 
 
 The RPP API is designed to be used for the provisioning and management of objects in a shared database, such as domain names, hosts, and entities.
 
-# Terminology
+# Terminology {#terminology}
 
 In this document the following terminology is used.
 
@@ -67,6 +67,8 @@ RPP client - An HTTP user agent performing an RPP request
 RPP server - An HTTP server responsible for processing requests and returning results in any supported media type.
 
 JWT - JSON Web Token as defined in [@!RFC7519].
+
+RPP media type - A media type, defined in a representation specification, that carries RPP messages in a specific data format.
 
 # Conventions Used in This Document
 
@@ -122,7 +124,7 @@ Example:
 Link: <https://rpp.example/rpp/v1/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
 ```
 
-# Cross-Origin Resource Sharing
+# Cross-Origin Resource Sharing {#cors}
 
 RPP servers MAY be accessed directly by browser-based clients. To support such clients, RPP servers SHOULD implement Cross-Origin Resource Sharing (CORS) as defined in [@!FETCH].
 
@@ -132,9 +134,9 @@ When responding to a CORS preflight (`OPTIONS`) request, the server SHOULD inclu
 - `Access-Control-Allow-Headers`: All request headers defined in this specification in addition to `Content-Type` and `Accept`.
 - `Access-Control-Expose-Headers`: All request and response headers defined in this specification.
 
-The server MUST allow the `application/rpp+json` media type to be used in the `Content-Type` and `Accept` headers of cross-origin requests.
+The server MUST allow every RPP media type it supports to be used in the `Content-Type` and `Accept` header fields of cross-origin requests.
 
-# Problem Detail responses for errors
+# Problem Detail responses for errors {#problem-detail}
 
 When an error occurs that prevents processing of the requested action, an RPP server MUST respond using a Problem Detail
 document [@!RFC9457] detailing what went wrong, or what was not acceptable to the server.
@@ -237,7 +239,7 @@ _rpp IN HTTPS 1 rpp-svr2.registry.example. alpn=h2,h3 port=8443
 
 In this example, the well-known endpoint URL is `https://rpp-svr2.registry.example:8443/.well-known/rpp.json`.
 
-# Discoverability
+# Discoverability {#discoverability}
 
 RPP server capabilities MUST be discoverable by clients. The server MUST provide a well-known endpoint at `/.well-known/rpp.json` at the root of the RPP server, this endpoint MUST return a JSON document containing the capabilities of the RPP server. The well-known endpoint MUST be accessible without authentication, and the client MUST be able to access this endpoint before authenticating with the server. The well-known endpoint MUST be accessible using the HTTP GET method and MUST return an HTTP status code 200 (OK) if the request was successful. The response message body MUST contain a JSON document describing the capabilities of the RPP server using the following fields:
 
@@ -339,11 +341,11 @@ The steps for a typical workflow of provisioning an object using RPP without kno
 3. Extract RPP URLs (optional): The client extracts the base URL and endpoint URL templates from the discovery response, and uses this information to construct the URLs for the desired operations.
 4. Perform provisioning operations: The client performs provisioning operations by sending HTTP requests to the appropriate endpoint URLs, using the HTTP method and request message body as required by the specific operation.
 
-# Versioning
+# Versioning {#versioning}
 
 RPP is designed to be extensible and backward compatible. The version of the RPP API is indicated in the URL path, for example: `https://rpp.example/rpp/v1/`. The server MUST support at least one version of the RPP API, and MUST return a 404 Not Found status code for requests using an unsupported version. The versioning scheme uses the Semantic Versioning format defined in [@!SemVer], but only the major version number is used to indicate breaking changes. The minor and patch version numbers are not used in an URL path, but can be used in the media type or in the message body to indicate non-breaking changes.
 
-The client MUST indicate the version of RPP it is using by including the RPP Media Type `application/rpp+json` in the HTTP Accept header of each request, a "version" parameter MUST also be used for the media type, for example: `application/rpp+json; version=1.0`. The server MUST include the media type used in the request in its response to the client. The server MUST reject requests using an unsupported version of RPP, and MUST return a 406 Not Acceptable status code.
+The client MUST indicate the version of RPP it is using by including an RPP media type with a `version` parameter in the `Accept` header field of each request, for example: `application/rpp+json; version=1.0`. The server MUST include the media type used in the request in its response to the client. The server MUST reject requests using an unsupported version of RPP, and MUST return a 406 Not Acceptable status code.
 
 The following additional RPP elements include versioning support:
 
@@ -383,11 +385,54 @@ Example of how the version information for a profile can be included in the RPP 
   ]
 ```
 
-# Media types
+# Media Types {#media-types}
 
-The HTTP media type headers "Accept" and "Content-Type" are used to indicate the media types that the client can process and the media type of the request and response data, respectively. The value of these headers includes the used profile name and version. The server uses the profile information to determine which features, extensions and versions to use when processing the request, and to ensure that it returns a response that is compatible with the client. The client uses the profile information in the media type to determine which features, extensions and versions to use when processing the response.
+RPP data can be transmitted using different representations and encodings, for example JSON or XML. This document does not define a representation. Each representation is defined in a separate specification that registers the RPP media type for that representation, for example `application/rpp+json`. Every RPP media type MUST define the `version`, `profile`, and `profile-version` parameters with the syntax and semantics given in (#media-type-parameter-signalling), so that version and profile signalling is identical for all representations. Each such specification also documents the security considerations of its underlying data format.
 
-Profile signalling using media types is described in section [Media type parameter signalling](#media-type-parameter-signalling).
+An RPP client and an RPP server signal the profile that applies to a message using the `Content-Type` ([@!RFC9110, section 8.3]) and `Accept` ([@!RFC9110, section 12.5.1]) header fields, as follows.
+
+Requests:
+
+- An RPP client MUST include an `Accept` header field in every request, including requests without a message body. Each media range in the `Accept` header field MUST include the `profile` and `profile-version` parameters of a profile the client is able to process in the response. The client MAY list more than one profile and MAY use quality values to indicate preference.
+- An RPP client sending a request with a message body MUST include a `Content-Type` header field. The media type MUST include the `profile` and `profile-version` parameters of the profile that the message body conforms to.
+- The profile indicated in the `Content-Type` header field MUST also be listed in the `Accept` header field of the same request.
+
+Server processing:
+
+- The RPP server MUST determine the data format and profile of a request message body only from the `Content-Type` header field and MUST NOT infer them from the message body. If the message body does not conform to the data format of the indicated media type, the server MUST reject the request with HTTP status code 400 (Bad Request).
+- The RPP server MUST process the request message body according to the profile indicated in the `Content-Type` header field. If the server does not support the indicated media type, profile, or profile version, the server MUST reject the request with HTTP status code 415 (Unsupported Media Type).
+- The RPP server MUST select the profile for the response from the `Accept` header field using proactive negotiation as described in [@!RFC9110, section 12.5.1]. If the server supports none of the listed profiles, the server MUST reject the request with HTTP status code 406 (Not Acceptable).
+- If the profile in the `Content-Type` header field is not listed in the `Accept` header field, the server MUST reject the request with HTTP status code 400 (Bad Request).
+- If a request does not include profile parameters, the server MUST apply the default profile advertised in the RPP Discovery document (see (#discoverability)).
+- In all rejection cases above, the server MUST include the `RPP-Code` header field and a Problem Detail response as described in (#problem-detail).
+
+<!-- TODO: the Discovery document does not yet define a default profile field -->
+<!-- TODO: assign RPP result codes for the 406 and 415 rejection cases -->
+
+Responses:
+
+- An RPP server MUST include a `Content-Type` header field in every successful response that contains a message body. The media type MUST include the `profile` and `profile-version` parameters of the profile the server applied, and that profile MUST be one listed in the `Accept` header field of the request.
+- Problem Detail responses use the `application/problem+json` media type [@!RFC9457] and do not carry profile parameters.
+- An RPP server MUST include `Accept` in the `Vary` header field [@!RFC9110, section 12.5.5] of every response whose content depends on the negotiated profile.
+- An RPP server SHOULD include the `X-Content-Type-Options: nosniff` header field [@!FETCH] in every response. Omitting it allows a browser-based RPP client to interpret a response as a media type other than the one indicated in `Content-Type`, which can expose registration data to scripts from another origin.
+
+Client processing:
+
+- The RPP client MUST determine the data format and profile of a response message body only from the `Content-Type` header field and MUST NOT infer them from the message body.
+- The RPP client MUST interpret a response message body according to the profile indicated in the response `Content-Type` header field.
+- If that profile or profile version was not listed in the `Accept` header field of the request, the client MUST NOT process the message body as an RPP response and MUST treat the response as a protocol error.
+
+Example of a request and the corresponding response headers, using `application/rpp+json` for illustration:
+
+```http
+GET /rpp/v1/domainNames/foo.example HTTP/1.1
+Host: rpp.example
+Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"; version="1.1"
+
+HTTP/1.1 200 OK
+Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"; version="1.1"
+Vary: Accept
+```
 
 # Profiles
 
@@ -1544,13 +1589,13 @@ Reference:     This document
 
 TODO
 
-# Security Considerations
+# Security Considerations {#security-considerations}
 
 RPP relies on the security of the underlying HTTP transport, hence the best common practices for securing HTTP described in [@!RFC9325] also apply to RPP and MUST be followed by RPP implementations.
 
 Data confidentiality and integrity MUST be enforced. Every client and server interaction MUST be encrypted using TLS version 1.3 [@!RFC8446]. Future versions of TLS MAY be used as they become available and are deemed secure.
 
-RPP does not mandate a single data format; media types for RPP messages MAY use JSON, XML, or other any other data format. Each registered RPP media type MUST document the security considerations applicable to its underlying format (e.g. [@!RFC8259] for JSON), in addition to the considerations described in this section.
+RPP does not mandate a single data format; media types for RPP messages can use JSON, XML, or any other data format. Each RPP media type specification MUST document the security considerations applicable to its underlying format (e.g. [@!RFC8259] for JSON), in addition to the considerations described in this section. An implementation that infers the data format or profile of a message from its content, rather than from the `Content-Type` header field, risks processing the message with the wrong parser or feature set; (#media-types) therefore requires both RPP clients and RPP servers to rely on the header field only.
 
 # Change History
 
