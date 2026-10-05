@@ -681,22 +681,6 @@ To retrieve all process instances across all process types for an object:
 
 A server MAY choose not to implement these endpoints, in which case it MUST return 404 Not Found or 501 Not Implemented.
 
-### Rule 7: Domain Name Variants Object Read Operation
-
-The Domain Name Variants Object defined in [@!I-D.ietf-rpp-data-objects] is exposed as a Direct Access sub-resource of a Domain Name resource at the path derived per Rule 3, and supports only the `"read"` operation defined for it.
-
-| Operation `"Identifier"` | HTTP Method | URL path |
-|---|---|---|
-| `"read"` | `"GET"` | `"/domainNames/{id}/variants"` |
-
-The `"lgr"` transient data element defined for the Read operation MUST be conveyed, when present, as an HTTP query parameter of the same name on the request URL:
-
-`"GET /domainNames/{id}/variants?lgr={idnLgrName}"`
-
-Valid IDN Label Generation Ruleset (LGR) name values can be discovered by the client, using the `idn_lgr` property of the discovery document. If the `"lgr"` query parameter is omitted, the server MUST compute variants using the default LGR applicable to for the relevant owning TLD. If the supplied value does not identify an LGR name applicable to the domain name, the server MUST reject the request with an appropriate error response.
-
-A server MAY choose not to implement IDN functionality and not provide the Domain Name Variants Object endpoint, in which case it MUST return 404 Not Found or 501 Not Implemented.
-
 ## Derived Endpoint Reference
 
 The following table lists all current RPP endpoints, each derived by applying the rules above to the relevant data object and operation identifiers. The following table is non normative.
@@ -707,7 +691,6 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Domain: create | `"POST"` | `"/domainNames"` |
 | Domain: update | `"PUT or PATCH"` | `"/domainNames/{id}"` |
 | Domain: delete | `"DELETE"` | `"/domainNames/{id}"` |
-| Domain Variants: read | `"GET"` | `"/domainNames/{id}/variants"` |
 | Contact: read | `"GET"` | `"/contacts/{id}"` |
 | Contact: create | `"POST"` | `"/contacts"` |
 | Contact: update | `"PUT or PATCH"` | `"/contacts/{id}"` |
