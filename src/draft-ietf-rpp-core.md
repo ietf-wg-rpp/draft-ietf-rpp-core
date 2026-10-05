@@ -68,6 +68,8 @@ RPP server - An HTTP server responsible for processing requests and returning re
 
 JWT - JSON Web Token as defined in [@!RFC7519].
 
+Label Generation Ruleset (LGR) - A set of rules defining the valid labels for a registry, including the permitted repertoire, contextual rules, and, where applicable, variant mappings. Also historically known as IDN tables.
+
 # Conventions Used in This Document
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT","SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [@!RFC2119].
@@ -266,10 +268,11 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
   - `start_time`: (required, string) The start time of the maintenance window in ISO 8601 format.
   - `end_time`: (required, string) The end time of the maintenance window in ISO 8601 format.
   - `description`: (optional, string) A human-readable description of the maintenance window.
-- `idn_tables`: (optional, array) Indicates whether the server supports Internationalized Domain Names (IDN). each entry in the array MUST contain the following fields:
-  - `tld`: (required, string) The top-level domain (TLD) to which the IDN table applies.
-  - `name`: (required, string) The IANA-registered name of the IDN table, as listed in the [IDN-Tables] registry.
-  - `url`: (required, string) The location (URL) for the IDN table specification in the [IDN-Tables] registry.
+- `idn_lgr`: (optional, array) a list of supported Label Generation Rulesets (LGRs), each entry in the array and MUST contain the following fields:
+  - `tld`: (required, array of strings) A list of top-level domains (TLDs) to which the LGR applies.
+  - `name`: (required, string) The IANA-registered name of the LGR, as listed in the [IDN-Tables] registry.
+  - `url`: (required, string) The location (URL) for the LGR specification in the [IDN-Tables] registry.
+  - `default`: (required, boolean) Indicates whether this LGR is the default for the specified TLDs.
 
 The following template variables are defined for use in RPP endpoint URL templates. They are data object independent; the same variables are used regardless of which Data Object or Process Object the endpoint acts on.
 
