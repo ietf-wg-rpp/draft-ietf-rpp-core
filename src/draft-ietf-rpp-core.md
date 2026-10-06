@@ -369,7 +369,7 @@ The steps for a typical workflow of provisioning an object using RPP without kno
 
 # Versioning
 
-RPP is designed to be extensible and backward compatible, the server MUST support at least one version of the RPP API, and MUST return a 404 Not Found status code for requests using an unsupported version. The versioning scheme uses the Semantic Versioning format defined in [@!SemVer], but only the major version number is used to indicate breaking changes. The minor and patch version numbers are not used in an URL path, but can be used in the media type or in the message body to indicate non-breaking changes.
+RPP operator MAY support more than one version of RPP. The versioning scheme uses the Semantic Versioning format defined in [@!SemVer], where major version number is used to indicate breaking changes. In this case of incompatible versions the operator MUST deploy them on distinct `"base_url"` and announce them in discovery document.
 
 The following RPP elements include versioning support:
 
