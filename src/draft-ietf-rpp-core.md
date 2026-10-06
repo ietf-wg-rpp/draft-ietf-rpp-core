@@ -274,8 +274,9 @@ In this example, the well-known endpoint URL is `https://rpp-svr2.registry.examp
 
 RPP server capabilities MUST be discoverable by clients. The server MUST provide a well-known endpoint at `/.well-known/rpp.json` at the root of the RPP server, this endpoint MUST return a JSON document containing the capabilities of the RPP server. The well-known endpoint MUST be accessible without authentication, and the client MUST be able to access this endpoint before authenticating with the server. The well-known endpoint MUST be accessible using the HTTP GET method and MUST return an HTTP status code 200 (OK) if the request was successful. The response message body MUST contain a JSON document describing the capabilities of the RPP server using the following fields:
 
-- `base_url`: (required, string) The base URL for the RPP API, used as a prefix for all endpoint URL templates.
-- `version`: (required, string) The version of the RPP API supported by the server, for example "1.0".
+- `versions`: (required, array of version objects) List of version objects representing the versions supported by the server.
+  - `version`: (required, string) The RPP version, for example "1.0".
+  - `base_url`: (required, string) The base URL specific for the version, used as a prefix for all endpoint URL templates.
 - `tlds`: (required, array of strings) A list of TLDs supported by the server, for example "example", "org".
 - `extensions`: (optional, array of extension objects) A list of supported extensions, each extension object MUST contain the following fields:
   - `name`: (required, string) A short name for the extension, for example "registry fee extension".
@@ -373,7 +374,6 @@ RPP operator MAY support more than one version of RPP. The versioning scheme use
 
 The following RPP elements include versioning support:
 
-- Endpoints (optional): If the RPP version is included in the URL, then `base_url` MUST include the version segment.
 - Messages: A request and response message MUST include the version of the RPP API it is compatible with.
 - Extensions: RPP extensions MUST include the version of the RPP API they are compatible with.
 - Profiles: RPP profiles MUST include the version of the RPP API they are compatible with.
