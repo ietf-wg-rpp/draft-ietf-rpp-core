@@ -1319,12 +1319,14 @@ The server MUST return "queued" messages in the order in which they were inserte
 
 ### Retrieve
 
-The messages endpoint is used for retrieving one or more messages stored on the server for the client to process. The client may use the following query parameters to control which and how many messages are returned:
+The messages endpoint is used for retrieving exactly one message stored on the server for the client to process. The client may use the following query parameter to control which messages are returned:
 
 - `type` (OPTIONAL): Restricts the response to messages of the given message type. This parameter MAY be repeated to request messages of more than one type. If omitted, messages of any type MAY be returned.
+<!-- removed bulk for now. todo: also update the data objects
 - `count` (OPTIONAL): The maximum number of messages to return in the response. The server MUST NOT return more messages than requested. The server MAY apply its own upper limit and MUST NOT be required to return more than one message even if more are available and requested. If omitted, a server-defined default applies.
+-->
 
-Every message has a `type`, identifying the kind of notification it represents (see the RPP Message Type registry). When the client uses the `type` query parameter, only "queued" messages matching one of the requested types transition to "delivered" and are included in the response. A "queued" message that does not match the requested type MUST remain in the queue with a status of "queued", even if it is ahead, per the ordering rules above, of a matching message that is returned; the `type` filter does not otherwise change the relative position of a message in the queue.
+Every message has a `type`, identifying the kind of notification it represents. When the client uses the `type` query parameter, only "queued" messages matching one of the requested types transition to "delivered" and are included in the response. A special match-all value of `*` MAY be used to request messages of any type. A "queued" message that does not match the requested type MUST remain in the queue with a status of "queued", even if it is ahead, per the ordering rules above, of a matching message that is returned; the `type` filter does not otherwise change the relative position of a message in the queue.
 
 Query parameters are used here for simplicity. A future revision of this document MAY instead, or additionally, define an equivalent request format using the HTTP QUERY method [@!RFC10008], which would allow more expressive filtering to be conveyed in a request body rather than the request URL.
 
@@ -1335,7 +1337,7 @@ Every message returned in the response transitions from "queued" to "delivered" 
 Example request for retrieving messages of type `transfer` only and returning a maximum of 10 messages:
 
 ```http
-GET messages?type=transfer&count=10 HTTP/2
+GET /messages?type=transferRequestMessage HTTP/2
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
@@ -1367,14 +1369,12 @@ A> TODO: update when covered in data objects
 - Request message: None
 - Response message: Poll Ack response
 
-The client MUST use the HTTP DELETE method to acknowledge receipt of a message from the queue. The "msgID" attribute of a received message MUST be included in the message resource URL, using the {id} path element. Acknowledgement is only valid for a message that is currently in the "delivered" status; if the message's delivery timeout has already elapsed by the time the acknowledgement is received, for example because it was redelivered to another reader, the server MUST reject the request with an appropriate error result code instead of removing the message. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST use RPP headers to return the RPP result code and the number of messages left in the queue. The server MUST NOT add content to the HTTP message body of a successful response, the server may add content to the message body of an error response.
-
-Because a single Retrieve request MAY return more than one message, the client MUST acknowledge each delivered message individually by issuing a separate Acknowledge request per message.
+The client MUST use the HTTP DELETE method to acknowledge receipt of a single message from the queue. The "id" attribute of a received message MUST be included in the message resource URL, using the {id} path element. Acknowledgement is only valid for a message that is currently in the "delivered" status; if the message's delivery timeout has already elapsed by the time the acknowledgement is received, the server MUST reject the request with an appropriate error result code instead of acknowledging and removing the message. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST NOT add content to the HTTP response message body of a successful delete request, the server may add content to the message body of an error response.
 
 Example request:
 
 ```http
-DELETE messages/12345 HTTP/2
+DELETE /messages/12345 HTTP/2
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
@@ -1398,8 +1398,6 @@ Content-Length: 145
 
 TODO
 ```
-
-**TODO** acking multiple messages in single request is not support because this makes processing more complicated when 1 or more messages cannot be deleted for some reason.
 
 # Extension Framework
 
@@ -1511,31 +1509,6 @@ Fields to be registered:
 - `version`: The version of the profile, for example "1.0".
 - `url`: The URL for the profile specification, for example "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-profile".
 - `description`: A human-readable description of the profile and its intended use.
-
-## RPP Message Type registry
-
-The IANA is requested to create a new registry for RPP message types, this registry will be used to register the types of asynchronous notification message that a server can place in a client's message queue (see (#messages)) and that a client can use as the value of the `type` query parameter when retrieving messages.
-
-```text
-Name of the registry: RPP Message Types
-Registry group: RESTful Provisioning Protocol (RPP)
-Registration procedure: Expert Review
-```
-
-Fields to be registered:
-
-- `type`: The identifier of the message type, for example "transfer-approved". This value MUST be used as the `type` property of a message of this type and MAY be used as the value of the `type` query parameter of a Retrieve request to filter for messages of this type.
-- `description`: A human-readable description of the message type and the circumstances under which a message of this type is generated.
-- `reference`: A reference to the specification that defines the message type and the structure of its associated message content.
-
-The following message types are defined by this document and MUST be registered as the initial registrations of the registry:
-
-| type | description | reference |
-|------|--------------|-----------|
-| `maintenance` | Informs the client of an upcoming planned maintenance window of the server. | This document |
-| `transfer` | Informs the client of the outcome of an object transfer request that required approval from another party. | This document |
-
-**TODO** move the RPP Message Type registry to the data objects document
 
 ## RPP Result Codes Registry
 
