@@ -88,7 +88,7 @@ Some RPP concepts are functionally similar to EPP concepts, but they are not dir
 
 # Headers
 
-HTTP headers defined for RPP MUST use the "RPP-" prefix and SHOULD be defined as Structured Header Fields [@!RFC9651].
+HTTP header fields defined by RPP MUST use the "RPP-" prefix and MUST be defined as Structured Header Fields [@!RFC9651], unless the syntax of the header value cannot be expressed as a Structured Field Item, List or Dictionary. A header field definition that is not a Structured Header Field MUST state this explicitly. RPP also uses existing standard header fields, such as `Link` [@!RFC8288], which do not use the "RPP-" prefix.
 
 ## Request Headers
 
