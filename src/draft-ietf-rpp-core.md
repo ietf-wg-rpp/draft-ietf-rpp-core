@@ -387,7 +387,7 @@ Example of how the version information for a profile can be included in the RPP 
 
 # Media Types {#media-types}
 
-RPP data can be transmitted using different representations and encodings, for example JSON or XML. This document does not define a representation. Each representation is defined in a separate specification that registers the RPP media type for that representation, for example `application/rpp+json`. Every RPP media type MUST define the `version`, `profile`, and `profile-version` parameters with the syntax and semantics given in (#media-type-parameter-signalling), so that version and profile signalling is identical for all representations. Each such specification also documents the security considerations of its underlying data format.
+RPP data can be transmitted using different representations and encodings, for example JSON or YAML. This document does not define a representation. Each representation is defined in a separate specification that registers the RPP media type for that representation, for example `application/rpp+json`. Every RPP media type MUST define the `version`, `profile`, and `profile-version` parameters with the syntax and semantics given in (#media-type-parameter-signalling), so that version and profile signalling is identical for all representations. Each such specification also documents the security considerations of its underlying data format.
 
 An RPP client and an RPP server signal the profile that applies to a message using the `Content-Type` ([@!RFC9110, section 8.3]) and `Accept` ([@!RFC9110, section 12.5.1]) header fields, as follows.
 
@@ -1595,7 +1595,7 @@ RPP relies on the security of the underlying HTTP transport, hence the best comm
 
 Data confidentiality and integrity MUST be enforced. Every client and server interaction MUST be encrypted using TLS version 1.3 [@!RFC8446]. Future versions of TLS MAY be used as they become available and are deemed secure.
 
-RPP does not mandate a single data format; media types for RPP messages can use JSON, XML, or any other data format. Each RPP media type specification MUST document the security considerations applicable to its underlying format (e.g. [@!RFC8259] for JSON), in addition to the considerations described in this section. An implementation that infers the data format or profile of a message from its content, rather than from the `Content-Type` header field, risks processing the message with the wrong parser or feature set; (#media-types) therefore requires both RPP clients and RPP servers to rely on the header field only.
+RPP does not mandate a single data format; media types for RPP messages can use JSON, YAML, or any other data format. Each RPP media type specification MUST document the security considerations applicable to its underlying format (e.g. [@!RFC8259] for JSON), in addition to the considerations described in this section. An implementation that infers the data format or profile of a message from its content, rather than from the `Content-Type` header field, risks processing the message with the wrong parser or feature set; (#media-types) therefore requires both RPP clients and RPP servers to rely on the header field only.
 
 # Change History
 
