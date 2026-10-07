@@ -104,8 +104,6 @@ Example use of the RPP-Authorization header:
 RPP-Authorization: authinfo value=TXkgU2VjcmFRva2Vu, roid=REG-X-123
  ```
 
-**TODO** Do we still need the RPP-Authorization header? i think the authinfo now should be part of the process input for object transfer?
-
 ## Response Headers
 
 - `RPP-Svtrid`: A server-assigned transaction identifier. The server MUST include this header in every response, providing a unique, server-side audit-trail reference for the processed request. Because this header maps the EPP `svTRID` element, whose syntax differs from the String type defined in [@!RFC9651, Section 3.3.3], `RPP-Svtrid` MUST NOT be defined as a Structured Header Field.
