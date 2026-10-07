@@ -1280,35 +1280,36 @@ Notwithstanding the guarantees described in this section, the server MAY delete 
 
 The server MAY include the `RPP-Queue-Size` header (see (#response-headers)) in any RPP response, not only in responses to Messages requests, to inform the client of the current number of unacknowledged messages in its queue without requiring a dedicated Retrieve request.
 
-Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "deleted". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing MUST be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
+Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "removed". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing MUST be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
 
-The following diagram illustrates the message state transitions described above, including the server-initiated deletion of a message, which MAY occur from either state:
+The following diagram illustrates the message state transitions described above, including the deletion of a message by the client or server which is permitted while the message is in either the "queued" or the "delivered" state:
 
 ```
-                               Insert
+                               Server
+                               Create
                                  |
                                  v
                          +---------------+
                  +------>|               |
-                 |       |    queued     |
-                 |       |               |-------+
-                 |       +-------+-------+       |
-                 |               |               |
-        Ack      |      Retrieve |               |  
-        Timeout  |               |               |
-                 |               v               |
-                 |       +---------------+       | Server Delete
-                 |       |               |       |
-                 +-------+   delivered   +-------+
-                         |               |       |
-                         +-------+-------+       |
-                                 |               |
-                      Ack/Delete |               |
-                                 v               |
-                         +---------------+       | 
-                         |               |       |
-                         |    removed    |<------+
-                         |               |
+                 |       |    queued     |-------------------------+
+                 |       |               |-------+                 |
+                 |       +-------+-------+       |                 |  Ack/Delete
+                 |               |               |                 | 
+        Ack      |      Retrieve |               |                 |
+        Timeout  |               |               |                 |
+                 |               v               |                 |
+                 |       +---------------+       |                 |
+                 |       |               |       |                 |
+                 +-------+   delivered   +-------+                 |
+                         |               |       |                 |
+                         +-------+-------+       |                 |
+                                 |               |                 |
+                      Ack/Delete |               | Server Delete   |
+                                 v               | (any state)     |
+                         +---------------+       |                 |
+                         |               |       |                 |
+                         |    removed    |<------+                 |
+                         |               |<------------------------+
                          +---------------+
 ```
 Figure: Message Data Object lifecycle {#fig-message-lifecycle}
@@ -1336,7 +1337,8 @@ In the EPP Compatibility Profile, the following limitations apply:
 * The RPP server always returns the oldest message in the EPP poll queue.
 * Multiple sequential requests from the same client return the same message until the message is acknowledged.
 * The `type` query parameter is ignored. The server always returns the oldest message in the EPP poll queue, regardless of its type.
-* When multiple readers are used, each reader independently receives the oldest message in the EPP poll queue. Consequently, multiple readers may receive the same message until that message is acknowledged.
+* When multiple readers are used, each reader independently receives the oldest message in the EPP poll queue. Consequently, multiple readers may receive the same message,possibly multiple times, until that message is acknowledged.
+* The messages remain in the "queued" state.
 
 
 Example request for retrieving messages of type `transfer` only and returning a maximum of 10 messages:
@@ -1368,7 +1370,7 @@ TODO
 
 ### Acknowledge
 
-The client MUST use the HTTP DELETE method to acknowledge receipt of a single message from the queue. The "id" attribute of a received message MUST be included in the message resource URL, using the {id} path element. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST NOT add content to the HTTP response message body of a successful delete request, the server may add content to the message body of an error response.
+The client MUST use the HTTP DELETE method to acknowledge receipt of a single message from the queue. The "id" attribute of a received message MUST be included in the message resource URL, using the {id} path element. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST NOT add content to the HTTP response message body of a successful delete request. When the delete request fails for any reason, the server MUST include a Problem detail object in the message body of the error response.
 
 Example request:
 
