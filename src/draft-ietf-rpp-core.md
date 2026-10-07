@@ -1280,7 +1280,7 @@ Notwithstanding the guarantees described in this section, the server MAY delete 
 
 The server MAY include the `RPP-Queue-Size` header (see (#response-headers)) in any RPP response, not only in responses to Messages requests, to inform the client of the current number of unacknowledged messages in its queue without requiring a dedicated Retrieve request.
 
-Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "deleted". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing SHOULD be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
+Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "deleted". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing MUST be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
 
 The following diagram illustrates the message state transitions described above, including the server-initiated deletion of a message, which MAY occur from either state:
 
@@ -1322,17 +1322,22 @@ The server MUST return "queued" messages in the order in which they were inserte
 The messages endpoint is used for retrieving exactly one message stored on the server for the client to process. The client may use the following query parameter to control which messages are returned:
 
 - `type` (OPTIONAL): Restricts the response to messages of the given message type. This parameter MAY be repeated to request messages of more than one type. If omitted, messages of any type MAY be returned.
-<!-- removed bulk for now. todo: also update the data objects
-- `count` (OPTIONAL): The maximum number of messages to return in the response. The server MUST NOT return more messages than requested. The server MAY apply its own upper limit and MUST NOT be required to return more than one message even if more are available and requested. If omitted, a server-defined default applies.
--->
 
-Every message has a `type`, identifying the kind of notification it represents. When the client uses the `type` query parameter, only "queued" messages matching one of the requested types transition to "delivered" and are included in the response. A special match-all value of `*` MAY be used to request messages of any type. A "queued" message that does not match the requested type MUST remain in the queue with a status of "queued", even if it is ahead, per the ordering rules above, of a matching message that is returned; the `type` filter does not otherwise change the relative position of a message in the queue.
+Every message has a `type`, identifying the kind of notification it represents. When the client uses the `type` query parameter, only "queued" messages matching one of the requested types transition to "delivered" and are included in the response. A "queued" message that does not match the requested type MUST remain in the queue with a status of "queued", even if it is ahead, per the ordering rules above, of a matching message that is returned; the `type` filter does not otherwise change the relative position of a message in the queue.
 
 Query parameters are used here for simplicity. A future revision of this document MAY instead, or additionally, define an equivalent request format using the HTTP QUERY method [@!RFC10008], which would allow more expressive filtering to be conveyed in a request body rather than the request URL.
 
 The server SHOULD return the human-readable content of a message in the language requested by the client's `Accept-Language` header. Not every message type may support every language; if the requested language is not available for a given message, the server MUST fall back to returning that message in its own default language.
 
 Every message returned in the response transitions from "queued" to "delivered" as described above.
+
+In the EPP Compatibility Profile, the following limitations apply:
+
+* The RPP server always returns the oldest message in the EPP poll queue.
+* Multiple sequential requests from the same client return the same message until the message is acknowledged.
+* The `type` query parameter is ignored. The server always returns the oldest message in the EPP poll queue, regardless of its type.
+* When multiple readers are used, each reader independently receives the oldest message in the EPP poll queue. Consequently, multiple readers may receive the same message until that message is acknowledged.
+
 
 Example request for retrieving messages of type `transfer` only and returning a maximum of 10 messages:
 
@@ -1363,13 +1368,7 @@ TODO
 
 ### Acknowledge
 
-A> TODO: update when covered in data objects
-
-- Request: DELETE /messages/{id}
-- Request message: None
-- Response message: Poll Ack response
-
-The client MUST use the HTTP DELETE method to acknowledge receipt of a single message from the queue. The "id" attribute of a received message MUST be included in the message resource URL, using the {id} path element. Acknowledgement is only valid for a message that is currently in the "delivered" status; if the message's delivery timeout has already elapsed by the time the acknowledgement is received, the server MUST reject the request with an appropriate error result code instead of acknowledging and removing the message. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST NOT add content to the HTTP response message body of a successful delete request, the server may add content to the message body of an error response.
+The client MUST use the HTTP DELETE method to acknowledge receipt of a single message from the queue. The "id" attribute of a received message MUST be included in the message resource URL, using the {id} path element. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST NOT add content to the HTTP response message body of a successful delete request, the server may add content to the message body of an error response.
 
 Example request:
 
