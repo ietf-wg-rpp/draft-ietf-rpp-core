@@ -274,6 +274,7 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
 - `endpoints`: (required, array of endpoint objects) A list of available endpoints, each endpoint object MUST contain the following fields:
   - `name`: (required, string) A short name for the endpoint, for example "availability", "info", "poll", "create", "delete", "renewal" or "transfer".
   - `url_template`: (required, string) The URI template for the endpoint, using the syntax defined in [@!RFC6570].
+- `datetime`: (required, string) The current date and time of the server as an RFC 3339 [@!RFC3339] `date-time` value. The server MUST express the value in UTC, using the `Z` suffix (for example `2026-06-01T10:00:00Z`), and MUST NOT use a numeric UTC offset or any other time zone.
 - `links`: (optional, array of link objects) A list of links to documents related to the use of RPP with this server, such as policies and terms. Each link object MUST contain the following fields:
   - `rel`: (required, string) The relation type of the link, this document uses the following values:
     - `privacy-policy`: The privacy policy of the server operator, describing how personal data is collected, used, retained and disclosed. A server SHOULD provide this link.
@@ -289,6 +290,7 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
   - `text`: (required, string) A human-readable description of the notice.
 
 <!-- TODO: create IANA registry for link relation types used in RPP? -->
+
 The following template variables are defined for use in RPP endpoint URL templates. They are data object independent; the same variables are used regardless of which Data Object or Process Object the endpoint acts on.
 
 - `collection`: The resource collection path segment, derived per Rule 1.
@@ -361,7 +363,8 @@ Example discovery response document:
       "rel": "terms-of-service",
       "href": "https://registry.example/terms"
     }
-  ]
+  ],
+  "datetime": "2026-05-31T12:30:00Z"
 
 }
 ```
