@@ -44,7 +44,7 @@ This document describes the endpoints for the RESTful Provisioning Protocol, use
 
 # Introduction
 
-This document describes an Application Programming Interface (API) API based on the HTTP protocol [@!RFC2616] and the principles of [@!REST]. Conforming to the REST constraints is generally referred to as being "RESTful". Hence the API is dubbed: "'RESTful Provisioning Protocol" or "RPP" for short.
+This document describes an Application Programming Interface (API) based on HTTP as defined in [@!HTTP] and the principles of [@!REST]. Conforming to the REST constraints is generally referred to as being "RESTful". Hence the API is dubbed: "RESTful Provisioning Protocol" or "RPP" for short.
 
 The RPP API is designed to be used for the provisioning and management of objects in a shared database, such as domain names, hosts, and entities.
 
@@ -100,7 +100,6 @@ HTTP header fields defined by RPP MUST use the "RPP-" prefix and MUST be defined
 - `RPP-Authorization`: The client MAY use this header to send authorization information in the format `<method> <authorization information>`, similar to the HTTP `Authorization` header, defined in [@!RFC9110, Section 11.6.2]. The `RPP-Authorization` header is specific for each User Agent and MUST NOT be cached, as recommended by [@!RFC9110, Section 16.4.2]. The `<method>` indicates the type of authorization being used. For EPP object authorization information, for example the authorization information used for domain names described in [@!RFC5731, Section 2.6], a new `authinfo` method is defined. The `<authorization information>` defines the following comma separated fields:
  - value (REQUIRED): Base64 encoded EPP password-based authorization information. The content of the `value` field is case sensitive.
  - roid (OPTIONAL): A Roid as defined in [@!RFC5731], [@!RFC5733], and [@!RFC5730]. The roid is used to identify the object for which the authorization information is provided. If the roid is not provided, then the server MUST assume that the authorization information is linked to the object identified by the URL of the request.
-
 
 Example use of the RPP-Authorization header:
 
@@ -648,7 +647,7 @@ The uniform interface operations defined in the RPP data object specification ma
 
 <!-- commented out as it does not fit this section at all.
 
-A RPP client MAY use the HTTP GET method for informational requests only when no request data has to be added to the HTTP message body. Sending content using an HTTP GET request is discouraged in [@!RFC9110], there exist no generally defined semantics for content received in a GET request. When an RPP operation requires additional input data, the client MUST use the HTTP POST, PUT or PATCH method and include any required data in the HTTP message body and HTTP headers.
+A RPP client MAY use the HTTP GET method for informational requests only when no request data has to be added to the HTTP message body. Sending content using an HTTP GET request is discouraged in [@!HTTP], there exist no generally defined semantics for content received in a GET request. When an RPP operation requires additional input data, the client MUST use the HTTP POST, PUT or PATCH method and include any required data in the HTTP message body and HTTP headers.
 
 A> TODO: the paragraph above looks like misplaced. Do we need it at all? The protocol defines if anything MAY be posted to the message body, so maybe this is a design consideration which does not belong to the final document?
 -->
@@ -1711,6 +1710,7 @@ RPP does not mandate a single data format; media types for RPP messages can use 
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Updated the reference for the HTTP specification (Issue #90)
 - Removed hardcoded version segment from examples (Issue #97)
 - Added "profile" and "version" parameters to the RPP media type (Issue #101)
 - Added support for the `links` array in the discovery document (Issue #130)
@@ -1781,6 +1781,19 @@ The authors would like to thank the following people for their helpful text cont
 
 
 {backmatter}
+
+<reference anchor="HTTP" target="https://www.rfc-editor.org/info/rfc9110">
+	<front>
+		<title>HTTP Semantics</title>
+		<author fullname="R. Fielding" initials="R." role="editor" surname="Fielding"/>
+		<author fullname="M. Nottingham" initials="M." role="editor" surname="Nottingham"/>
+		<author fullname="J. Reschke" initials="J." role="editor" surname="Reschke"/>
+		<date month="June" year="2022"/>
+	</front>
+	<seriesInfo name="STD" value="97"/>
+	<seriesInfo name="RFC" value="9110"/>
+	<seriesInfo name="DOI" value="10.17487/RFC9110"/>
+</reference>
 
 <reference anchor="REST" target="http://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm">
   <front>
