@@ -68,6 +68,8 @@ RPP server - An HTTP server responsible for processing requests and returning re
 
 JWT - JSON Web Token as defined in [@!RFC7519].
 
+Label Generation Ruleset (LGR) - A set of rules defining the valid labels for a registry, including the permitted repertoire, contextual rules, and, where applicable, variant mappings. Also historically known as IDN tables.
+
 # Conventions Used in This Document
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT","SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [@!RFC2119].
@@ -271,6 +273,11 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
 - `endpoints`: (required, array of endpoint objects) A list of available endpoints, each endpoint object MUST contain the following fields:
   - `name`: (required, string) A short name for the endpoint, for example "availability", "info", "poll", "create", "delete", "renewal" or "transfer".
   - `url_template`: (required, string) The URI template for the endpoint, using the syntax defined in [@!RFC6570].
+- `idn_lgr`: (optional, array) a list of supported Label Generation Rulesets (LGRs), each entry in the array and MUST contain the following fields:
+  - `tld`: (required, array of strings) A list of top-level domains (TLDs) to which the LGR applies.
+  - `name`: (required, string) The IANA-registered name of the LGR, as listed in the [IDN-Tables] registry.
+  - `url`: (required, string) The location (URL) for the LGR specification in the [IDN-Tables] registry.
+  - `default`: (required, boolean) Indicates whether this LGR is the default for the specified TLDs.
 - `notices`: (optional, array) An array containing notices from the server operator, with the following fields:
   - `pub_time`: (required, string) The publication time of the notice in ISO 8601 format.
   - `text`: (required, string) A human-readable description of the notice.
@@ -331,6 +338,13 @@ Example discovery response document:
     {
       "pub_time": "2026-06-01T00:00:00Z",
       "text": "This server will undergo planned maintenance on the first Monday of each month."
+    }
+  ],
+  "idn_lgr": [
+    {
+      "name": "example-latn-1.0",
+      "tld": "example",
+      "url": "https://www.iana.org/domains/idn-tables/tables/example_latn_1.0.txt"
     }
   ]
 
@@ -726,6 +740,20 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Processes: list | `"GET"` | `"/{collection}/{id}/processes"` |
 
 A> TODO: add availability and message queue 
+
+## Internationalized Domain Names (IDN)
+
+When an Internationalized Domain Name (IDN) is used to identify a Domain Name Data Object or Host Data Object instance in a URL, in particular as the `{id}` path segment described in Rule 2, the ASCII Compatible Encoding (ACE) A-label form of the name, as defined in [@!RFC5890], MUST be used. This requirement ensures that the resulting URL remains a valid URI as defined in [@!RFC3986], since the A-label form is composed exclusively of ASCII characters and therefore requires no percent-encoding or additional Unicode normalization when used as a URL path segment.
+
+The Unicode (U-label) form of an internationalized name MUST NOT be used to address a resource in a URL. A client MAY submit or receive the U-label form as a separate data element as part of a resource representation, but this Unicode representation of the name as a whole MUST NOT be used when constructing or matching a URL.
+
+This is consistent with the use of IDN in the DNS, the actual DNS name is naturally represented using its A-label form. This also avoids ambiguity: the URL identifies the DNS domain name rather than a particular Unicode representation of it.
+
+For example, to address the domain name whose U-label is `"bücher.example"`, a client MUST use the corresponding A-label, `"xn--bcher-kva.example"`, when constructing the `{id}` path segment:
+
+```
+GET /domainNames/xn--bcher-kva.example
+```
 
 ## Availability for Creation
 
@@ -1651,6 +1679,7 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Added support for Internationalized Domain Names (IDN) (Issue #126)
 - Added text to the "messages" section, describing service messages (Issue #116)
 - Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
@@ -1743,5 +1772,14 @@ The authors would like to thank the following people for their helpful text cont
       <organization>WHATWG</organization>
     </author>
     <date/>
+  </front>
+</reference>
+
+<reference anchor="IDN-Tables" target="https://www.iana.org/assignments/idn-tables">
+  <front>
+    <title>Repository of IDN Practices</title>
+    <author>
+      <organization>Internet Assigned Numbers Authority (IANA)</organization>
+    </author>
   </front>
 </reference>
