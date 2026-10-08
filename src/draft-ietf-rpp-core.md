@@ -76,60 +76,61 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT","SHOULD", "SH
 
 All example requests assume an RPP server is available on the standard HTTPS port on host `rpp.example`. An authorization token has been provided by an out of band process and MUST be used by the client to authenticate each request.
 
+# Notational Conventions
+
+This document uses the following terminology from [@!RFC9651, Section 3] to specify syntax and parsing: Item, String, and Integer.
+
 # Mapping to EPP
 
 RPP is designed as an independent protocol and does not require an EPP server. RPP concepts such as transaction identifiers, result codes, and object attributes are defined in their own right and serve RPP purposes regardless of whether an EPP backend is present, however compatibility with EPP is to the great extent preserved. Implementers with no prior EPP experience are be able to implement RPP based solely on this specification.
 
 Some RPP concepts are functionally similar to EPP concepts, but they are not directly derived from EPP and MAY have different semantics. To avoid confusion, RPP elements SHOULD NOT use an "EPP" prefix or suffix. For implementers who operate an EPP backend and need to bridge RPP requests to EPP commands, a separate RPP-to-EPP mapping document [TODO REF] is provided. Any extensions to RPP are not covered by that mapping document; the mapping of extension elements MUST be defined in the respective extension specification.
 
-# Request Headers
+# Headers
 
-A RPP request does not always require a request message body. The information conveyed by the HTTP method, URL, and request headers may be sufficient for the server to be able to successfully processes a request. However, the client MUST include a request message body when the server requires additional attributes to be present in the request message. The RPP HTTP headers listed below use the "RPP-" prefix, following the recommendations in [@!RFC6648].
+HTTP header fields defined by RPP MUST use the "RPP-" prefix and MUST be defined as Structured Header Fields [@!RFC9651], unless the syntax of the header value cannot be expressed as a Structured Field Item, List or Dictionary. A header field definition that is not a Structured Header Field MUST state this explicitly. RPP also uses existing standard header fields, such as `Link` [@!RFC8288], which do not use the "RPP-" prefix.
 
-- `RPP-Cltrid`:  A client-assigned transaction identifier. The client MUST include this header in every request. It serves two independent purposes: as an idempotency key, allowing the server to detect and safely handle duplicate requests, and as an audit-trail identifier, enabling end-to-end correlation of a request across client and server logs. The value MUST be unique per request.
-- `RPP-Authorization`: The client MAY use this header to send authorization information in the format `<method> <authorization information>`, similar to the HTTP `Authorization` header, defined in [RFC9110, Section 11.6.2]. The `<method>` indicates the type of authorization being used. For EPP object authorization information, for example the authorization information used for domain names described in [RFC5731, Section 2.3], a new `authinfo` method is defined and MUST be used. The `<authorization information>` defines the following comma separated fields:
- - value (REQUIRED): Base64 encoded EPP password-based authorization information. Base64 encoding is used to prevent problems when special characters are present that may conflict with the format rules for the Authorization header.
+## Request Headers
+
+- `RPP-Cltrid`:  A client-assigned transaction identifier. The client MUST include this header in every request. It serves two independent purposes: as an idempotency key, allowing the server to detect and safely handle duplicate requests, and as an audit-trail identifier, enabling end-to-end correlation of a request across client and server logs. The value MUST be unique per request. `RPP-Cltrid` is an Item Structured Header Field [@!RFC9651]. Its value MUST be an String (Section 3.3.3 of [@!RFC9651])
+- `RPP-Authorization`: The client MAY use this header to send authorization information in the format `<method> <authorization information>`, similar to the HTTP `Authorization` header, defined in [@!RFC9110, Section 11.6.2]. The `RPP-Authorization` header is specific for each User Agent and MUST NOT be cached, as recommended by [@!RFC9110, Section 16.4.2]. The `<method>` indicates the type of authorization being used. For EPP object authorization information, for example the authorization information used for domain names described in [@!RFC5731, Section 2.6], a new `authinfo` method is defined. The `<authorization information>` defines the following comma separated fields:
+ - value (REQUIRED): Base64 encoded EPP password-based authorization information. The content of the `value` field is case sensitive.
  - roid (OPTIONAL): A Roid as defined in [@!RFC5731], [@!RFC5733], and [@!RFC5730]. The roid is used to identify the object for which the authorization information is provided. If the roid is not provided, then the server MUST assume that the authorization information is linked to the object identified by the URL of the request.
 
-Use of the RPP-Authorization header:
+
+Example use of the RPP-Authorization header:
 
  ```http
 RPP-Authorization: authinfo value=TXkgU2VjcmFRva2Vu, roid=REG-X-123
  ```
 
-The value of the `RPP-Authorization` header is case sensitive. The server MUST reject requests where the case of the header value does not match the expected case.
-The `RPP-Authorization` header is specific to the user agent and MUST NOT be cached, as recommended by [@!RFC9110, Section 16.4.2], the server MUST use the correct HTTP cache directives to prevent caching of the `RPP-Authorization` header.
+## Response Headers
 
-- `RPP-Profile`: The client MUST use this header to indicate the profiles is used in the request.
+- `RPP-Svtrid`: A server-assigned transaction identifier. The server MUST include this header in every response, providing a unique, server-side audit-trail reference for the processed request. Because this header maps the EPP `svTRID` element, whose syntax differs from the String type defined in [@!RFC9651, Section 3.3.3], `RPP-Svtrid` MUST NOT be defined as a Structured Header Field.
 
-<!--TODO: need to make a choice, do we use the RPP-Profile or do we use media-type params for signalling profile used  -->
+Example use of the RPP-Svtrid header:
 
-# Response Headers {#response-headers}
+ ```http
+RPP-Svtrid: 12345-XYZ
+ ```
 
-The server HTTP response contains a status code, headers, and MAY contain an RPP response message in the message body. HTTP headers are used to transmit additional data to the client and MAY be used to send RPP process related data to the client. HTTP headers used by RPP MUST use the "RPP-" prefix, the following response headers have been defined for RPP.
+- `RPP-Cltrid`: The server MUST echo the client transaction identifier from the request back to the client in this response header. This allows the client to correlate responses to their originating requests. Because this header maps the EPP `clTRID` element, whose syntax differs from the String type defined in [@!RFC9651, Section 3.3.3], `RPP-Cltrid` MUST NOT be defined as a Structured Header Field.
 
-- `RPP-Svtrid`:  A server-assigned transaction identifier. The server MUST include this header in every response. It provides a unique, server-side audit-trail reference for the processed request.
+Example use of the RPP-Cltrid header:
 
-- `RPP-Cltrid`: The server MUST echo the client transaction identifier from the request back to the client in this response header. This allows the client to correlate responses to their originating requests.
+ ```http
+RPP-Cltrid: 12345-ABC
+ ```
   
-- `RPP-Code`: This header is the equivalent of the EPP result code defined in [@!RFC5730] and MUST be used accordingly. This header MUST be added to all responses and MAY be used by the client for easy access to the result code, without having to parse the HTTP response message body.
+- `RPP-Code`: This header is the equivalent of the EPP result code defined in [@!RFC5730] and MUST be used accordingly. This header MUST be added to all responses and MAY be used by the client for easy access to the result code, without having to parse the HTTP response message body. `RPP-Code` is an Item Structured Header Field [@!RFC9651]. Its value MUST be an String (Section 3.3.3 of [@!RFC9651])
 
-For the EPP codes related to session management (1500, 2500, 2501 and 2502) there are no corresponding RPP codes.
+- `RPP-Queue-Size`: Return the number of unacknowledged messages in the client message queue. The server MAY include this header in all RPP responses. `RPP-Queue-Size` is an Item Structured Header Field [@!RFC9651]. Its value MUST be an Integer (Section 3.3.1 of [@!RFC9651]) and MUST be greater than or equal to 0.
 
-In order for RPP to be backwards compatible with EPP, RPP will use 5-digit coding of the result codes, where first digit will denote origin specification of the result codes.
+- `Link`: When a uniform interface operation implicitly creates a process object as a side effect, the server MUST communicate the URL of the created process resource using the `Link` response header [@!RFC8288] with the `rpp-process` relation type. If multiple process objects are created, the server MUST include one `Link` header field per created process resource, each with `rel="rpp-process"`.
 
-For [@!RFC5730] Result Codes the leading digit MUST be "0".
-For RPP result codes the leading digit MUST be "1". For avoidance of confusion RPP MUST not define new codes with the same semantic meaning as already defined in EPP.
+Example use of the `Link` response header to indicate the URL of a process object created as a side effect of a domain create request:
 
-For RPP codes the remaining 4 digits MUST keep the same semantics as [@!RFC5730] Result Codes.
-
-- `RPP-Queue-Size`: The number of messages with the status "queued" that are currently in the message queue. The server MAY include this header in all RPP responses.
-
-When a uniform interface operation implicitly creates a process object as a side effect, the server MUST communicate the URL of the created process resource using the `Link` response header [@!RFC8288] with the `rpp-process` relation type. If multiple process objects are created, the server MUST include one `Link` header field per created process resource, each with `rel="rpp-process"`.
-
-Example:
-
-```
+```http-message
 Link: <https://rpp.example/rpp/v1/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
 ```
 
@@ -490,32 +491,7 @@ The example profile definition shown in (#profile-example) uses the "base-profil
 
 ## Signalling
 
-This document descibes two distinct methods for signalling the profile used in a RPP request or response, the first method uses a dedicated HTTP header, the second method uses media type parameters. The two methods MUST not be used simultaneously in a single request or response. If both methods are used in a single request or response, then the server MUST return an HTTP error response and include a Problem Detail response in the message body.
-
-<!-- TODO: We need to make a choice here, do we want to use the RPP-Profile header or do we want to use media type parameters for signalling the profile used in the request? 
- having both is probably not a good idea, having 2 methods for doing the same thing -->
-
-### Header signalling
-
-The client MUST use the `RPP-Profile` header to indicate the name of the profile that is to be used for the request. The value of this header MUST be of the type `parameter` described in [@!RFC8941], the first parameter MUST uniquely identify a profile, for example `urn:ietf:params:rpp:profile:example-profile`, followed by the version parameter. If the server does not support the indicated profile or version, then the server MUST return an HTTP error response and include a Problem Detail response in the message body.
-
-The ABNF for Profile header value is as follows:
-
-```abnf
-profile-header = "profile" "=" profile-name ";" OWS "version" "=" version
-profile-name   = token
-version        = 1*DIGIT "." 1*DIGIT
-```
-
-Example:
-
-```http
-RPP-Profile: profile=urn:ietf:params:rpp:profile:example-profile;version=1.0
-```
-
-### Media type parameter signalling
-
-When using Media type parameter signalling, the client and the server MUST use media type parameters in the Accept and Content-Type headers to indicate the name and version of the profile used in the request. The media type parameters MUST be defined as follows:
+The client and the server both use media type parameters in the Accept and Content-Type headers to indicate the name and version of the profile used in the request. The media type parameters MUST be defined as follows:
 
 - `profile`: The value of this parameter MUST uniquely identify the profile, for example `urn:ietf:params:rpp:profile:example-profile`.
 - `profile-version`: The value of this parameter MUST indicate the version of the profile used in the request.
@@ -1679,6 +1655,7 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Updated "Request Headers" and "Response Headers" section to use Structured Headers [@!RFC8941] (Issue #95)
 - Added support for Internationalized Domain Names (IDN) (Issue #126)
 - Added text to the "messages" section, describing service messages (Issue #116)
 - Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
