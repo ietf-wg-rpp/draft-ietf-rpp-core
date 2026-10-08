@@ -68,13 +68,13 @@ RPP server - An HTTP server responsible for processing requests and returning re
 
 JWT - JSON Web Token as defined in [@!RFC7519].
 
+Label Generation Ruleset (LGR) - A set of rules defining the valid labels for a registry, including the permitted repertoire, contextual rules, and, where applicable, variant mappings. Also historically known as IDN tables.
+
 # Conventions Used in This Document
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT","SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [@!RFC2119].
 
-In examples, indentation and white space in examples are provided only to illustrate element relationships and are not REQUIRED features of the protocol.
-
-All example requests assume a RPP server using HTTP version 2 is listening on the standard HTTPS port on host rpp.example. An authorization token has been provided by an out of band process and MUST be used by the client to authenticate each request.
+All example requests assume an RPP server is available on the standard HTTPS port on host `rpp.example`. An authorization token has been provided by an out of band process and MUST be used by the client to authenticate each request.
 
 # Notational Conventions
 
@@ -134,37 +134,17 @@ Example use of the `Link` response header to indicate the URL of a process objec
 Link: <https://rpp.example/rpp/v1/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
 ```
 
-# Error handling and relation between HTTP status codes and RPP codes
+# Cross-Origin Resource Sharing
 
-RPP leverages standard HTTP status codes to reflect the outcome of RPP operations. The RPP result codes are based on the EPP result codes defined in [@!RFC5730]. This allows clients to handle responses generically using common HTTP patterns. While the HTTP status code provides the primary, high-level outcome, the specific RPP result code MUST still be provided in the `RPP-Code` HTTP header for detailed diagnostics.
+RPP servers MAY be accessed directly by browser-based clients. To support such clients, RPP servers SHOULD implement Cross-Origin Resource Sharing (CORS) as defined in [@!FETCH].
 
-The mapping strategy is to use the most specific HTTP code that accurately reflects the operation's result.
+When responding to a CORS preflight (`OPTIONS`) request, the server SHOULD include the following in its response:
 
-For common and well-defined outcomes, a specific HTTP status code is used. For example, an attempt to access a non-existent resource (EPP code 2302) MUST return 404 Not Found, and an attempt to create a resource that already exists (EPP code 2303) MUST return 409 Conflict. This allows a client to handle these common situations based on the HTTP code alone.
+- `Access-Control-Allow-Methods`: The HTTP methods supported for the requested endpoint.
+- `Access-Control-Allow-Headers`: All request headers defined in this specification in addition to `Content-Type` and `Accept`.
+- `Access-Control-Expose-Headers`: All request and response headers defined in this specification.
 
-For all other failures, a generic HTTP status code is used. Client-side errors (e.g., syntax, parameter, or policy violations) MUST return 400 Bad Request. Server-side failures MUST return 500 Internal Server Error.
-
-The server MUST return HTTP status codes, following the mapping rules in Table 1.
-
-Table 1: RPP result code and HTTP Status-Code mapping.
-
-| HTTP Status-Code | Description | Corresponding RPP result code(s) |
-| ---------------- | ----------- | -------------------------------- |
-| Success (2xx)    |             |                                  |
-| 200 OK | The request was successful (e.g., for GET or UPDATE). | 01000 (in all cases not specified otherwise), 01300, 01301 |
-| 201 Created | The resource was created successfully. | 01000 for resource creating requests (POST/PUT) |
-| 202 Accepted | The request was accepted for asynchronous processing. | 01001 |
-| 204 No Content | The resource was deleted successfully. | 01000 for DELETE |
-| Client Errors (4xx) |   |   |
-| 400 Bad Request | Generic client-side error (syntax, parameters, policy). | 02000-02005, 02104-02106, 02300-02301, 02304-02308 |
-| 403 Forbidden | Authentication or authorization failed. | 02200-02202 |
-| 404 Not Found | The requested resource does not exist. | 02303 |
-| 409 Conflict | The resource could not be created because it already exists. | 02302 |
-| Server Errors (5xx) |   |   |
-| 500 Internal Server Error | Generic server-side error; command failed. | 02400 |
-| 501 Not Implemented | The requested command or feature is not implemented. | 02100-02103 |
-
-Some EPP result codes, like 01500, 02500, 02501 and 02502 are related to session management and therefore not applicable to a sessionless RPP protocol.
+The server MUST allow the `application/rpp+json` media type to be used in the `Content-Type` and `Accept` headers of cross-origin requests.
 
 # Problem Detail responses for errors
 
@@ -275,6 +255,9 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
 
 - `base_url`: (required, string) The base URL for the RPP API, this is the URL that MUST be used as the base for all endpoint URL templates.
 - `version`: (required, string) The version of the RPP API supported by the server, for example "1.0".
+- `environment`: (required, object) An object containing information about the RPP server, with the following fields:
+  - `name`: (required, string) The name of the RPP server, for example "rpp.example".
+  - `status`: (required, string) The operational status of the RPP server, for example "production", "test", or "development".
 - `tlds`: (required, array of strings) A list of TLDs supported by the server, for example "example", "org".
 - `extensions`: (optional, array of extension objects) A list of supported extensions, each extension object MUST contain the following fields:
   - `name`: (required, string) A short name for the extension, for example "registry fee extension".
@@ -291,10 +274,14 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
 - `endpoints`: (required, array of endpoint objects) A list of available endpoints, each endpoint object MUST contain the following fields:
   - `name`: (required, string) A short name for the endpoint, for example "availability", "info", "poll", "create", "delete", "renewal" or "transfer".
   - `url_template`: (required, string) The URI template for the endpoint, using the syntax defined in [@!RFC6570].
-- `maintenance`: (optional, array) An array containing information about upcoming planned maintenance windows of the server, with the following fields:
-  - `start_time`: (required, string) The start time of the maintenance window in ISO 8601 format.
-  - `end_time`: (required, string) The end time of the maintenance window in ISO 8601 format.
-  - `description`: (optional, string) A human-readable description of the maintenance window.
+- `idn_lgr`: (optional, array) a list of supported Label Generation Rulesets (LGRs), each entry in the array and MUST contain the following fields:
+  - `tld`: (required, array of strings) A list of top-level domains (TLDs) to which the LGR applies.
+  - `name`: (required, string) The IANA-registered name of the LGR, as listed in the [IDN-Tables] registry.
+  - `url`: (required, string) The location (URL) for the LGR specification in the [IDN-Tables] registry.
+  - `default`: (required, boolean) Indicates whether this LGR is the default for the specified TLDs.
+- `notices`: (optional, array) An array containing notices from the server operator, with the following fields:
+  - `pub_time`: (required, string) The publication time of the notice in ISO 8601 format.
+  - `text`: (required, string) A human-readable description of the notice.
 
 The following template variables are defined for use in RPP endpoint URL templates. They are data object independent; the same variables are used regardless of which Data Object or Process Object the endpoint acts on.
 
@@ -317,7 +304,7 @@ Example discovery response document:
       "name": "RPP example extension",
       "id": "urn:ietf:params:rpp:extension:example-extension",
       "version": "1.0",
-      "url": "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension-1.0"
+      "url": "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension"
     }
   ],
   "profiles": [
@@ -325,7 +312,7 @@ Example discovery response document:
       "name": "EPP compatibility profile",
       "id": "urn:ietf:params:rpp:profile:epp-compatibility",
       "version": "1.0",
-      "url": "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-provisioning-profile-1.0"
+      "url": "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-profile"
     }
   ],
   "objects": ["domains", "hosts", "entities"],
@@ -348,11 +335,17 @@ Example discovery response document:
     },
   ],
   "authentication": ["Bearer"],
-  "maintenance": [
+  "notices": [
     {
-      "start_time": "2026-06-01T00:00:00Z",
-      "end_time": "2026-06-01T06:00:00Z",
-      "description": "Planned maintenance for server upgrades"
+      "pub_time": "2026-06-01T00:00:00Z",
+      "text": "This server will undergo planned maintenance on the first Monday of each month."
+    }
+  ],
+  "idn_lgr": [
+    {
+      "name": "example-latn-1.0",
+      "tld": "example",
+      "url": "https://www.iana.org/domains/idn-tables/tables/example_latn_1.0.txt"
     }
   ]
 
@@ -363,7 +356,7 @@ Example discovery response document:
 
 The steps for a typical workflow of provisioning an object using RPP without knowing the location and capabilities of the server are as follows, the first three steps are optional, the client can choose to skip any of these steps if it already has the required information from a previous interaction or configuration.
 
-1. Bootstrap (optional): The client discovers the location of the RPP server by looking up the IANA registry for RPP servers or by performing a DNS SRV lookup as defined in [@!RFC2782].
+1. Bootstrap (optional): The client discovers the location of the RPP server by looking up the IANA registry for RPP servers or by performing a DNS HTTPS lookup as defined in [@!RFC9460].
 2. Discover capabilities (optional):  The client retrieves the capabilities of the RPP server by sending a GET request to the well-known endpoint at `/.well-known/rpp.json`.
 3. Extract RPP URLs (optional): The client extracts the base URL and endpoint URL templates from the discovery response, and uses this information to construct the URLs for the desired operations.
 4. Perform provisioning operations: The client performs provisioning operations by sending HTTP requests to the appropriate endpoint URLs, using the HTTP method and request message body as required by the specific operation.
@@ -372,24 +365,12 @@ The steps for a typical workflow of provisioning an object using RPP without kno
 
 RPP is designed to be extensible and backward compatible. The version of the RPP API is indicated in the URL path, for example: `https://rpp.example/rpp/v1/`. The server MUST support at least one version of the RPP API, and MUST return a 404 Not Found status code for requests using an unsupported version. The versioning scheme uses the Semantic Versioning format defined in [@!SemVer], but only the major version number is used to indicate breaking changes. The minor and patch version numbers are not used in an URL path, but can be used in the media type or in the message body to indicate non-breaking changes.
 
-The following RPP elements include versioning support:
+The client MUST indicate the version of RPP it is using by including the RPP Media Type `application/rpp+json` in the HTTP Accept header of each request, a "version" parameter MUST also be used for the media type, for example: `application/rpp+json; version=1.0`. The server MUST include the media type used in the request in its response to the client. The server MUST reject requests using an unsupported version of RPP, and MUST return a 406 Not Acceptable status code.
 
-- Endpoints: The server MUST support at least one version of the RPP API, and MUST return a 404 Not Found status code for requests using an unsupported version.
-- Messages: A request and response message MUST include the version of the RPP API it is compatible with.
+The following additional RPP elements include versioning support:
+
 - Extensions: RPP extensions MUST include the version of the RPP API they are compatible with.
 - Profiles: RPP profiles MUST include the version of the RPP API they are compatible with.
-- Media types: RPP media types MUST include the version of the RPP API they are compatible with.
-- Result codes: RPP result codes may be added by extensions or updates to the core RPP specification.
-
-## Endpoints
-
-The `base_url` element of the RPP Discovery response MAY include the version of the RPP API supported by the server. The client MUST use this `base_url` for all subsequent requests to the server. For example, if the version is 1.2.3, the `base_url` is `https://rpp.example/rpp/v1/`, then the client MUST use this URL for all subsequent requests to the server, and MUST not use a different version in the URL path.
-
-## Messages
-
-The `version` element of the RPP request and response messages MUST include the version of the RPP API that the message is compatible with. The server MUST reject requests with a version that is not supported by the server, and MUST return a RPP Client error code.
-
-<!-- TODO: see media type below, this version element may be redundant -->
 
 ## Extensions
 
@@ -400,16 +381,18 @@ A request using an extension MUST include the version of the extension. The serv
 "extensions": [
     {
       "name": "RPP example extension",
-      "id": "urn:ietf:params:rpp:extension:example-extension",
+      "id": "urn:ietf:params:rpp:extension:example-extension-1.0",
       "version": "1.0",
-      "url": "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension-1.0"
+      "url": "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension"
     }
   ],
 ```
 
 ## Profiles
 
-The RPP server MUST include the version for each profile in the RPP Discovery response. The client MUST use this version information to determine which profiles are supported by the server, and to ensure that it uses the correct version of the profile when making requests to the server. A request using a profile MUST include the version of the profile. The server MUST reject requests using profiles with a version that is not supported by the server, and MUST return a RPP Client error code. The following is an example of how the version information for a profile can be included in the RPP Discovery response:
+The RPP server MUST include the version for each profile in the RPP Discovery response. The client MUST use this version information to determine which profiles are supported by the server, and to ensure that it uses the correct version of the profile when making requests to the server. A request using a profile MUST include the version of the profile. The server MUST reject requests using profiles with a version that is not supported by the server, and MUST return a RPP Client error code.
+
+Example of how the version information for a profile can be included in the RPP Discovery response:
 
 ```json
 "profiles": [
@@ -417,7 +400,7 @@ The RPP server MUST include the version for each profile in the RPP Discovery re
       "name": "EPP compatibility profile",
       "id": "urn:ietf:params:rpp:profile:epp-compatibility",
       "version": "1.0",
-      "url": "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-provisioning-profile-1.0"
+      "url": "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-profile"
     }
   ]
 ```
@@ -511,21 +494,21 @@ The example profile definition shown in (#profile-example) uses the "base-profil
 The client and the server both use media type parameters in the Accept and Content-Type headers to indicate the name and version of the profile used in the request. The media type parameters MUST be defined as follows:
 
 - `profile`: The value of this parameter MUST uniquely identify the profile, for example `urn:ietf:params:rpp:profile:example-profile`.
-- `version`: The value of this parameter MUST indicate the version of the profile used in the request.
+- `profile-version`: The value of this parameter MUST indicate the version of the profile used in the request.
 
 The ABNF for media type parameter signalling is as follows:
 
 ```abnf
-profile-parameter = "profile" "=" profile-name ";" OWS "version" "=" version
+profile-parameter = "profile" "=" profile-name ";" OWS "profile-version" "=" version
 profile-name      = token
 version           = 1*DIGIT "." 1*DIGIT
 ```
 
-Example for the media type `application/rpp+json` with profile parameters indicating the use of the "example-profile" profile version 1.0.:
+Example for the media type `application/rpp+json` with profile parameters indicating the use of the "example-profile" profile version 1.0. and RPP version 1.1:
 
 ```http
-Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; version="1.0"
-Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; version="1.0"
+Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"; version="1.1"
+Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"; version="1.1"
 ```
 
 
@@ -575,10 +558,11 @@ Examples derived from current data object identifiers:
 | `"contact"` | `"contacts"` | `"/contacts"` |
 | `"host"` | `"hosts"` | `"/hosts"` |
 | `"organisation"` | `"organisations"` | `"/organisations"` |
+| `"message"` | `"messages"` | `"/messages"` |
 
 ### Rule 2: Uniform Interface Operations
 
-The four uniform interface operations defined in the RPP data object specification map to HTTP methods and URL paths as follows. `"{collection}"` is derived per Rule 1. `"{id}"` is the unique identifier value of the specific object instance.
+The uniform interface operations defined in the RPP data object specification map to HTTP methods and URL paths as follows. `"{collection}"` is derived per Rule 1. `"{id}"` is the unique identifier value of the specific object instance.
 
 <!-- commented out as it does not fit this section at all.
 
@@ -591,8 +575,12 @@ A> TODO: the paragraph above looks like misplaced. Do we need it at all? The pro
 |---|---|---|
 | `"create"` | `"POST"` | `/"{collection}"` |
 | `"read"` | `"GET"` | `"/{collection}/{id}"` |
+| `"query"` | `"GET"` | `/"{collection}"` |
 | `"update"` | `"PUT or PATCH"` | `"/{collection}/{id}"` |
 | `"delete"` | `"DELETE"` | `"/{collection}/{id}"` |
+
+<!-- The query operation retrieves a collection of resource instances based on the specified criteria.
+ we may want to also allow the use of HTTP Query method here. -->
 
 ### Rule 3: Direct Access Sub-Resource Path Segment
 
@@ -710,6 +698,10 @@ The following table lists all current RPP endpoints, each derived by applying th
 | User: create | `"POST"` | `"/organisations/{id}/users"` |
 | User: update | `"PATCH"` | `"/organisations/{id}/users/{userId}"` |
 | User: delete | `"DELETE"` | `"/organisations/{id}/users/{userId}"` |
+| Message: read | `"GET"` | `"/messages/{id}"` |
+| Message: create | `"POST"` | `"/messages"` |
+| Message: query | `"GET"` | `"/messages"` |
+| Message: delete | `"DELETE"` | `"/messages/{id}"` |
 | Transfer: create | `"POST"` | `"/{collection}/{id}/processes/transferProcesses"` |
 | Transfer: read | `"GET"` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
 | Transfer: delete (cancel) | `"DELETE"` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
@@ -724,6 +716,20 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Processes: list | `"GET"` | `"/{collection}/{id}/processes"` |
 
 A> TODO: add availability and message queue 
+
+## Internationalized Domain Names (IDN)
+
+When an Internationalized Domain Name (IDN) is used to identify a Domain Name Data Object or Host Data Object instance in a URL, in particular as the `{id}` path segment described in Rule 2, the ASCII Compatible Encoding (ACE) A-label form of the name, as defined in [@!RFC5890], MUST be used. This requirement ensures that the resulting URL remains a valid URI as defined in [@!RFC3986], since the A-label form is composed exclusively of ASCII characters and therefore requires no percent-encoding or additional Unicode normalization when used as a URL path segment.
+
+The Unicode (U-label) form of an internationalized name MUST NOT be used to address a resource in a URL. A client MAY submit or receive the U-label form as a separate data element as part of a resource representation, but this Unicode representation of the name as a whole MUST NOT be used when constructing or matching a URL.
+
+This is consistent with the use of IDN in the DNS, the actual DNS name is naturally represented using its A-label form. This also avoids ambiguity: the URL identifies the DNS domain name rather than a particular Unicode representation of it.
+
+For example, to address the domain name whose U-label is `"bücher.example"`, a client MUST use the corresponding A-label, `"xn--bcher-kva.example"`, when constructing the `{id}` path segment:
+
+```
+GET /domainNames/xn--bcher-kva.example
+```
 
 ## Availability for Creation
 
@@ -1251,24 +1257,81 @@ RPP-code: 01000
 }
 ```
 
-## Messages
+## Messages {#messages}
+
+The messages endpoint exposes a server-side durable queue of asynchronous notifications generated for a client, for example to report the completion of an operation that was processed out of band, such as a Transfer request requiring approval from another party. The server MUST retain a message in the queue until it has been explicitly acknowledged by the client. Retrieval and acknowledgement of a message are deliberately separate operations, using a separate resource and HTTP method for each: the client uses the HTTP GET method to retrieve one or more messages, and the HTTP DELETE method, addressed at a specific message, to acknowledge it. A message that is retrieved but never acknowledged MUST remain in the queue and MUST be made available for redelivery, as described below, so that every message is guaranteed to eventually be delivered to, and can be processed by, the client, subject to the server-initiated deletion described below.
+
+Each message is linked to a single organisation. Only the organisation to which a message is linked is permitted to retrieve or acknowledge that message; the server MUST NOT return a message to, or accept an acknowledgement of a message from, any other organisation. 
+
+Notwithstanding the guarantees described in this section, the server MAY delete a message from the queue at any time, including before it has been acknowledged, for example to enforce a retention policy or reclaim storage. Deletion of unacknowledged messages is therefore a best-effort guarantee and clients SHOULD NOT rely on the eventual delivery of every message for correctness.
+
+The server MAY include the `RPP-Queue-Size` header (see (#response-headers)) in any RPP response, not only in responses to Messages requests, to inform the client of the current number of unacknowledged messages in its queue without requiring a dedicated Retrieve request.
+
+Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "removed". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing MUST be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
+
+The following diagram illustrates the message state transitions described above, including the deletion of a message by the client or server which is permitted while the message is in either the "queued" or the "delivered" state:
+
+```
+                               Server
+                               Create
+                                 |
+                                 v
+                         +---------------+
+                 +------>|               |
+                 |       |    queued     |-------------------------+
+                 |       |               |-------+                 |
+                 |       +-------+-------+       |                 |  Ack/Delete
+                 |               |               |                 | 
+        Ack      |      Retrieve |               |                 |
+        Timeout  |               |               |                 |
+                 |               v               |                 |
+                 |       +---------------+       |                 |
+                 |       |               |       |                 |
+                 +-------+   delivered   +-------+                 |
+                         |               |       |                 |
+                         +-------+-------+       |                 |
+                                 |               |                 |
+                      Ack/Delete |               | Server Delete   |
+                                 v               | (any state)     |
+                         +---------------+       |                 |
+                         |               |       |                 |
+                         |    removed    |<------+                 |
+                         |               |<------------------------+
+                         +---------------+
+```
+Figure: Message Data Object lifecycle {#fig-message-lifecycle}
+
+The server MAY support multiple simultaneous readers concurrently retrieving messages from the same queue, for example multiple worker processes operated by the same client. The server MUST NOT return the same "queued" message to more than one Retrieve request at a time; once a message has been returned to a reader and its status changes to "delivered", it MUST NOT be returned again to any reader until its delivery timeout has elapsed and its status has reverted to "queued".
+
+The server MUST return "queued" messages in the order in which they were inserted into the queue, so that the oldest "queued" message is always the next one returned to a Retrieve request. A message that reverts from "delivered" back to "queued" after its delivery timeout has elapsed MUST be treated, for ordering purposes, according to its original insertion order rather than being moved to the end of the queue.
 
 ### Retrieve
 
-A> TODO: update when covered in data objects
+The messages endpoint is used for retrieving exactly one message stored on the server for the client to process. The client may use the following query parameter to control which messages are returned:
 
-The messages endpoint is used for retrieving messages stored on the server for the client to process.
+- `type` (OPTIONAL): Restricts the response to messages of the given message type. This parameter MAY be repeated to request messages of more than one type. If omitted, messages of any type MAY be returned.
 
-- Request: GET /messages
-- Request message: None
-- Response message: Poll response
+Every message has a `type`, identifying the kind of notification it represents. When the client uses the `type` query parameter, only "queued" messages matching one of the requested types transition to "delivered" and are included in the response. A "queued" message that does not match the requested type MUST remain in the queue with a status of "queued", even if it is ahead, per the ordering rules above, of a matching message that is returned; the `type` filter does not otherwise change the relative position of a message in the queue.
 
-The client MUST use the HTTP GET method on the messages resource collection to request the message at the head of the queue.
+Query parameters are used here for simplicity. A future revision of this document MAY instead, or additionally, define an equivalent request format using the HTTP QUERY method [@!RFC10008], which would allow more expressive filtering to be conveyed in a request body rather than the request URL.
 
-Example request:
+The server SHOULD return the human-readable content of a message in the language requested by the client's `Accept-Language` header. Not every message type may support every language; if the requested language is not available for a given message, the server MUST fall back to returning that message in its own default language.
+
+Every message returned in the response transitions from "queued" to "delivered" as described above.
+
+In the EPP Compatibility Profile, the following limitations apply:
+
+* The RPP server always returns the oldest message in the EPP poll queue.
+* Multiple sequential requests from the same client return the same message until the message is acknowledged.
+* The `type` query parameter is ignored. The server always returns the oldest message in the EPP poll queue, regardless of its type.
+* When multiple readers are used, each reader independently receives the oldest message in the EPP poll queue. Consequently, multiple readers may receive the same message,possibly multiple times, until that message is acknowledged.
+* The messages remain in the "queued" state.
+
+
+Example request for retrieving messages of type `transfer` only and returning a maximum of 10 messages:
 
 ```http
-GET messages HTTP/2
+GET /messages?type=transferRequestMessage HTTP/2
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
@@ -1287,24 +1350,19 @@ Content-Length: 312
 Content-Type: application/rpp+json
 Content-Language: en
 RPP-code: 01301
+RPP-Queue-Size: 4
 
 TODO
 ```
 
-### Delete
+### Acknowledge
 
-A> TODO: update when covered in data objects
-
-- Request: DELETE /messages/{id}
-- Request message: None
-- Response message: Poll Ack response
-
-The client MUST use the HTTP DELETE method to acknowledge receipt of a message from the queue. The "msgID" attribute of a received RPP Poll message MUST be included in the message resource URL, using the {id} path element. The server MUST use RPP headers to return the RPP result code and the number of messages left in the queue. The server MUST NOT add content to the HTTP message body of a successful response, the server may add content to the message body of an error response.
+The client MUST use the HTTP DELETE method to acknowledge receipt of a single message from the queue. The "id" attribute of a received message MUST be included in the message resource URL, using the {id} path element. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST NOT add content to the HTTP response message body of a successful delete request. When the delete request fails for any reason, the server MUST include a Problem detail object in the message body of the error response.
 
 Example request:
 
 ```http
-DELETE messages/12345 HTTP/2
+DELETE /messages/12345 HTTP/2
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
@@ -1333,24 +1391,64 @@ TODO
 
 TODO
 
-# RPP Result Codes
+# Result Codes
 
-RPP result codes are used to indicate the result of an RPP request. They are returned in the RPP-Code header of the HTTP response. The format of the RPP result code is a 5-digit string, where the first digit MUST always be "1", the second digit indicates the class of the result, and the remaining four digits indicate the specific result within that class, his allows implementers to define more specific result codes within each class. The classes of RPP result codes are designed to match the classes of HTTP status codes, to facilitate mapping between RPP result codes and HTTP status codes. The classes of RPP result codes are defined as follows:
+RPP result codes are backward compatible with the EPP result codes defined in [@!RFC5730] and are mapped to HTTP status codes. This allows clients to handle responses generically using common HTTP patterns. While the HTTP status code provides the primary, high-level outcome, the specific RPP result code MUST still be provided in the `RPP-Code` HTTP header for detailed diagnostics.
 
-- 11xxx: Informational
-- 12xxx: Success
-- 13xxx: Reserved for future use
-- 14xxx: Client error
-- 15xxx: Server error
+In order for RPP to be backwards compatible with EPP, RPP will use 5-digit coding of the result codes, where first digit will denote origin specification of the result codes. For [@!RFC5730] Result Codes the leading digit MUST be "0".
+For RPP result codes the leading digit MUST be "1", the second digit indicates the class of the result, and the remaining three digits indicate the specific result within that class, this allows implementers to define more specific result codes within each class. Every RPP result code SHOULD be registered with IANA to ensure uniqueness and avoid conflicts. An IANA registry for RPP result codes is defined in the IANA Considerations section.
 
-The following RPP result codes are defined and used in this document:
+The mapping strategy is to use a specific HTTP status code for common and well-defined RPP result codes, while using a generic HTTP status code for all other RPP result codes.
+
+The classes of RPP result codes are designed to match the classes of HTTP status codes, to facilitate mapping between RPP result codes and HTTP status codes. The classes of RPP result codes are defined as follows:
+
+- x1yzz: Success response
+- x2yzz: Error response
+
+Table (#tbl-rpp-result-codes) lists the RPP result codes and their mapping to specific HTTP status codes, any RPP result code not listed in the table MUST be mapped to a generic HTTP status code as defined in Table (#tbl-rpp-unknown-result-codes).
 
 | RPP Result Code | HTTP Status Code | Description | 
 |-----------------|------------------|-------------|
-| 12000           | 200 OK           | Command completed successfully |
-| 12001           | 201 Created      | Command completed successfully and a new resource was created |
+| x1000           | 200 (OK)           | Request completed successfully |
+| 02002           | 409 (Conflict)     | Command use error |
+| 02101           | 501 (Not Implemented) | Unimplemented command |
+| 02102           | 501 (Not Implemented) | Unimplemented option |
+| 02103           | 501 (Not Implemented) | Unimplemented extension |
+| 02104           | 402 (Payment Required) | Billing failure |
+| 02105           | 409 (Conflict)     | Object is not eligible for renewal |
+| 02106           | 409 (Conflict)     | Object is not eligible for transfer |
+| 02200           | 401 (Unauthorized) | Authentication error |
+| 02201           | 403 (Forbidden)    | Authorization error |
+| 02202           | 401 (Unauthorized) | Invalid authorization information |
+| 02300           | 409 (Conflict)     | Object pending transfer |
+| 02301           | 409 (Conflict)     | Object not pending transfer |
+| 02302           | 409 (Conflict)     | Object exists |
+| 02303           | 404 (Not Found)    | Object does not exist |
+| 02304           | 409 (Conflict)     | Object status prohibits operation |
+| 02305           | 409 (Conflict)     | Object association prohibits operation |
+| 02306           | 422 (Unprocessable Content) | Parameter value policy error |
+| 02307           | 501 (Not Implemented) | Unimplemented object service |
+| 02308           | 422 (Unprocessable Content) | Data management policy violation |
+| 02501           | 401 (Unauthorized) | Authentication error; server closing connection |
+| 02502           | 429 (Too Many Requests) | Session limit exceeded; server closing connection |
+Table: Mapping RPP Result Codes to specific HTTP Status Codes
+{#tbl-rpp-result-codes}
 
-<!-- TODO: add more result codes here -->
+The RPP result codes listed in Table (#tbl-rpp-result-codes) are derived from the EPP result codes defined in [@!RFC5730, Section 3], using the leading "0" digit to indicate an [@!RFC5730]-derived result code, as described above. Only EPP result codes for which a more specific HTTP status code applies than the generic class-based mapping in Table (#tbl-rpp-unknown-result-codes) are listed; all other EPP result codes MUST use the generic mapping.
+
+ Table (#tbl-rpp-unknown-result-codes) lists the RPP result codes that are not directly mapped to specific HTTP status codes and MUST be mapped to the generic HTTP status codes as indicated.
+
+| RPP Result Code | HTTP Status Code | Description | 
+|-----------------|------------------|-------------|
+| x1xxx:          | 200 (OK)           | Command completed successfully |
+| x20xx:          | 400 (Bad Request)  | Client error |
+| x21xx:          | 400 (Bad Request)  | Client error |
+| x22xx:          | 400 (Bad Request)  | Client error |
+| x23xx:          | 400 (Bad Request)  | Client error |
+| x24xx:          | 500 (Internal Server Error) | Server error |
+| x25xx:          | 500 (Internal Server Error) | Server error |
+Table: Mapping RPP Result Codes to generic HTTP Status Codes
+{#tbl-rpp-unknown-result-codes}
 
 # Authentication and Authorization
 
@@ -1419,7 +1517,7 @@ Fields to be registered:
 
 - `name`: The name of the extension, for example "RPP example extension".
 - `version`: The version of the extension, for example "1.0".
-- `url`: The URL for the extension specification, for example "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension-1.0".
+- `url`: The URL for the extension specification, for example "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension".
 - `description`: A human-readable description of the extension and its intended use.
 
 ## RPP Profile registry
@@ -1435,12 +1533,12 @@ Registration procedure: Expert Review
 Fields to be registered:
 
 - `name`: The name of the profile, for example "EPP compatibility profile".
-- `id`: A unique URN identifier for the profile, for example "urn:ietf:params:rpp:profile:epp-compatibility-1.0".
+- `id`: A unique URN identifier for the profile, for example "urn:ietf:params:rpp:profile:epp-compatibility".
 - `version`: The version of the profile, for example "1.0".
-- `url`: The URL for the profile specification, for example "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-provisioning-profile-1.0".
-- `description`: A human-readable description of the profile and its intended use. 
+- `url`: The URL for the profile specification, for example "https://www.iana.org/assignments/rpp-profiles/epp-compatibility-profile".
+- `description`: A human-readable description of the profile and its intended use.
 
-## RPP Result Codes Registry
+## RPP Result Codes Registry {rpp-result-codes-registry}
 
 The IANA is requested to create a new registry "RPP Result codes", this registry will be used to register RPP result codes defined in this document and in future RPP specifications and extensions.
 
@@ -1454,6 +1552,47 @@ Fields to be registered:
 
 - `code`: The RPP result code, for example "12000".
 - `description`: A human-readable description of the result code and its intended use.
+
+The registry MUST be initially populated with the RPP result codes listed in Table (#tbl-rpp-iana-result-codes-initial), which are derived from the EPP result codes defined in [@!RFC5730, Section 3] by prepending the leading digit "0", as described in the Result Codes section above.
+
+| RPP Result Code | Description |
+|------------------|-------------|
+| 01000            | Command completed successfully |
+| 01001            | Command completed successfully; action pending |
+| 01300            | Command completed successfully; no messages |
+| 01301            | Command completed successfully; ack to dequeue |
+| 01500            | Command completed successfully; ending session |
+| 02000            | Unknown command |
+| 02001            | Command syntax error |
+| 02002            | Command use error |
+| 02003            | Required parameter missing |
+| 02004            | Parameter value range error |
+| 02005            | Parameter value syntax error |
+| 02100            | Unimplemented protocol version |
+| 02101            | Unimplemented command |
+| 02102            | Unimplemented option |
+| 02103            | Unimplemented extension |
+| 02104            | Billing failure |
+| 02105            | Object is not eligible for renewal |
+| 02106            | Object is not eligible for transfer |
+| 02200            | Authentication error |
+| 02201            | Authorization error |
+| 02202            | Invalid authorization information |
+| 02300            | Object pending transfer |
+| 02301            | Object not pending transfer |
+| 02302            | Object exists |
+| 02303            | Object does not exist |
+| 02304            | Object status prohibits operation |
+| 02305            | Object association prohibits operation |
+| 02306            | Parameter value policy error |
+| 02307            | Unimplemented object service |
+| 02308            | Data management policy violation |
+| 02400            | Command failed |
+| 02500            | Command failed; server closing connection |
+| 02501            | Authentication error; server closing connection |
+| 02502            | Session limit exceeded; server closing connection |
+Table: Initial RPP Result Codes registrations, derived from [@!RFC5730] result codes
+{#tbl-rpp-iana-result-codes-initial}
 
 ## Link Relation Type: rpp-process
 
@@ -1514,9 +1653,14 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 # Change History
 
-## Version 00 to 01
+## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
 - Updated "Request Headers" and "Response Headers" section to use Structured Headers [@!RFC8941] (Issue #95)
+- Added support for Internationalized Domain Names (IDN) (Issue #126)
+- Added text to the "messages" section, describing service messages (Issue #116)
+- Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
+- Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
+- Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
@@ -1594,6 +1738,25 @@ The authors would like to thank the following people for their helpful text cont
     <title>Semantic Versioning 2.0.0</title>
     <author>
       <organization>Semantic Versioning</organization>
+    </author>
+  </front>
+</reference>
+
+<reference anchor="FETCH" target="https://fetch.spec.whatwg.org/">
+  <front>
+    <title>Fetch - Living Standard</title>
+    <author>
+      <organization>WHATWG</organization>
+    </author>
+    <date/>
+  </front>
+</reference>
+
+<reference anchor="IDN-Tables" target="https://www.iana.org/assignments/idn-tables">
+  <front>
+    <title>Repository of IDN Practices</title>
+    <author>
+      <organization>Internet Assigned Numbers Authority (IANA)</organization>
     </author>
   </front>
 </reference>
