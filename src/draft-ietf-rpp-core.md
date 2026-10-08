@@ -274,6 +274,11 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
 - `endpoints`: (required, array of endpoint objects) A list of available endpoints, each endpoint object MUST contain the following fields:
   - `name`: (required, string) A short name for the endpoint, for example "availability", "info", "poll", "create", "delete", "renewal" or "transfer".
   - `url_template`: (required, string) The URI template for the endpoint, using the syntax defined in [@!RFC6570].
+- `links`: (optional, array of link objects) A list of links to documents related to the use of RPP with this server, such as policies and terms. Each link object MUST contain the following fields:
+  - `rel`: (required, string) The relation type of the link, this document uses the following values:
+    - `privacy-policy`: The privacy policy of the server operator, describing how personal data is collected, used, retained and disclosed. A server SHOULD provide this link.
+    - `terms-of-service`: The terms of service that apply to the use of the RPP server. A server SHOULD provide this link.
+  - `href`: (required, string) An absolute HTTPS URL of the linked document. The document MUST be accessible to the client without authentication.
 - `idn_lgr`: (optional, array) a list of supported Label Generation Rulesets (LGRs), each entry in the array and MUST contain the following fields:
   - `tld`: (required, array of strings) A list of top-level domains (TLDs) to which the LGR applies.
   - `name`: (required, string) The IANA-registered name of the LGR, as listed in the [IDN-Tables] registry.
@@ -283,14 +288,13 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
   - `pub_time`: (required, string) The publication time of the notice in ISO 8601 format.
   - `text`: (required, string) A human-readable description of the notice.
 
+<!-- TODO: create IANA registry for link relation types used in RPP? -->
 The following template variables are defined for use in RPP endpoint URL templates. They are data object independent; the same variables are used regardless of which Data Object or Process Object the endpoint acts on.
 
 - `collection`: The resource collection path segment, derived per Rule 1.
 - `id`: The Unique Identifier value (as defined in [@!I-D.ietf-rpp-data-objects]) of the resource instance within `collection`.
 - `process-collection`: The process collection path segment, derived per Rule 3.
 - `process-id`: The Unique Identifier value (as defined in [@!I-D.ietf-rpp-data-objects]) of a specific process instance, scoped to its owner Data Object instance.
-
-<!-- TODO: Include appendix with example discovery response document. -->
 
 Example discovery response document:
 
@@ -346,6 +350,16 @@ Example discovery response document:
       "name": "example-latn-1.0",
       "tld": "example",
       "url": "https://www.iana.org/domains/idn-tables/tables/example_latn_1.0.txt"
+    }
+  ],
+  "links": [
+    {
+      "rel": "privacy-policy",
+      "href": "https://registry.example/privacy"
+    },
+    {
+      "rel": "terms-of-service",
+      "href": "https://registry.example/terms"
     }
   ]
 
@@ -1655,6 +1669,7 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Added support for the `links` array in the discovery document (Issue #130)
 - Updated "Request Headers" and "Response Headers" section to use Structured Headers [@!RFC8941] (Issue #95)
 - Added support for Internationalized Domain Names (IDN) (Issue #126)
 - Added text to the "messages" section, describing service messages (Issue #116)
