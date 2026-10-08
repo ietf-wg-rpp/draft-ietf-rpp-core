@@ -102,7 +102,7 @@ The `RPP-Authorization` header is specific to the user agent and MUST NOT be cac
 
 <!--TODO: need to make a choice, do we use the RPP-Profile or do we use media-type params for signalling profile used  -->
 
-# Response Headers
+# Response Headers {#response-headers}
 
 The server HTTP response contains a status code, headers, and MAY contain an RPP response message in the message body. HTTP headers are used to transmit additional data to the client and MAY be used to send RPP process related data to the client. HTTP headers used by RPP MUST use the "RPP-" prefix, the following response headers have been defined for RPP.
 
@@ -112,7 +112,16 @@ The server HTTP response contains a status code, headers, and MAY contain an RPP
   
 - `RPP-Code`: This header is the equivalent of the EPP result code defined in [@!RFC5730] and MUST be used accordingly. This header MUST be added to all responses and MAY be used by the client for easy access to the result code, without having to parse the HTTP response message body.
 
-- `RPP-Queue-Size`: Return the number of unacknowledged messages in the client message queue. The server MAY include this header in all RPP responses.
+For the EPP codes related to session management (1500, 2500, 2501 and 2502) there are no corresponding RPP codes.
+
+In order for RPP to be backwards compatible with EPP, RPP will use 5-digit coding of the result codes, where first digit will denote origin specification of the result codes.
+
+For [@!RFC5730] Result Codes the leading digit MUST be "0".
+For RPP result codes the leading digit MUST be "1". For avoidance of confusion RPP MUST not define new codes with the same semantic meaning as already defined in EPP.
+
+For RPP codes the remaining 4 digits MUST keep the same semantics as [@!RFC5730] Result Codes.
+
+- `RPP-Queue-Size`: The number of messages with the status "queued" that are currently in the message queue. The server MAY include this header in all RPP responses.
 
 When a uniform interface operation implicitly creates a process object as a side effect, the server MUST communicate the URL of the created process resource using the `Link` response header [@!RFC8288] with the `rpp-process` relation type. If multiple process objects are created, the server MUST include one `Link` header field per created process resource, each with `rel="rpp-process"`.
 
@@ -262,10 +271,9 @@ RPP server capabilities MUST be discoverable by clients. The server MUST provide
 - `endpoints`: (required, array of endpoint objects) A list of available endpoints, each endpoint object MUST contain the following fields:
   - `name`: (required, string) A short name for the endpoint, for example "availability", "info", "poll", "create", "delete", "renewal" or "transfer".
   - `url_template`: (required, string) The URI template for the endpoint, using the syntax defined in [@!RFC6570].
-- `maintenance`: (optional, array) An array containing information about upcoming planned maintenance windows of the server, with the following fields:
-  - `start_time`: (required, string) The start time of the maintenance window in ISO 8601 format.
-  - `end_time`: (required, string) The end time of the maintenance window in ISO 8601 format.
-  - `description`: (optional, string) A human-readable description of the maintenance window.
+- `notices`: (optional, array) An array containing notices from the server operator, with the following fields:
+  - `pub_time`: (required, string) The publication time of the notice in ISO 8601 format.
+  - `text`: (required, string) A human-readable description of the notice.
 
 The following template variables are defined for use in RPP endpoint URL templates. They are data object independent; the same variables are used regardless of which Data Object or Process Object the endpoint acts on.
 
@@ -319,11 +327,10 @@ Example discovery response document:
     },
   ],
   "authentication": ["Bearer"],
-  "maintenance": [
+  "notices": [
     {
-      "start_time": "2026-06-01T00:00:00Z",
-      "end_time": "2026-06-01T06:00:00Z",
-      "description": "Planned maintenance for server upgrades"
+      "pub_time": "2026-06-01T00:00:00Z",
+      "text": "This server will undergo planned maintenance on the first Monday of each month."
     }
   ]
 
@@ -561,10 +568,11 @@ Examples derived from current data object identifiers:
 | `"contact"` | `"contacts"` | `"/contacts"` |
 | `"host"` | `"hosts"` | `"/hosts"` |
 | `"organisation"` | `"organisations"` | `"/organisations"` |
+| `"message"` | `"messages"` | `"/messages"` |
 
 ### Rule 2: Uniform Interface Operations
 
-The four uniform interface operations defined in the RPP data object specification map to HTTP methods and URL paths as follows. `"{collection}"` is derived per Rule 1. `"{id}"` is the unique identifier value of the specific object instance.
+The uniform interface operations defined in the RPP data object specification map to HTTP methods and URL paths as follows. `"{collection}"` is derived per Rule 1. `"{id}"` is the unique identifier value of the specific object instance.
 
 <!-- commented out as it does not fit this section at all.
 
@@ -577,8 +585,12 @@ A> TODO: the paragraph above looks like misplaced. Do we need it at all? The pro
 |---|---|---|
 | `"create"` | `"POST"` | `/"{collection}"` |
 | `"read"` | `"GET"` | `"/{collection}/{id}"` |
+| `"query"` | `"GET"` | `/"{collection}"` |
 | `"update"` | `"PUT or PATCH"` | `"/{collection}/{id}"` |
 | `"delete"` | `"DELETE"` | `"/{collection}/{id}"` |
+
+<!-- The query operation retrieves a collection of resource instances based on the specified criteria.
+ we may want to also allow the use of HTTP Query method here. -->
 
 ### Rule 3: Direct Access Sub-Resource Path Segment
 
@@ -696,6 +708,10 @@ The following table lists all current RPP endpoints, each derived by applying th
 | User: create | `"POST"` | `"/organisations/{id}/users"` |
 | User: update | `"PATCH"` | `"/organisations/{id}/users/{userId}"` |
 | User: delete | `"DELETE"` | `"/organisations/{id}/users/{userId}"` |
+| Message: read | `"GET"` | `"/messages/{id}"` |
+| Message: create | `"POST"` | `"/messages"` |
+| Message: query | `"GET"` | `"/messages"` |
+| Message: delete | `"DELETE"` | `"/messages/{id}"` |
 | Transfer: create | `"POST"` | `"/{collection}/{id}/processes/transferProcesses"` |
 | Transfer: read | `"GET"` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
 | Transfer: delete (cancel) | `"DELETE"` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
@@ -1237,24 +1253,81 @@ RPP-code: 01000
 }
 ```
 
-## Messages
+## Messages {#messages}
+
+The messages endpoint exposes a server-side durable queue of asynchronous notifications generated for a client, for example to report the completion of an operation that was processed out of band, such as a Transfer request requiring approval from another party. The server MUST retain a message in the queue until it has been explicitly acknowledged by the client. Retrieval and acknowledgement of a message are deliberately separate operations, using a separate resource and HTTP method for each: the client uses the HTTP GET method to retrieve one or more messages, and the HTTP DELETE method, addressed at a specific message, to acknowledge it. A message that is retrieved but never acknowledged MUST remain in the queue and MUST be made available for redelivery, as described below, so that every message is guaranteed to eventually be delivered to, and can be processed by, the client, subject to the server-initiated deletion described below.
+
+Each message is linked to a single organisation. Only the organisation to which a message is linked is permitted to retrieve or acknowledge that message; the server MUST NOT return a message to, or accept an acknowledgement of a message from, any other organisation. 
+
+Notwithstanding the guarantees described in this section, the server MAY delete a message from the queue at any time, including before it has been acknowledged, for example to enforce a retention policy or reclaim storage. Deletion of unacknowledged messages is therefore a best-effort guarantee and clients SHOULD NOT rely on the eventual delivery of every message for correctness.
+
+The server MAY include the `RPP-Queue-Size` header (see (#response-headers)) in any RPP response, not only in responses to Messages requests, to inform the client of the current number of unacknowledged messages in its queue without requiring a dedicated Retrieve request.
+
+Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "removed". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing MUST be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
+
+The following diagram illustrates the message state transitions described above, including the deletion of a message by the client or server which is permitted while the message is in either the "queued" or the "delivered" state:
+
+```
+                               Server
+                               Create
+                                 |
+                                 v
+                         +---------------+
+                 +------>|               |
+                 |       |    queued     |-------------------------+
+                 |       |               |-------+                 |
+                 |       +-------+-------+       |                 |  Ack/Delete
+                 |               |               |                 | 
+        Ack      |      Retrieve |               |                 |
+        Timeout  |               |               |                 |
+                 |               v               |                 |
+                 |       +---------------+       |                 |
+                 |       |               |       |                 |
+                 +-------+   delivered   +-------+                 |
+                         |               |       |                 |
+                         +-------+-------+       |                 |
+                                 |               |                 |
+                      Ack/Delete |               | Server Delete   |
+                                 v               | (any state)     |
+                         +---------------+       |                 |
+                         |               |       |                 |
+                         |    removed    |<------+                 |
+                         |               |<------------------------+
+                         +---------------+
+```
+Figure: Message Data Object lifecycle {#fig-message-lifecycle}
+
+The server MAY support multiple simultaneous readers concurrently retrieving messages from the same queue, for example multiple worker processes operated by the same client. The server MUST NOT return the same "queued" message to more than one Retrieve request at a time; once a message has been returned to a reader and its status changes to "delivered", it MUST NOT be returned again to any reader until its delivery timeout has elapsed and its status has reverted to "queued".
+
+The server MUST return "queued" messages in the order in which they were inserted into the queue, so that the oldest "queued" message is always the next one returned to a Retrieve request. A message that reverts from "delivered" back to "queued" after its delivery timeout has elapsed MUST be treated, for ordering purposes, according to its original insertion order rather than being moved to the end of the queue.
 
 ### Retrieve
 
-A> TODO: update when covered in data objects
+The messages endpoint is used for retrieving exactly one message stored on the server for the client to process. The client may use the following query parameter to control which messages are returned:
 
-The messages endpoint is used for retrieving messages stored on the server for the client to process.
+- `type` (OPTIONAL): Restricts the response to messages of the given message type. This parameter MAY be repeated to request messages of more than one type. If omitted, messages of any type MAY be returned.
 
-- Request: GET /messages
-- Request message: None
-- Response message: Poll response
+Every message has a `type`, identifying the kind of notification it represents. When the client uses the `type` query parameter, only "queued" messages matching one of the requested types transition to "delivered" and are included in the response. A "queued" message that does not match the requested type MUST remain in the queue with a status of "queued", even if it is ahead, per the ordering rules above, of a matching message that is returned; the `type` filter does not otherwise change the relative position of a message in the queue.
 
-The client MUST use the HTTP GET method on the messages resource collection to request the message at the head of the queue.
+Query parameters are used here for simplicity. A future revision of this document MAY instead, or additionally, define an equivalent request format using the HTTP QUERY method [@!RFC10008], which would allow more expressive filtering to be conveyed in a request body rather than the request URL.
 
-Example request:
+The server SHOULD return the human-readable content of a message in the language requested by the client's `Accept-Language` header. Not every message type may support every language; if the requested language is not available for a given message, the server MUST fall back to returning that message in its own default language.
+
+Every message returned in the response transitions from "queued" to "delivered" as described above.
+
+In the EPP Compatibility Profile, the following limitations apply:
+
+* The RPP server always returns the oldest message in the EPP poll queue.
+* Multiple sequential requests from the same client return the same message until the message is acknowledged.
+* The `type` query parameter is ignored. The server always returns the oldest message in the EPP poll queue, regardless of its type.
+* When multiple readers are used, each reader independently receives the oldest message in the EPP poll queue. Consequently, multiple readers may receive the same message,possibly multiple times, until that message is acknowledged.
+* The messages remain in the "queued" state.
+
+
+Example request for retrieving messages of type `transfer` only and returning a maximum of 10 messages:
 
 ```http
-GET messages HTTP/2
+GET /messages?type=transferRequestMessage HTTP/2
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
@@ -1273,24 +1346,19 @@ Content-Length: 312
 Content-Type: application/rpp+json
 Content-Language: en
 RPP-code: 01301
+RPP-Queue-Size: 4
 
 TODO
 ```
 
-### Delete
+### Acknowledge
 
-A> TODO: update when covered in data objects
-
-- Request: DELETE /messages/{id}
-- Request message: None
-- Response message: Poll Ack response
-
-The client MUST use the HTTP DELETE method to acknowledge receipt of a message from the queue. The "msgID" attribute of a received RPP Poll message MUST be included in the message resource URL, using the {id} path element. The server MUST use RPP headers to return the RPP result code and the number of messages left in the queue. The server MUST NOT add content to the HTTP message body of a successful response, the server may add content to the message body of an error response.
+The client MUST use the HTTP DELETE method to acknowledge receipt of a single message from the queue. The "id" attribute of a received message MUST be included in the message resource URL, using the {id} path element. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST NOT add content to the HTTP response message body of a successful delete request. When the delete request fails for any reason, the server MUST include a Problem detail object in the message body of the error response.
 
 Example request:
 
 ```http
-DELETE messages/12345 HTTP/2
+DELETE /messages/12345 HTTP/2
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
@@ -1583,6 +1651,7 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Added text to the "messages" section, describing service messages (Issue #116)
 - Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
