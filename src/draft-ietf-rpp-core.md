@@ -319,14 +319,48 @@ The RPP server MUST provide the set of supported profiles in the RPP Discovery r
 
 # Media Types {#media-types}
 
-RPP data can be transmitted using different representations and encodings, for example JSON or YAML. This document does not define a representation. Each representation is defined in a separate specification that registers the RPP media type for that representation, for example `application/rpp+json`. Every RPP media type MUST define the `profile`, and `profile-version` parameters, so that version and profile signalling is identical for all representations. Each such specification also documents the security considerations of its underlying data format.
+RPP data can be transmitted using different representation formats, for example JSON or YAML. This document does not define a representation. Each representation is defined in a separate specification that registers an RPP media type for that representation, for example `application/rpp+json`. Each such specification also documents the security considerations of its underlying data format. Every RPP media type MUST support the `profile` and `profile-version` parameters defined in (#profile-signalling), so that profile signalling is identical for all representations.
 
-The media type parameters MUST be defined as follows:
+An RPP client and an RPP server indicate and negotiate the media type of a message using the `Content-Type` ([@!RFC9110, section 8.3]) and `Accept` ([@!RFC9110, section 12.5.1]) header fields, as follows.
+
+Requests:
+
+- An RPP client MUST include an `Accept` header field in every request, including requests without a message body. Each media range in the `Accept` header field MUST identify an RPP media type the client is able to process in the response. The client MAY list more than one media range and MAY use quality values to indicate preference.
+- An RPP client sending a request with a message body MUST include a `Content-Type` header field identifying the RPP media type of the message body.
+- The media type indicated in the `Content-Type` header field MUST also be acceptable according to the `Accept` header field of the same request.
+
+Server processing:
+
+- The RPP server MUST determine the data format of a request message body only from the `Content-Type` header field and MUST NOT infer it from the message body. If the message body does not conform to the data format of the indicated media type, the server MUST reject the request with HTTP status code 400 (Bad Request).
+- If the server does not support the media type indicated in the `Content-Type` header field, the server MUST reject the request with HTTP status code 415 (Unsupported Media Type).
+- The RPP server MUST select the media type for the response from the `Accept` header field using proactive negotiation as described in [@!RFC9110, section 12.5.1]. If the server supports none of the listed media types, the server MUST reject the request with HTTP status code 406 (Not Acceptable).
+- If the media type indicated in the `Content-Type` header field is not acceptable according to the `Accept` header field, the server MUST reject the request with HTTP status code 400 (Bad Request).
+- In all rejection cases above, the server MUST include the `RPP-Code` header field and a Problem Detail response as described in (#problem-detail).
+
+<!-- TODO: assign RPP result codes for the 406 and 415 rejection cases -->
+
+Responses:
+
+- An RPP server MUST include a `Content-Type` header field in every successful response that contains a message body. The media type MUST be one listed in the `Accept` header field of the request.
+- Problem Detail responses use the `application/problem+json` media type [@!RFC9457].
+- An RPP server MUST include `Accept` in the `Vary` header field [@!RFC9110, section 12.5.5] of every response whose content depends on the negotiated media type or profile.
+- An RPP server SHOULD include the `X-Content-Type-Options: nosniff` header field [@!FETCH] in every response. Omitting it allows a browser-based RPP client to interpret a response as a media type other than the one indicated in `Content-Type`, which can expose registration data to scripts from another origin.
+
+Client processing:
+
+- The RPP client MUST determine the data format of a response message body only from the `Content-Type` header field and MUST NOT infer it from the message body.
+- Except for Problem Detail responses, if the media type of a response was not listed in the `Accept` header field of the request, the client MUST NOT process the message body as an RPP response and MUST treat the response as a protocol error.
+
+# Profile Signalling {#profile-signalling}
+
+An RPP client and an RPP server select the profile that applies to a message using the media type parameters defined in this section, on top of the `Content-Type` and `Accept` header field handling defined in (#media-types). The profiles supported by an RPP server are announced in the RPP Discovery document (see (#discoverability)).
+
+The media type parameters are defined as follows:
 
 - `profile`: The value of this parameter MUST uniquely identify the profile, for example `urn:ietf:params:rpp:profile:example-profile`.
-- `profile-version`: The value of this parameter MUST indicate the version of the profile used in the request.
+- `profile-version`: The value of this parameter MUST indicate the version of the profile.
 
-The ABNF for media type parameters is as follows:
+The ABNF for the media type parameters is as follows:
 
 ```abnf
 profile-parameter = "profile" "=" profile-name ";" OWS "profile-version" "=" version
@@ -334,37 +368,31 @@ profile-name      = token
 version           = 1*DIGIT "." 1*DIGIT
 ```
 
-An RPP client and an RPP server signal the profile that applies to a message using the `Content-Type` ([@!RFC9110, section 8.3]) and `Accept` ([@!RFC9110, section 12.5.1]) header fields, as follows.
-
 Requests:
 
-- An RPP client MUST include an `Accept` header field in every request, including requests without a message body. Each media range in the `Accept` header field MUST include the `profile` and `profile-version` parameters of a profile the client is able to process in the response. The client MAY list more than one profile and MAY use quality values to indicate preference.
-- An RPP client sending a request with a message body MUST include a `Content-Type` header field. The media type MUST include the `profile` and `profile-version` parameters of the profile that the message body conforms to.
+- Each media range in the `Accept` header field of a request MUST include the `profile` and `profile-version` parameters of a profile the client is able to process in the response. The client MAY list more than one profile and MAY use quality values to indicate preference.
+- The media type in the `Content-Type` header field of a request with a message body MUST include the `profile` and `profile-version` parameters of the profile that the message body conforms to.
 - The profile indicated in the `Content-Type` header field MUST also be listed in the `Accept` header field of the same request.
 
 Server processing:
 
-- The RPP server MUST determine the data format and profile of a request message body only from the `Content-Type` header field and MUST NOT infer them from the message body. If the message body does not conform to the data format of the indicated media type, the server MUST reject the request with HTTP status code 400 (Bad Request).
-- The RPP server MUST process the request message body according to the profile indicated in the `Content-Type` header field. If the server does not support the indicated media type, profile, or profile version, the server MUST reject the request with HTTP status code 415 (Unsupported Media Type).
+- The RPP server MUST determine the profile of a request message body only from the `Content-Type` header field and MUST NOT infer it from the message body, and MUST process the message body according to that profile.
+- If the server does not support the indicated profile or profile version, the server MUST reject the request with HTTP status code 415 (Unsupported Media Type).
 - The RPP server MUST select the profile for the response from the `Accept` header field using proactive negotiation as described in [@!RFC9110, section 12.5.1]. If the server supports none of the listed profiles, the server MUST reject the request with HTTP status code 406 (Not Acceptable).
 - If the profile in the `Content-Type` header field is not listed in the `Accept` header field, the server MUST reject the request with HTTP status code 400 (Bad Request).
 - If a request does not include profile parameters, the server MUST apply the default profile advertised in the RPP Discovery document (see (#discoverability)).
 - In all rejection cases above, the server MUST include the `RPP-Code` header field and a Problem Detail response as described in (#problem-detail).
 
 <!-- TODO: the Discovery document does not yet define a default profile field -->
-<!-- TODO: assign RPP result codes for the 406 and 415 rejection cases -->
 
 Responses:
 
-- An RPP server MUST include a `Content-Type` header field in every successful response that contains a message body. The media type MUST include the `profile` and `profile-version` parameters of the profile the server applied, and that profile MUST be one listed in the `Accept` header field of the request.
-- Problem Detail responses use the `application/problem+json` media type [@!RFC9457] and do not carry profile parameters.
-- An RPP server MUST include `Accept` in the `Vary` header field [@!RFC9110, section 12.5.5] of every response whose content depends on the negotiated profile.
-- An RPP server SHOULD include the `X-Content-Type-Options: nosniff` header field [@!FETCH] in every response. Omitting it allows a browser-based RPP client to interpret a response as a media type other than the one indicated in `Content-Type`, which can expose registration data to scripts from another origin.
+- The media type in the `Content-Type` header field of a successful response that contains a message body MUST include the `profile` and `profile-version` parameters of the profile the server applied, and that profile MUST be one listed in the `Accept` header field of the request.
+- Problem Detail responses do not carry profile parameters.
 
 Client processing:
 
-- The RPP client MUST determine the data format and profile of a response message body only from the `Content-Type` header field and MUST NOT infer them from the message body.
-- The RPP client MUST interpret a response message body according to the profile indicated in the response `Content-Type` header field.
+- The RPP client MUST determine the profile of a response message body only from the `Content-Type` header field and MUST interpret the message body according to that profile.
 - If that profile or profile version was not listed in the `Accept` header field of the request, the client MUST NOT process the message body as an RPP response and MUST treat the response as a protocol error.
 
 Example of a request and the corresponding response headers, using `application/rpp+json` for illustration:
@@ -372,10 +400,10 @@ Example of a request and the corresponding response headers, using `application/
 ```http
 GET /rpp/v1/domainNames/foo.example HTTP/1.1
 Host: rpp.example
-Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0""
+Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"
 
 HTTP/1.1 200 OK
-Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0""
+Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"
 Vary: Accept
 ```
 
