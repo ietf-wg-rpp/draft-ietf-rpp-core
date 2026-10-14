@@ -113,6 +113,8 @@ Example use of the RPP-Authorization header:
 RPP-Authorization: authinfo value=TXkgU2VjcmFRva2Vu, roid=REG-X-123
  ```
 
+- `RPP-Profile`: The client MUST use this header to indicate the profile that is used in the request.
+
 ## Response Headers
 
 - `RPP-Svtrid`: A server-assigned transaction identifier. The server MUST include this header in every response, providing a unique, server-side audit-trail reference for the processed request. Because this header maps the EPP `svTRID` element, whose syntax differs from the String type defined in [@!RFC9651, Section 3.3.3], `RPP-Svtrid` MUST NOT be defined as a Structured Header Field.
@@ -144,6 +146,8 @@ Example:
 ```
 Link: <https://rpp.example/rpp/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
 ```
+
+- `RPP-Profile`: The server MUST use this header to indicate the profile that is used in the response.
 
 # Cross-Origin Resource Sharing {#cors}
 
@@ -351,7 +355,40 @@ Client processing:
 - The RPP client MUST determine the data format of a response message body only from the `Content-Type` header field and MUST NOT infer it from the message body.
 - Except for Problem Detail responses, if the media type of a response was not listed in the `Accept` header field of the request, the client MUST NOT process the message body as an RPP response and MUST treat the response as a protocol error.
 
-# Profile Signalling {#profile-signalling}
+# Media Type Signalling {#profile-signalling}
+
+This document describes two distinct methods for signalling the profile used in a RPP request or response, the first method uses a dedicated HTTP header, the second method uses media type parameters. The two methods MUST not be used simultaneously in a single request or response. If both methods are used in a single request or response, then the server MUST return an HTTP error response and include a Problem Detail response in the message body.
+
+## Rationale for header signalling {#signalling-rationale}
+
+This section is not normative. Signalling the profile using a dedicated HTTP header is preferable to signalling it using media type parameters, for the following reasons:
+
+- Protocol level versus content level: the profile, and the RPP version it implies, determines how the whole HTTP message is interpreted, including URL paths, query parameters, and HTTP header fields, which can all evolve over time and need agreement between client and server. A media type only describes the format of the message body. Signalling at the protocol level, in a header field, fits this scope better than signalling in a property of the content.
+- Independence of the representation format: media type parameters have to be mandated for, and implemented identically in, every RPP media type registered for every representation format. A header field is independent of the representation format, so a new representation format does not need to define any profile signalling and the profile signalling does not need to be changed when the media type handling changes.
+- Messages without content: `Content-Type` is only meaningful for a message that has content. Requests such as GET and DELETE, and responses without a message body, would otherwise have to carry a `Content-Type` header field only to signal the profile. A header field defined by RPP can be present in every request and response.
+- Separation of concerns: with a dedicated header field, media types are used only to negotiate the data format of the message body, and the profile is negotiated independently of it.
+
+A> TODO: the working group has not yet decided on the signalling method to use, the two methods are both described until that decision is made.
+
+## Header signalling
+
+The client MUST use the `RPP-Profile` header to indicate the name of the profile that is to be used for the request. The value of this header MUST be of the type `parameter` described in [@!RFC8941], the first parameter MUST uniquely identify a profile, for example `urn:ietf:params:rpp:profile:example-profile`, followed by the version parameter. If the server does not support the indicated profile or version, then the server MUST return an HTTP error response and include a Problem Detail response in the message body.
+
+The ABNF for Profile header value is as follows:
+
+```abnf
+profile-header = "profile" "=" profile-name ";" OWS "version" "=" version
+profile-name   = token
+version        = 1*DIGIT "." 1*DIGIT
+```
+
+Example:
+
+```http
+RPP-Profile: profile=urn:ietf:params:rpp:profile:example-profile;version=1.0
+```
+
+## Media Type Signalling {#media-type-signalling}
 
 An RPP client and an RPP server select the profile that applies to a message using the media type parameters defined in this section, on top of the `Content-Type` and `Accept` header field handling defined in (#media-types). The profiles supported by an RPP server are announced in the RPP Discovery document (see (#discoverability)).
 
