@@ -303,21 +303,9 @@ The `version` element of the RPP request and response messages MUST include the 
 
 ## Extensions
 
-The RPP server MUST include the version for each extension in the RPP Discovery response. The client MUST use this version information to determine which extensions are supported by the server, and to ensure that it uses the correct version of the extension when making requests to the server.
-A request using an extension MUST include the version of the extension. The server MUST reject requests using extensions with a version that is not supported by the server, and MUST return a RPP Client error code. The following is an example of how the version information for an extension can be included in the RPP Discovery response:
+The RPP server MUST include all supported extensions and the version for each extension in the RPP Discovery response. The client MUST use this version information to determine which extensions are supported by the server, and to ensure that it uses the correct version of the extension when making requests to the server. The server MUST reject requests requiring extensions or unsupported versions of an extension that are not supported by the server. The set of extensions required by the client must be signalled by the client by using the correct "profile", see (#profiles).
 
-```json
-"extensions": [
-    {
-      "name": "RPP example extension",
-      "id": "urn:ietf:params:rpp:extension:example-extension-1.0",
-      "version": "1.0",
-      "url": "https://www.iana.org/assignments/rpp-extensions/rpp-example-extension"
-    }
-  ],
-```
-
-## Profiles
+## Profiles {#profiles}
 
 The RPP server MUST provide the set of supported profiles in the RPP Discovery response in the `profiles` element. The client can then request the appropriate profile from the server, using the "profiles" endpoint. The client MUST use this version information to determine which profiles are supported by the server, and to ensure that it uses the correct version of the profile when making requests to the server. A request using a profile MUST include the version of the profile. The server MUST reject requests using profiles with a version that is not supported by the server, and MUST return a RPP Client error code.
 
@@ -748,7 +736,6 @@ Content-Type: application/rpp+json
 Content-Language: en
 RPP-code: 01000
 
-TODO: JSON message here
 ```
 
 ## Create Resource
@@ -781,7 +768,6 @@ Content-Type: application/rpp+json
 Location: https://rpp.example/rpp/domainNames/foo.example
 RPP-code: 01000
 
-TODO
 ```
 
 Example Domain Create response where a `createProcess` object was implicitly created:
@@ -796,7 +782,6 @@ Location: https://rpp.example/rpp/domainNames/foo.example
 Link: <https://rpp.example/rpp/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
 RPP-code: 01000
 
-TODO
 ```
 
 ## Delete Resource
@@ -827,7 +812,6 @@ RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
 RPP-code: 01000
 
-TODO
 ```
 
 ## Update Resource
@@ -855,7 +839,6 @@ Accept-Language: en
 RPP-Cltrid: ABC-12345
 Content-Length: 252
 
-TODO
 ```
 
 Example full update response:
@@ -870,7 +853,6 @@ RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
 RPP-code: 01000
 
-TODO
 ```
 
 Example partial update request (PATCH):
@@ -885,7 +867,6 @@ Accept-Language: en
 RPP-Cltrid: ABC-12345
 Content-Length: 252
 
-TODO
 ```
 
 Example partial update response:
@@ -900,7 +881,6 @@ RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
 RPP-code: 01000
 
-TODO
 ```
 
 ## Processes
@@ -941,13 +921,6 @@ RPP-Cltrid: ABC-12345
 Accept-Language: en
 Content-Length: 96
 
-{
-  "expiryDate": "2025-09-08",
-  "renewalPeriod": {
-    "unit": "y",
-    "value": 1
-  }
-}
 ```
 
 Example Renew response:
@@ -964,9 +937,6 @@ Location: https://rpp.example/rpp/domainNames/foo.example/processes/renewProcess
 Content-Type: application/rpp+json
 RPP-code: 01000
 
-{
-  "expiryDate": "2026-09-08"
-}
 ```
 
 ### Transfer Resource
@@ -988,11 +958,6 @@ Accept-Language: en
 RPP-Cltrid: ABC-12345
 Content-Length: 320
 
-{
-  "transferDir": "push",
-  "gainingClientId": "ClientX"
-}
-
 ```
 
 Example request using object authorization:
@@ -1006,10 +971,6 @@ RPP-Cltrid: ABC-12345
 RPP-Authorization: authinfo value=TXkgU2VjcmV0IFRva2Vu
 Accept-Language: en
 Content-Length: 320
-
-{
-    "transferDir": "pull"
-}
 
 ```
 
@@ -1025,14 +986,6 @@ Content-Type: application/rpp+json
 Location: https://rpp.example/rpp/domainNames/foo.example/processes/transferProcesses/latest
 RPP-code: 01001
 
-{
-  "trStatus": "pending",
-  "reqClientId": "ClientX",
-  "actClientId": "ClientY",
-  "requestDate": "2000-06-06T22:00:00.0Z",
-  "actionDate": "2000-06-11T22:00:00.0Z",
-  "exDate": "2002-09-08T22:00:00.0Z"
-}
 ```
 
 #### Status
@@ -1064,14 +1017,6 @@ Content-Type: application/rpp+json
 Content-Language: en
 RPP-code: 01000
 
-{
-  "trStatus": "pending",
-  "reqClientId": "ClientX",
-  "actClientId": "ClientY",
-  "requestDate": "2000-06-06T22:00:00.0Z",
-  "actionDate": "2000-06-11T22:00:00.0Z",
-  "exDate": "2002-09-08T22:00:00.0Z"
-}
 ```
 
 #### Cancel
@@ -1102,13 +1047,6 @@ RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
 RPP-code: 01000
 
-{
-  "trStatus": "clientCancelled",
-  "reqClientId": "ClientX",
-  "actClientId": "ClientY",
-  "requestDate": "2000-06-06T22:00:00.0Z",
-  "actionDate": "2000-06-11T22:00:00.0Z"
-}
 ```
 
 #### Reject
@@ -1138,14 +1076,6 @@ Content-Length: 80
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
 RPP-code: 01000
-
-{
-  "trStatus": "clientRejected",
-  "reqClientId": "ClientX",
-  "actClientId": "ClientY",
-  "requestDate": "2000-06-06T22:00:00.0Z",
-  "actionDate": "2000-06-11T22:00:00.0Z"
-}
 
 ```
 
@@ -1178,13 +1108,6 @@ RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
 RPP-code: 01000
 
-{
-  "trStatus": "clientApproved",
-  "reqClientId": "ClientX",
-  "actClientId": "ClientY",
-  "requestDate": "2000-06-06T22:00:00.0Z",
-  "actionDate": "2000-06-11T22:00:00.0Z"
-}
 ```
 
 ## Messages {#messages}
@@ -1282,7 +1205,6 @@ Content-Language: en
 RPP-code: 01301
 RPP-Queue-Size: 4
 
-TODO
 ```
 
 ### Acknowledge
@@ -1314,7 +1236,6 @@ RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
 Content-Length: 145
 
-TODO
 ```
 
 # Extension Framework
@@ -1425,6 +1346,7 @@ RPP does not mandate a single data format; media types for RPP messages can use 
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Removed all JSON examples, these are now found in the rpp-json draft. (Issue #74)
 - Moved specification of discover and profile data objects to rpp-data-objects and examples to rpp-json (Issue #153)
 - Moved IANA registration requests to rpp-data-objects (Issue #153)
 - Updated the reference for the HTTP specification (Issue #90)
