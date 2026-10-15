@@ -183,6 +183,16 @@ When responding to a CORS preflight (OPTIONS) request, the server SHOULD include
 
 The server MUST allow every RPP media type it supports to be used in the `Content-Type` and `Accept` header fields of cross-origin requests.
 
+# Redirection {#redirection}
+
+An RPP server, or an HTTP intermediary, can redirect a request to another URL. Depending on the status code, an HTTP client can change the method of the request when following a redirect, for example from POST to GET, which may break RPP processing. Therefore, as recommended by [@RFC9205], this section defines how redirects are handled by RPP.
+
+An RPP server MUST use only the 307 (Temporary Redirect) or 308 (Permanent Redirect) status code ([@!HTTP, Section 15.4.8] and [@!HTTP, Section 15.4.9]) when redirecting a request, because these status codes do not allow the client to change the request method. A redirect response MUST include a `Location` header field containing an absolute URL using the `https` scheme.
+
+An RPP client MAY follow a 307 or 308 redirect response. When following a redirect, the client must send the same request content and the same header fields as in the original request, including the `RPP-Cltrid` header field, so that the redirected request is the same request for the purpose of idempotency. The client MUST NOT send the `Authorization` and `RPP-Authorization` header fields to an origin that differs from the origin of the original request, unless the client knows that the target origin is an alias of the origin of the original request, or the client has credentials that are valid for the new target origin. In the latter case the client uses the credentials for the new target origin, which can differ from the credentials used for the original request.
+
+An RPP client MUST NOT follow a response with any other redirection status code, for example because an HTTP intermediary generated it, and MUST treat such a response as a protocol error.
+
 # Problem Detail responses for errors {#problem-detail}
 
 When an error occurs that prevents processing of the requested action, an RPP server MUST respond using a Problem Detail
@@ -1375,10 +1385,13 @@ Data confidentiality and integrity MUST be enforced. Every client and server int
 
 RPP does not mandate a single data format; media types for RPP messages can use JSON, YAML, or any other data format. Each RPP media type specification MUST document the security considerations applicable to its underlying format (e.g. [@!RFC8259] for JSON), in addition to the considerations described in this section. An implementation that infers the data format or profile of a message from its content, rather than from the `Content-Type` header field, risks processing the message with the wrong parser or feature set; (#media-types) therefore requires both RPP clients and RPP servers to rely on the header field only.
 
+An RPP client MUST verify the identity of the RPP server, as described in [@!RFC9205], before sending any request. The client MUST validate the TLS server certificate, including that the certificate chain is trusted and that the certificate matches the host name of the URL used to access the RPP server. If the validation fails, the client must not continue and must not send the request.
+
 # Change History
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Added text describing client behavior when handling TLS-certificates and HTTP-redirects (Issue #133)
 - Updated the draft to comply with the HTTP Editorial Style Guide. (Issue #103)
 - Removed all JSON examples, these are now found in the rpp-json draft. (Issue #74)
 - Moved specification of discover and profile data objects to rpp-data-objects and examples to rpp-json (Issue #153)
@@ -1393,6 +1406,7 @@ RPP does not mandate a single data format; media types for RPP messages can use 
 - Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
+- Added Redirection section, requiring the use of the 307 and 308 status codes and forbidding clients to change the request method when following a redirect.
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
