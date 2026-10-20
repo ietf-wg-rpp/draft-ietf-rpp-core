@@ -1354,6 +1354,66 @@ When using JWTs for OAuth 2.0 [@!RFC6749] Access Tokens, the JWT profile describ
 
 # IANA Considerations
 
+## RPP Result Codes Registry
+
+The IANA is requested to create a new registry "RPP Result codes", this registry will be used to register RPP result codes defined in this document and in future RPP specifications and extensions.
+
+```text
+Name of the registry: RPP Result codes
+Registry group: RESTful Provisioning Protocol (RPP)
+Registration procedure: Expert Review
+```
+
+Fields to be registered:
+
+- `code`: The RPP result code, for example "01000".
+- `description`: A human-readable description of the result code and its intended use.
+
+The registry MUST be initially populated with the RPP result codes derived from the EPP result codes defined in [@!RFC5730, Section 3] and by new RPP codes defined in this document.
+The RPP result codes derived from the EPP result codes are obtained by prepending the leading digit "0", as described in the Result Codes section above.
+
+| RPP Result Code | Description |
+|------------------|-------------|
+| 01000            | Command completed successfully |
+| 01001            | Command completed successfully; action pending |
+| 01300            | Command completed successfully; no messages |
+| 01301            | Command completed successfully; ack to dequeue |
+| 01500            | Command completed successfully; ending session |
+| 02000            | Unknown command |
+| 02001            | Command syntax error |
+| 02002            | Command use error |
+| 02003            | Required parameter missing |
+| 02004            | Parameter value range error |
+| 02005            | Parameter value syntax error |
+| 02100            | Unimplemented protocol version |
+| 02101            | Unimplemented command |
+| 02102            | Unimplemented option |
+| 02103            | Unimplemented extension |
+| 02104            | Billing failure |
+| 02105            | Object is not eligible for renewal |
+| 02106            | Object is not eligible for transfer |
+| 02200            | Authentication error |
+| 02201            | Authorization error |
+| 02202            | Invalid authorization information |
+| 02300            | Object pending transfer |
+| 02301            | Object not pending transfer |
+| 02302            | Object exists |
+| 02303            | Object does not exist |
+| 02304            | Object status prohibits operation |
+| 02305            | Object association prohibits operation |
+| 02306            | Parameter value policy error |
+| 02307            | Unimplemented object service |
+| 02308            | Data management policy violation |
+| 02400            | Command failed |
+| 02500            | Command failed; server closing connection |
+| 02501            | Authentication error; server closing connection |
+| 02502            | Session limit exceeded; server closing connection |
+Table: Initial RPP Result Codes registrations, derived from [@!RFC5730] result codes
+{#tbl-rpp-iana-result-codes-initial}
+
+A> TODO: Do we want to reregister the RPP result codes that are derived from the EPP result codes, or only register the new RPP-specific result codes?
+A> TODO: Can we not cover this better using an EPP compatibility profile?
+
 ## Link Relation Type
 
 The IANA is requested to register the "rpp-process" link relation type in the "Link Relation Types" registry, following the template in [@!RFC8288]:
