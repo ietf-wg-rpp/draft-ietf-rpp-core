@@ -151,7 +151,7 @@ RPP-Code: 01000
 
 ```
   
-- `RPP-Code`: This header field is the equivalent of the EPP result code defined in [@!RFC5730] and MUST be used accordingly. This header field MUST be added to all responses and MAY be used by the client for easy access to the result code, without having to parse the HTTP response content. The `RPP-Code` header field's value is an Item of type String.
+- `RPP-Code`: This header field contains the RPP result code indicating the outcome of the request. This header field MUST be included in all responses and MAY be used by the client for easy access to the result code, without having to parse the HTTP response content. The `RPP-Code` header field's value is an Item of type String.
 
 - `RPP-Queue-Size`: Return the number of unacknowledged messages in the client message queue. The server MAY include this header field in all RPP responses. The `RPP-Queue-Size` header field's value is an Item of type Integer and MUST be greater than or equal to 0.
 
@@ -1315,17 +1315,61 @@ TODO
 
 # Result Codes
 
-RPP result codes are backward compatible with the EPP result codes defined in [@!RFC5730] and are mapped to HTTP status codes. This allows clients to handle responses generically using common HTTP patterns. While the HTTP status code provides the primary, high-level outcome, the specific RPP result code MUST still be provided in the `RPP-Code` HTTP header for detailed diagnostics.
+RPP result codes are used to indicate the outcome of an RPP request, they are defined to be backwards compatible with the EPP result codes defined in [@!RFC5730] and other EPP specifications and extensions.
 
-In order for RPP to be backwards compatible with EPP, RPP will use 5-digit coding of the result codes, where first digit will denote origin specification of the result codes. For [@!RFC5730] Result Codes the leading digit MUST be "0".
-For RPP result codes the leading digit MUST be "1", the second digit indicates the class of the result, and the remaining three digits indicate the specific result within that class, this allows implementers to define more specific result codes within each class. Every RPP result code SHOULD be registered with IANA to ensure uniqueness and avoid conflicts. An IANA registry for RPP result codes is defined in the IANA Considerations section.
+Two distinct namespaces are defined for RPP result codes:
 
-The mapping strategy is to use a specific HTTP status code for common and well-defined RPP result codes, while using a generic HTTP status code for all other RPP result codes.
+- Result codes derived from EPP [@!RFC5730] and other EPP specifications and extensions, which must use a leading digit of "0".
+- RPP specific result codes, which must use a leading digit of "1".
 
-The classes of RPP result codes are designed to match the classes of HTTP status codes, to facilitate mapping between RPP result codes and HTTP status codes. The classes of RPP result codes are defined as follows:
+RPP result codes follow the theory of reply codes described in [@!RFC5321, Section 4.2.1]. An RPP result code consists of five decimal digits, each digit has a special significance:
 
-- x1yzz: Success response
-- x2yzz: Error response
+- The first digit identifies the namespace, "1" for RPP specific result codes.
+- The second digit denotes the success or failure of the request, see the classes of result codes below.
+- The third digit denotes the category of the result, such as syntax or security.
+- The fourth and fifth digit provide the explicit result detail within the category.
+
+The second digit has two possible values:
+
+- 1: Positive completion. The request was accepted and processed by the server without error.
+- 2: Negative completion. The request was not accepted, and the requested action did not occur.
+
+The third digit groups the results into one of six categories:
+
+- 0: Protocol syntax
+- 1: Implementation-specific rules
+- 2: Security
+- 3: Data management
+- 4: Server system
+- 5: Connection management
+
+For example, the RPP result code "02303" is an EPP derived (0) failure (2) in the data management category (3), with the detail "Object does not exist" (03).
+
+Every RPP result code defined in this document and in future standardized RPP extensions MUST be registered with IANA to ensure uniqueness and avoid conflicts. An IANA registry for RPP result codes is defined in the IANA Considerations section.
+
+Newly defined RPP result codes, for example in future extensions, MUST NOT use the name space reserved for result codes derived from EPP.
+
+## Mapping RPP Result Codes to HTTP Status Codes
+
+RPP result codes are mapped to HTTP status codes, allowing clients to handle responses using common HTTP patterns. The RPP result code, describing the specific outcome of an RPP process, MUST always be returned using the `RPP-Code` HTTP header. This enables the client to take appropriate action based on the detailed result code.
+
+The mapping strategy is to map an RPP result code to the most applicable HTTP status code, when no such mapping can be defined then the RPP result code MUST be mapped to a general HTTP status code (e.g. 200, 400, and 500).
+
+The second and third digit of an RPP result code MUST be used to map the result code to a class of HTTP status codes, as defined in Table (#tbl-rpp-result-code-classes). The leading namespace digit and the last two detail digits do not influence the class.
+
+| RPP Result Code | Meaning | HTTP Status Code Class |
+|-----------------|---------|------------------------|
+| x1yzz           | Success response | 2xx (Successful) |
+| x20zz           | Error response, protocol syntax | 4xx (Client Error) |
+| x21zz           | Error response, implementation-specific rules | 4xx (Client Error) |
+| x22zz           | Error response, security | 4xx (Client Error) |
+| x23zz           | Error response, data management | 4xx (Client Error) |
+| x24zz           | Error response, server system | 5xx (Server Error) |
+| x25zz           | Error response, connection management | 4xx (Client Error) or 5xx (Server Error) |
+Table: Mapping RPP Result Code classes to HTTP Status Code classes
+{#tbl-rpp-result-code-classes}
+
+An RPP server MUST NOT use a 1xx or 3xx HTTP status code to signal an RPP result code. Redirection is handled as described in (#redirection).
 
 Table (#tbl-rpp-result-codes) lists the RPP result codes and their mapping to specific HTTP status codes, any RPP result code not listed in the table MUST be mapped to a generic HTTP status code as defined in Table (#tbl-rpp-unknown-result-codes).
 
@@ -1356,19 +1400,17 @@ Table (#tbl-rpp-result-codes) lists the RPP result codes and their mapping to sp
 Table: Mapping RPP Result Codes to specific HTTP Status Codes
 {#tbl-rpp-result-codes}
 
-The RPP result codes listed in Table (#tbl-rpp-result-codes) are derived from the EPP result codes defined in [@!RFC5730, Section 3], using the leading "0" digit to indicate an [@!RFC5730]-derived result code, as described above. Only EPP result codes for which a more specific HTTP status code applies than the generic class-based mapping in Table (#tbl-rpp-unknown-result-codes) are listed; all other EPP result codes MUST use the generic mapping.
-
- Table (#tbl-rpp-unknown-result-codes) lists the RPP result codes that are not directly mapped to specific HTTP status codes and MUST be mapped to the generic HTTP status codes as indicated.
+The generic class-based mapping in Table (#tbl-rpp-unknown-result-codes) is used for all other RPP result codes.
 
 | RPP Result Code | HTTP Status Code | Description | 
 |-----------------|------------------|-------------|
-| x1xxx:          | 200 (OK)           | Command completed successfully |
-| x20xx:          | 400 (Bad Request)  | Client error |
-| x21xx:          | 400 (Bad Request)  | Client error |
-| x22xx:          | 400 (Bad Request)  | Client error |
-| x23xx:          | 400 (Bad Request)  | Client error |
-| x24xx:          | 500 (Internal Server Error) | Server error |
-| x25xx:          | 500 (Internal Server Error) | Server error |
+| x1yzz           | 200 (OK)           | Command completed successfully |
+| x20zz           | 400 (Bad Request)  | Protocol syntax error |
+| x21zz           | 400 (Bad Request)  | Implementation-specific rule error |
+| x22zz           | 400 (Bad Request)  | Security error |
+| x23zz           | 400 (Bad Request)  | Data management error |
+| x24zz           | 500 (Internal Server Error) | Server system error |
+| x25zz           | 500 (Internal Server Error) | Connection management error, used when no specific mapping is listed |
 Table: Mapping RPP Result Codes to generic HTTP Status Codes
 {#tbl-rpp-unknown-result-codes}
 
@@ -1381,6 +1423,63 @@ Due to the stateless nature of RPP, the client MUST include the authentication c
 When using JWTs for OAuth 2.0 [@!RFC6749] Access Tokens, the JWT profile described in [@!RFC9068] MUST be used. It is RECOMMENDED to use short-lived tokens and to implement token revocation mechanisms to mitigate the risk of token compromise. If sensitive information is included in the JWT payload, it MUST be encrypted to prevent unauthorized access when the token is persistent to a storage device. Furthermore, the best practices for JWT usage as outlined in [@!RFC8725] MUST be followed.
 
 # IANA Considerations
+
+## RPP Result Codes Registry
+
+The IANA is requested to create a new registry "RPP Result codes", this registry will be used to register RPP result codes defined in this document and in future RPP specifications and extensions.
+
+```text
+Name of the registry: RPP Result codes
+Registry group: RESTful Provisioning Protocol (RPP)
+Registration procedure: Expert Review
+```
+
+Fields to be registered:
+
+- `code`: The RPP result code, for example "01000".
+- `origin`: The origin of the result code, indicating whether it is derived from EPP or defined specifically for RPP.
+- `description`: A human-readable description of the result code and its intended use.
+
+The initial set of codes is listed in the table below.
+
+| RPP Result Code | Origin | Description |
+|------------------|--------|-------------|
+| 01000            | EPP    | Command completed successfully |
+| 01001            | EPP    | Command completed successfully; action pending |
+| 01300            | EPP    | Command completed successfully; no messages |
+| 01301            | EPP    | Command completed successfully; ack to dequeue |
+| 01500            | EPP    | Command completed successfully; ending session |
+| 02000            | EPP    | Unknown command |
+| 02001            | EPP    | Command syntax error |
+| 02002            | EPP    | Command use error |
+| 02003            | EPP    | Required parameter missing |
+| 02004            | EPP    | Parameter value range error |
+| 02005            | EPP    | Parameter value syntax error |
+| 02100            | EPP    | Unimplemented protocol version |
+| 02101            | EPP    | Unimplemented command |
+| 02102            | EPP    | Unimplemented option |
+| 02103            | EPP    | Unimplemented extension |
+| 02104            | EPP    | Billing failure |
+| 02105            | EPP    | Object is not eligible for renewal |
+| 02106            | EPP    | Object is not eligible for transfer |
+| 02200            | EPP    | Authentication error |
+| 02201            | EPP    | Authorization error |
+| 02202            | EPP    | Invalid authorization information |
+| 02300            | EPP    | Object pending transfer |
+| 02301            | EPP    | Object not pending transfer |
+| 02302            | EPP    | Object exists |
+| 02303            | EPP    | Object does not exist |
+| 02304            | EPP    | Object status prohibits operation |
+| 02305            | EPP    | Object association prohibits operation |
+| 02306            | EPP    | Parameter value policy error |
+| 02307            | EPP    | Unimplemented object service |
+| 02308            | EPP    | Data management policy violation |
+| 02400            | EPP    | Command failed |
+| 02500            | EPP    | Command failed; server closing connection |
+| 02501            | EPP    | Authentication error; server closing connection |
+| 02502            | EPP    | Session limit exceeded; server closing connection |
+Table: Initial RPP Result Codes registrations
+{#tbl-rpp-iana-result-codes-initial}
 
 ## Link Relation Type
 
