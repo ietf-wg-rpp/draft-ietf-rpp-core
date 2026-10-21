@@ -630,6 +630,34 @@ To retrieve all process instances across all process types for an object:
 
 A server MAY choose not to implement these endpoints, in which case it MUST return 404 Not Found or 501 Not Implemented.
 
+### Rule 7: Operation Parameters {#operation-parameters}
+
+An operation parameter defined in [@!I-D.ietf-rpp-data-objects], such as `includeElements` MUST be included in the query component of the request URL, for every HTTP method, and MUST NOT be carried in the request content. This rule also applies to operation parameters added to an operation by an extension.
+
+The query component is derived as follows:
+
+- The parameter name MUST be the `"Identifier"` of the operation parameter, unchanged.
+- The parameter value MUST be the value of the data element, serialized as defined for its Data Type, only primitive types SHOULD be used.
+- An operation parameter with a cardinality of `0+` or `1+` MUST be repeated in the query component, once for each value.
+- Multiple operation parameters are allowed, no specific ordering is required.
+
+Example request for a domain name, using the `includeElements` operation parameter to request an additional data element:
+
+```http-message
+GET /domainNames/foo.example?includeElements=authInfo HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+RPP-Cltrid: ABC-12345
+
+```
+
+The server MUST reject the request with the 400 (Bad Request) status code, the `RPP-Code` header field if:
+
+- The query component contains a parameter name that is not an operation parameter of the requested operation or of a supported extension;
+- A parameter with a cardinality of `0-1` or `1` occurs more than once;
+- A parameter value does not conform to the Data Type of the operation parameter.
+
 ## Derived Endpoint Reference
 
 The following table lists all current RPP endpoints, each derived by applying the rules above to the relevant data object and operation identifiers. The following table is non normative.
@@ -1391,6 +1419,7 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
+- Added generic mapping of operation parameter to HTTP query parameter (Issue #135)
 - Added text describing client behavior when handling TLS-certificates and HTTP-redirects (Issue #133)
 - Updated the draft to comply with the HTTP Editorial Style Guide. (Issue #103)
 - Removed all JSON examples, these are now found in the rpp-json draft. (Issue #74)
