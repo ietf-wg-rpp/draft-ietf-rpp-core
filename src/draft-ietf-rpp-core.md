@@ -664,43 +664,48 @@ The following table lists all current RPP endpoints, each derived by applying th
 
 | Operation | HTTP Method | URL path |
 |---|---|---|
-| Domain: read | `GET` | `"/domainNames/{id}"` |
-| Domain: create | `POST` | `"/domainNames"` |
-| Domain: update | `PUT` or `PATCH` | `"/domainNames/{id}"` |
-| Domain: delete | `DELETE` | `"/domainNames/{id}"` |
+| Domain Name: read | `GET` | `"/domainNames/{name}"` |
+| Domain Name: create | `POST` | `"/domainNames"` |
+| Domain Name: update | `PUT` or `PATCH` | `"/domainNames/{name}"` |
+| Domain Name: delete | `DELETE` | `"/domainNames/{name}"` |
 | Contact: read | `GET` | `"/contacts/{id}"` |
 | Contact: create | `POST` | `"/contacts"` |
 | Contact: update | `PUT` or `PATCH` | `"/contacts/{id}"` |
 | Contact: delete | `DELETE` | `"/contacts/{id}"` |
-| Host: read | `GET` | `"/hosts/{id}"` |
+| Host: read | `GET` | `"/hosts/{hostName}"` |
 | Host: create | `POST` | `"/hosts"` |
-| Host: update | `PUT` or `PATCH` | `"/hosts/{id}"` |
-| Host: delete | `DELETE` | `"/hosts/{id}"` |
+| Host: update | `PUT` or `PATCH` | `"/hosts/{hostName}"` |
+| Host: delete | `DELETE` | `"/hosts/{hostName}"` |
 | Organisation: read | `GET` | `"/organisations/{id}"` |
 | Organisation: create | `POST` | `"/organisations"` |
-| Organisation: update | `PATCH` | `"/organisations/{id}"` |
+| Organisation: update | `PUT` or `PATCH` | `"/organisations/{id}"` |
 | Organisation: delete | `DELETE` | `"/organisations/{id}"` |
-| User: read | `GET` | `"/organisations/{id}/users/{userId}"` |
+| User: read | `GET` | `"/organisations/{id}/users/{id}"` |
 | User: create | `POST` | `"/organisations/{id}/users"` |
-| User: update | `PATCH` | `"/organisations/{id}/users/{userId}"` |
-| User: delete | `DELETE` | `"/organisations/{id}/users/{userId}"` |
+| User: update | `PUT` or `PATCH` | `"/organisations/{id}/users/{id}"` |
+| User: delete | `DELETE` | `"/organisations/{id}/users/{id}"` |
+| Discovery: read | `GET` | `"/.well-known/rpp"` |
 | Message: read | `GET` | `"/messages/{id}"` |
 | Message: create | `POST` | `"/messages"` |
 | Message: query | `GET` | `"/messages"` |
 | Message: delete | `DELETE` | `"/messages/{id}"` |
-| Transfer: create | `POST` | `"/{collection}/{id}/processes/transferProcesses"` |
 | Transfer: read | `GET` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
-| Transfer: delete (cancel) | `DELETE` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
+| Transfer: create | `POST` | `"/{collection}/{id}/processes/transferProcesses"` |
+| Transfer: delete | `DELETE` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
 | Transfer: transferApprove | `POST` | `"/{collection}/{id}/processes/transferProcesses/latest/transferApprove"` |
 | Transfer: transferReject | `POST` | `"/{collection}/{id}/processes/transferProcesses/latest/transferReject"` |
-| Restore: create | `POST` | `"/{collection}/{id}/processes/restoreProcesses"` |
-| Restore: read | `GET` | `"/{collection}/{id}/processes/restoreProcesses/latest"` |
-| Restore: report | `POST` | `"/{collection}/{id}/processes/restoreProcesses/latest/report"` |
-| Renew: create | `POST` | `"/{collection}/{id}/processes/renewProcesses"` |
-| Renew: read | `GET` | `"/{collection}/{id}/processes/renewProcesses/latest"` |
 | Transfer: list | `GET` | `"/{collection}/{id}/processes/transferProcesses"` |
+| Restore: read | `GET` | `"/{collection}/{id}/processes/restoreProcesses/latest"` |
+| Restore: create | `POST` | `"/{collection}/{id}/processes/restoreProcesses"` |
+| Restore: update | `PUT` or `PATCH` | `"/{collection}/{id}/processes/restoreProcesses/latest"` |
+| Restore: list | `GET` | `"/{collection}/{id}/processes/restoreProcesses"` |
+| Renew: create | `POST` | `"/{collection}/{id}/processes/renewProcesses"` |
+| Renew: list | `GET` | `"/{collection}/{id}/processes/renewProcesses"` |
+| Create: read | `GET` | `"/{collection}/{id}/processes/createProcesses/latest"` |
+| Create: create | `POST` | `"/{collection}/{id}/processes/createProcesses"` |
+| Create: list | `GET` | `"/{collection}/{id}/processes/createProcesses"` |
 | Processes: list | `GET` | `"/{collection}/{id}/processes"` |
-| Profile: read | `GET` | `"/profiles/{profileId}"` |
+| Profile: read | `GET` | `"/profiles/{name}"` |
 
 A> TODO: add availability and message queue 
 
