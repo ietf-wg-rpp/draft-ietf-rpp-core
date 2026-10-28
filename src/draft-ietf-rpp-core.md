@@ -1014,6 +1014,8 @@ Content-Type: application/rpp+json
 RPP-code: 01000
 
 ```
+A> TODO: See https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/195 - read for renew?
+
 
 ### Transfer Resource
 
