@@ -461,7 +461,7 @@ Client processing:
 Example of a request and the corresponding response headers, using `application/rpp+json` for illustration:
 
 ```http
-GET /rpp/v1/domainNames/foo.example HTTP/1.1
+GET /domainNames/foo.example HTTP/1.1
 Host: rpp.example
 Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"
 
@@ -745,7 +745,7 @@ The server MUST respond with the same HTTP status code if the same URL is reques
 Example request for a domain name that is not available for provisioning:
 
 ```http-message
-HEAD domains/foo.example/availability HTTP/1.1
+HEAD /domainNames/foo.example/availability HTTP/1.1
 Host: rpp.example
 Authorization: Bearer <token>
 Accept-Language: en
@@ -1285,7 +1285,7 @@ The client MUST use the HTTP DELETE method to acknowledge receipt of a single me
 Example request:
 
 ```http-message
-DELETE messages/12345 HTTP/1.1
+DELETE /messages/12345 HTTP/1.1
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
