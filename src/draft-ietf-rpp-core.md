@@ -614,7 +614,6 @@ The operation `"Identifier"` MUST be used as-is with no transformation. The foll
 |---|---|
 | `"transferApprove"` | `"/domains/foo.example/processes/transferProcesses/latest/transferApprove"` |
 | `"transferReject"` | `"/domains/foo.example/processes/transferProcesses/latest/transferReject"` |
-| `"report"` | `"/domains/foo.example/processes/restoreProcesses/latest/report"` |
 
 ### Rule 6: Process Listing
 
@@ -975,7 +974,59 @@ When the server creates a process object as a side effect of the operation, it M
 
 ### Restore Resource
 
-A> TODO: this needs update once restoreProcess is defined in Data Objects
+The Restore operation manages the recovery of an object that has entered the Redemption Grace Period (RGP) [@RFC3915]. Restore is modelled as a Process Object with its own lifecycle. The `restoreProcess` object identifier yields the `restoreProcesses` collection segment per Rule 3.
+
+Not every object resource includes support for the restore process; support is only available when the server supports the RGP feature.
+
+The client MUST use the HTTP POST method to create a new restore process (Rule 4, `create`). The server MUST reject the request with HTTP status code 409 (Conflict) and RPP result code `02304` if the object is not in the `rgpRedemptionPeriod` state. The response MUST include the Location header for the created restore process resource.
+
+Example Domain Restore request:
+
+```http-message
+POST /domainNames/foo.example/processes/restoreProcesses HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+Content-Type: application/rpp+json
+RPP-Cltrid: ABC-12345
+Accept-Language: en
+Content-Length: 96
+
+```
+
+Example Restore response:
+
+```http-message
+HTTP/1.1 201 Created
+Date: Wed, 24 Jan 2024 12:00:00 UTC
+Server: Example RPP server v1.0
+Content-Language: en
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
+Content-Length: 85
+Location: https://rpp.example/rpp/domainNames/foo.example/processes/restoreProcesses/XYZ-12345
+Content-Type: application/rpp+json
+RPP-code: 01000
+
+```
+
+To submit a restore report for an object in the `rgpPendingRestore` state, the client MUST use the HTTP PUT or PATCH method to update the restore process (Rule 4, `update`). The server MUST reject the request with HTTP status code 409 (Conflict) and RPP result code `02304` if the object is not in the `rgpPendingRestore` state.
+
+Example Domain Restore Report request:
+
+```http-message
+PUT /domainNames/foo.example/processes/restoreProcesses/latest HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+Content-Type: application/rpp+json
+RPP-Cltrid: ABC-12346
+Accept-Language: en
+Content-Length: 180
+
+```
+
+To retrieve the current state of the restore process, the client MUST use the HTTP GET method (Rule 4, `read`) and MUST NOT add content to the HTTP message body.
 
 ### Renew Resource
 
@@ -1542,6 +1593,7 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
 - Added Redirection section, requiring the use of the 307 and 308 status codes and forbidding clients to change the request method when following a redirect.
+- Added Restore Resource process based on the Restore Process Object (Issue #117)
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
