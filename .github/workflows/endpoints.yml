@@ -1,0 +1,32 @@
+name: Endpoint checks
+
+on:
+  push:
+    paths:
+      - "src/**.md"
+      - "requirements.txt"
+      - ".work/*.yaml"
+      - ".scripts/endpoints.py"
+      - ".github/workflows/endpoints.yml"
+  pull_request:
+    paths:
+      - "src/**.md"
+      - "requirements.txt"
+      - ".work/*.yaml"
+      - ".scripts/endpoints.py"
+      - ".github/workflows/endpoints.yml"
+  workflow_dispatch:
+
+jobs:
+  endpoints:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+          cache: pip
+      - run: pip install -r requirements.txt
+      # Exits 1 only on ERRORs; WARNINGs are reported but do not fail the job.
+      - name: Verify endpoint table and examples
+        run: python3 .scripts/endpoints.py
