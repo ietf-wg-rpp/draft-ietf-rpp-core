@@ -536,6 +536,7 @@ A> TODO: the paragraph above looks like misplaced. Do we need it at all? The pro
 | `"query"` | `GET` | `/"{collection}"` |
 | `"update"` | `PUT` or `PATCH` | `"/{collection}/{id}"` |
 | `"delete"` | `DELETE` | `"/{collection}/{id}"` |
+| `"availability"` | `HEAD` or `GET` | `"/{collection}/{id}/availability"` |
 
 <!-- The query operation retrieves a collection of resource instances based on the specified criteria.
  we may want to also allow the use of HTTP Query method here. -->
@@ -668,14 +669,17 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Domain: create | `POST` | `"/domainNames"` |
 | Domain: update | `PUT` or `PATCH` | `"/domainNames/{id}"` |
 | Domain: delete | `DELETE` | `"/domainNames/{id}"` |
+| Domain Name: availability | `HEAD` or `GET` | `"/domainNames/{name}/availability"` |
 | Contact: read | `GET` | `"/contacts/{id}"` |
 | Contact: create | `POST` | `"/contacts"` |
 | Contact: update | `PUT` or `PATCH` | `"/contacts/{id}"` |
 | Contact: delete | `DELETE` | `"/contacts/{id}"` |
+| Contact: availability | `HEAD` or `GET` | `"/contacts/{id}/availability"` |
 | Host: read | `GET` | `"/hosts/{id}"` |
 | Host: create | `POST` | `"/hosts"` |
 | Host: update | `PUT` or `PATCH` | `"/hosts/{id}"` |
 | Host: delete | `DELETE` | `"/hosts/{id}"` |
+| Host: availability | `HEAD` or `GET` | `"/hosts/{hostName}/availability"` |
 | Organisation: read | `GET` | `"/organisations/{id}"` |
 | Organisation: create | `POST` | `"/organisations"` |
 | Organisation: update | `PATCH` | `"/organisations/{id}"` |
@@ -702,7 +706,7 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Processes: list | `GET` | `"/{collection}/{id}/processes"` |
 | Profile: read | `GET` | `"/profiles/{profileId}"` |
 
-A> TODO: add availability and message queue 
+A> TODO: message queue 
 
 ## Internationalized Domain Names (IDN)
 
@@ -722,30 +726,28 @@ Host: rpp.example
 
 ## Availability for Creation
 
-A> TODO: align with data object when availability is described there
-
-The Availability for Creation endpoint is used to check whether an object can be successfully provisioned. Two distinct methods are defined for checking the availability of provisioning of an object, the first method uses the HEAD method for a quick check to find out if the object can be provisioned. The second method uses the GET method to retrieve additional information about the object's availability for provisioning, for example about pricing or additional requirements to be able to provision the requested object.
+The Availability for Creation endpoint maps the Availability operation defined in [@!I-D.ietf-rpp-data-objects] and is used to check whether an object can be successfully provisioned. Two distinct methods are defined for checking the availability of provisioning of an object, the first method uses the HEAD method for a quick check to find out if the object can be provisioned. The second method uses the GET method to retrieve the Availability Object, which may contain additional information, for example about pricing or additional requirements to be able to provision the requested object.
 
 When the client uses the HTTP HEAD method, the server MUST respond with an HTTP status code 200 (OK) if the object can be provisioned or with an HTTP status code 404 (Not Found) if the object cannot be provisioned.
 
-When the client uses the HTTP GET method, the server MUST respond with an HTTP status code 200 (OK) if the object can be provisioned. The server MUST include a message body containing more detailed availability information, for example about pricing or additional requirements to be able to provision the requested object. The message body MAY be and empty JSON object if no additional information is applicable.
+When the client uses the HTTP GET method, the server MUST respond with an HTTP status code 200 (OK) if the object can be provisioned. The server MUST include the Availability Object in the message body.
 
-If the object cannot be provisioned then the server MUST return an HTTP status code 404 (Not Found) and include a problem statement in the message body.
+If the object cannot be provisioned then the server MUST return an HTTP status code 404 (Not Found) and include the Availability Object in the message body.
 
-As an extension point the server MAY define and the client MAY use additional HTTP query parameters to further specify the check operation or the kind of response information that shall be returned. For example Registry Fee Extension [@RFC8748] defines a possibility to request certain currency, only certain commands or periods. Such functionality would add query parameters, which could be used with GET request to receive additional pricing information with the response. HEAD request would not be affected in this case.
+Parameters added to the Availability operation by extensions, for example to request a certain currency as defined in the Registry Fee Extension [@RFC8748], are mapped to query parameters as described in (#operation-parameters).
 
 The server MUST respond with the same HTTP status code if the same URL is requested with HEAD and with GET.
 
 ```
 - Request: HEAD|GET {collection}/{id}/availability
 - Request message: None
-- Response message: Optional availability response
+- Response message: Availability Object (GET only)
 ```
 
 Example request for a domain name that is not available for provisioning:
 
 ```http-message
-HEAD domains/foo.example/availability HTTP/1.1
+HEAD /domainNames/foo.example/availability HTTP/1.1
 Host: rpp.example
 Authorization: Bearer <token>
 Accept-Language: en
@@ -1535,6 +1537,7 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
 - Added Redirection section, requiring the use of the 307 and 308 status codes and forbidding clients to change the request method when following a redirect.
+- Added paths for availability operation and aligned "Availability for Creation" with the Availability operation defined in rpp-data-objects
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
