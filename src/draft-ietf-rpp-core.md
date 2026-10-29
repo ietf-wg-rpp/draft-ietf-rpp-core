@@ -668,14 +668,17 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Domain: create | `POST` | `"/domainNames"` |
 | Domain: update | `PUT` or `PATCH` | `"/domainNames/{id}"` |
 | Domain: delete | `DELETE` | `"/domainNames/{id}"` |
+| Domain Name: availability | `HEAD` or `GET` | `"/domainNames/{name}/availability"` |
 | Contact: read | `GET` | `"/contacts/{id}"` |
 | Contact: create | `POST` | `"/contacts"` |
 | Contact: update | `PUT` or `PATCH` | `"/contacts/{id}"` |
 | Contact: delete | `DELETE` | `"/contacts/{id}"` |
+| Contact: availability | `HEAD` or `GET` | `"/contacts/{id}/availability"` |
 | Host: read | `GET` | `"/hosts/{id}"` |
 | Host: create | `POST` | `"/hosts"` |
 | Host: update | `PUT` or `PATCH` | `"/hosts/{id}"` |
 | Host: delete | `DELETE` | `"/hosts/{id}"` |
+| Host: availability | `HEAD` or `GET` | `"/hosts/{hostName}/availability"` |
 | Organisation: read | `GET` | `"/organisations/{id}"` |
 | Organisation: create | `POST` | `"/organisations"` |
 | Organisation: update | `PATCH` | `"/organisations/{id}"` |
@@ -1535,6 +1538,7 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
 - Added Redirection section, requiring the use of the 307 and 308 status codes and forbidding clients to change the request method when following a redirect.
+- Added paths for availability operation
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 

@@ -89,6 +89,7 @@ Table of Contents
          2.7.4.3.  Query
          2.7.4.4.  Update
          2.7.4.5.  Delete
+         2.7.4.6.  Availability
        2.7.5.  Offline Review
        2.7.6.  Operations beyond uniform interface
        2.7.7.  Transfer Operations
@@ -159,20 +160,25 @@ Table of Contents
      9.15. Organisation Role Object
      9.16. Processes Object
      9.17. Base Process Object
-     9.18. Messages
-       9.18.1.  Base Message Object
-       9.18.2.  Review Response Object
-       9.18.3.  Transfer Request Message Object
-       9.18.4.  Transfer Outcome Message Object
-       9.18.5.  Expiration Deletion Message Object
-       9.18.6.  Auto-Renewal Message Object
-       9.18.7.  Service Notice Message Object
-     9.19. Discovery
-       9.19.1.  Version Object
-       9.19.2.  Environment Object
-       9.19.3.  Extension Object
-       9.19.4.  IDN LGR Object
-       9.19.5.  Notice Object
+     9.18. Availability
+       9.18.1.  Base Availability Object
+       9.18.2.  Domain Name Availability Object
+       9.18.3.  Contact Availability Object
+       9.18.4.  Host Availability Object
+     9.19. Messages
+       9.19.1.  Base Message Object
+       9.19.2.  Review Response Object
+       9.19.3.  Transfer Request Message Object
+       9.19.4.  Transfer Outcome Message Object
+       9.19.5.  Expiration Deletion Message Object
+       9.19.6.  Auto-Renewal Message Object
+       9.19.7.  Service Notice Message Object
+     9.20. Discovery
+       9.20.1.  Version Object
+       9.20.2.  Environment Object
+       9.20.3.  Extension Object
+       9.20.4.  IDN LGR Object
+       9.20.5.  Notice Object
    10. Process Objects
      10.1.  Transfer Process Object
        10.1.1.  Operations
@@ -197,10 +203,11 @@ Table of Contents
      11.1.  Object Description
      11.2.  Data Elements
      11.3.  Operations
-       11.3.1.  Create Operation
-       11.3.2.  Read Operation
-       11.3.3.  Update Operation
-       11.3.4.  Delete Operation
+       11.3.1.  Availability Operation
+       11.3.2.  Create Operation
+       11.3.3.  Read Operation
+       11.3.4.  Update Operation
+       11.3.5.  Delete Operation
      11.4.  Processes
        11.4.1.  Domain Create Process Object
          11.4.1.1.  Operations
@@ -210,19 +217,21 @@ Table of Contents
      12.1.  Object Description
      12.2.  Data Elements
      12.3.  Operations
-       12.3.1.  Create Operation
-       12.3.2.  Read Operation
-       12.3.3.  Update Operation
-       12.3.4.  Delete Operation
+       12.3.1.  Availability Operation
+       12.3.2.  Create Operation
+       12.3.3.  Read Operation
+       12.3.4.  Update Operation
+       12.3.5.  Delete Operation
      12.4.  Processes
    13. Host Data Object
      13.1.  Object Description
      13.2.  Data Elements
      13.3.  Operations
-       13.3.1.  Create Operation
-       13.3.2.  Read Operation
-       13.3.3.  Update Operation
-       13.3.4.  Delete Operation
+       13.3.1.  Availability Operation
+       13.3.2.  Create Operation
+       13.3.3.  Read Operation
+       13.3.4.  Update Operation
+       13.3.5.  Delete Operation
      13.4.  Processes
    14. Organisation Data Object
      14.1.  Object Description
@@ -835,6 +844,26 @@ Table of Contents
    -  Output:
       -  Object: This Object
          -  Cardinality: 0-1
+
+2.7.4.6.  Availability
+
+   -  Input:
+      -  Reference: This Object
+   -  Output:
+      -  Object: Base Availability Object
+
+   The Availability operation allows a client to determine whether the
+   object identified by the Reference can be created using the Create
+   operation at the time of the request.  The referenced object does not
+   need to exist.  The operation does not create, reserve, or otherwise
+   change the state of any object.
+
+   A Data Object that supports the Availability operation declares as
+   its Output an Availability Object that extends the Base Availability
+   Object (see Section 9.18).
+
+   Extensions MAY add parameters that further specify the check and data
+   elements to the Availability Objects.
 
 2.7.5.  Offline Review
 
@@ -3363,7 +3392,74 @@ Table of Contents
          -  Constraints: The value is set by the server and cannot be
             specified by the client.
 
-9.18.  Messages
+9.18.  Availability
+
+   The Availability Objects define the output of the Availability
+   operation (see Section 2.7.4.6).  Each Data Object that supports the
+   Availability operation defines its own Availability Object extending
+   the Base Availability Object.  Extensions add availability
+   information, for example pricing, as data elements of these objects.
+
+9.18.1.  Base Availability Object
+
+   -  Name: Base Availability Object
+   -  Identifier: baseAvailability
+   -  Abstract: true
+   -  Description: Base structure for the result of an Availability
+      operation, indicating whether the referenced object can be
+      created.
+   -  Data Elements:
+      -  Available
+         -  Identifier: available
+         -  Cardinality: 1
+         -  Mutability: read-only
+         -  Data Type: Boolean
+         -  Description: Indicates whether the referenced object can be
+            created at the time the operation is completed.  The value
+            true means that the object can be created.  It does not
+            guarantee that a subsequent Create operation for the same
+            object succeeds, as the state of the server can change
+            between the two operations.  The value false means that the
+            object cannot be created.
+         -  Constraints: (None)
+      -  Reason
+         -  Identifier: reason
+         -  Cardinality: 0-1
+         -  Mutability: read-only
+         -  Data Type: String
+         -  Description: Server-specific text explaining why the
+            referenced object cannot be created.
+         -  Constraints: The element is present only when available is
+            false.
+
+9.18.2.  Domain Name Availability Object
+
+   -  Name: Domain Name Availability Object
+   -  Identifier: domainNameAvailability
+   -  Extends: Base Availability Object
+   -  Description: The result of an Availability operation on a Domain
+      Name Data Object.
+   -  Data Elements: (None)
+
+9.18.3.  Contact Availability Object
+
+   -  Name: Contact Availability Object
+   -  Identifier: contactAvailability
+   -  Extends: Base Availability Object
+   -  Description: The result of an Availability operation on a Contact
+      Data Object.
+   -  Data Elements: (None)
+
+9.18.4.  Host Availability Object
+
+   -  Name: Host Availability Object
+   -  Identifier: hostAvailability
+   -  Extends: Base Availability Object
+   -  Description: The result of an Availability operation on a Host
+      Data Object.
+   -  Data Elements: (None)
+
+9.19.  Messages
 
    The Message Components define the structure and data elements for all
    message objects used in the protocol.  Each specific message type
@@ -3372,7 +3468,7 @@ Table of Contents
    section may be used for the data data element defined for the Message
    Data Object.
 
-9.18.1.  Base Message Object
+9.19.1.  Base Message Object
 
    -  Name: Base Message Object
    -  Identifier: baseMessage
@@ -3408,7 +3504,7 @@ Table of Contents
             -  When the message is not related to a specific object, the
                objectId field may be empty.
 
-9.18.2.  Review Response Object
+9.19.2.  Review Response Object
 
    The Review Response Object defines the data elements for returning
    the result of an offline-review.  Offline-review is optional for the
@@ -3476,7 +3572,7 @@ Table of Contents
             absent otherwise, including for update and delete
             operations.
 
-9.18.3.  Transfer Request Message Object
+9.19.3.  Transfer Request Message Object
 
    -  Name: Transfer Request Message Object
    -  Identifier: transferRequestMessage
@@ -3518,7 +3614,7 @@ Table of Contents
          -  Constraints: Absent if the server does not expose the
             Transfer Process Object.
 
-9.18.4.  Transfer Outcome Message Object
+9.19.4.  Transfer Outcome Message Object
 
    -  Name: Transfer Outcome Message Object
    -  Identifier: transferOutcomeMessage
@@ -3567,7 +3663,7 @@ Table of Contents
          -  Constraints: Absent if the server does not expose the
             Transfer Process Object.
 
-9.18.5.  Expiration Deletion Message Object
+9.19.5.  Expiration Deletion Message Object
 
    -  Name: Expiration Deletion Message Object
    -  Identifier: expirationDeletionMessage
@@ -3584,7 +3680,7 @@ Table of Contents
             object.
          -  Constraints: (None)
 
-9.18.6.  Auto-Renewal Message Object
+9.19.6.  Auto-Renewal Message Object
 
    -  Name: Auto-Renewal Message Object
    -  Identifier: autoRenewalMessage
@@ -3608,7 +3704,7 @@ Table of Contents
          -  Description: The new expiration date of the object.
          -  Constraints: (None)
 
-9.18.7.  Service Notice Message Object
+9.19.7.  Service Notice Message Object
 
    The Service Notice Message Object is not linked to a specific object
    or process and can be used to convey general information to the
@@ -3635,9 +3731,9 @@ Table of Contents
    *TODO* Complete the Service Notice Message Object definition, do we
    need it at all?
 
-9.19.  Discovery
+9.20.  Discovery
 
-9.19.1.  Version Object
+9.20.1.  Version Object
 
    -  Name: Discovery Version Object
    -  Identifier: discoveryVersion
@@ -3660,7 +3756,7 @@ Table of Contents
             a prefix for all endpoint URL templates.
          -  Constraints: (None)
 
-9.19.2.  Environment Object
+9.20.2.  Environment Object
 
    -  Name: Discovery Environment Object
    -  Identifier: discoveryEnvironment
@@ -3683,7 +3779,7 @@ Table of Contents
             example "production", "test", or "development".
          -  Constraints: (None)
 
-9.19.3.  Extension Object
+9.20.3.  Extension Object
 
    -  Name: Extension Object
    -  Identifier: extension
@@ -3727,7 +3823,7 @@ Table of Contents
                MUST resolve and the URL MUST be accessible to the
                client.
 
-9.19.4.  IDN LGR Object
+9.20.4.  IDN LGR Object
 
    -  Name: Discovery IDN LGR Object
    -  Identifier: discoveryIdnLgr
@@ -3767,7 +3863,7 @@ Table of Contents
             the specified TLDs.
          -  Constraints: (None)
 
-9.19.5.  Notice Object
+9.20.5.  Notice Object
 
    -  Name: Discovery Notice Object
    -  Identifier: discoveryNotice
@@ -4516,7 +4612,23 @@ Table of Contents
 
 11.3.  Operations
 
-11.3.1.  Create Operation
+11.3.1.  Availability Operation
+
+   -  Identifier: availability
+
+   The Availability operation allows a client to determine whether a
+   Domain Name resource with the given name can be created.
+
+   -  Authorisation:
+
+      -  Any authenticated client is authorised to perform this
+         operation.
+
+   -  Output:
+
+      -  Object: Domain Name Availability Object
+
+11.3.2.  Create Operation
 
    -  Identifier: create
 
@@ -4549,7 +4661,7 @@ Table of Contents
    (uName), the server MUST respond with an appropriate error indicating
    the mismatch.
 
-11.3.2.  Read Operation
+11.3.3.  Read Operation
 
    -  Identifier: read
 
@@ -4584,7 +4696,7 @@ Table of Contents
                (delegated), "sub" (subordinate), or "none".  The default
                value is "all".
 
-11.3.3.  Update Operation
+11.3.4.  Update Operation
 
    -  Identifier: update
 
@@ -4599,7 +4711,7 @@ Table of Contents
    Authorisation Information MAY be removed.  Contacts, nameservers, and
    the registrant to be added MUST be known to the server.
 
-11.3.4.  Delete Operation
+11.3.5.  Delete Operation
 
    -  Identifier: delete
 
@@ -4872,7 +4984,23 @@ Table of Contents
 
 12.3.  Operations
 
-12.3.1.  Create Operation
+12.3.1.  Availability Operation
+
+   -  Identifier: availability
+
+   The Availability operation allows a client to determine whether a
+   Contact resource with the given Handle ID can be created.
+
+   -  Authorisation:
+
+      -  Any authenticated client is authorised to perform this
+         operation.
+
+   -  Output:
+
+      -  Object: Contact Availability Object
+
+12.3.2.  Create Operation
 
    -  Identifier: create
 
@@ -4896,7 +5024,7 @@ Table of Contents
    -  E-mail (email)
    -  Authorisation Information (authInfo)
 
-12.3.2.  Read Operation
+12.3.3.  Read Operation
 
    -  Identifier: read
 
@@ -4926,7 +5054,7 @@ Table of Contents
    for non-disclosure MUST NOT be included in responses to unauthorised
    clients.
 
-12.3.3.  Update Operation
+12.3.4.  Update Operation
 
    -  Identifier: update
 
@@ -4947,7 +5075,7 @@ Table of Contents
    At least one change MUST be provided, unless the operation is
    extended.
 
-12.3.4.  Delete Operation
+12.3.5.  Delete Operation
 
    -  Identifier: delete
 
@@ -5058,7 +5186,23 @@ Table of Contents
 
 13.3.  Operations
 
-13.3.1.  Create Operation
+13.3.1.  Availability Operation
+
+   -  Identifier: availability
+
+   The Availability operation allows a client to determine whether a
+   Host Data Object with the given host name can be created.
+
+   -  Authorisation:
+
+      -  Any authenticated client is authorised to perform this
+         operation.
+
+   -  Output:
+
+      -  Object: Host Availability Object
+
+13.3.2.  Create Operation
 
    -  Identifier: create
 
@@ -5083,7 +5227,7 @@ Table of Contents
    name is external to the server's namespace, IP addresses are not
    required by the DNS and MAY be omitted.
 
-13.3.2.  Read Operation
+13.3.3.  Read Operation
 
    -  Identifier: read
 
@@ -5096,7 +5240,7 @@ Table of Contents
          information and there is no distinction based on client
          identity as described in Section 3.1.2 of [RFC5732].
 
-13.3.3.  Update Operation
+13.3.4.  Update Operation
 
    -  Identifier: update
 
@@ -5126,7 +5270,7 @@ Table of Contents
    attributes, and subsequently updating the other objects sponsored by
    the client.
 
-13.3.4.  Delete Operation
+13.3.5.  Delete Operation
 
    -  Identifier: delete
 
@@ -6538,6 +6682,87 @@ Table of Contents
 
                                   Table 27
 
+   Object: baseAvailability
+
+   Object Name: Base Availability Object
+
+   Object Type: Component
+
+   Description: Base structure for the result of an Availability
+   operation, indicating whether the referenced object can be created.
+
+   Reference: [This-ID]
+
+   Data Elements
+
+   +==========+=========+=====+============+=======+===================+
+   |Element   |Element  |Card.| Mutability |Data   | Description       |
+   |Identifier|Name     |     |            |Type   |                   |
+   +==========+=========+=====+============+=======+===================+
+   |available |Available|1    | read-only  |Boolean| Indicates         |
+   |          |         |     |            |       | whether the       |
+   |          |         |     |            |       | referenced        |
+   |          |         |     |            |       | object can be     |
+   |          |         |     |            |       | created at the    |
+   |          |         |     |            |       | time the          |
+   |          |         |     |            |       | operation is      |
+   |          |         |     |            |       | completed.        |
+   +----------+---------+-----+------------+-------+-------------------+
+   |reason    |Reason   |0-1  | read-only  |String | Server-specific   |
+   |          |         |     |            |       | text explaining   |
+   |          |         |     |            |       | why the           |
+   |          |         |     |            |       | referenced        |
+   |          |         |     |            |       | object cannot     |
+   |          |         |     |            |       | be created.       |
+   +----------+---------+-----+------------+-------+-------------------+
+
+                                  Table 28
+
+   Object: domainNameAvailability
+
+   Object Name: Domain Name Availability Object
+
+   Object Type: Component
+
+   Extends: baseAvailability
+
+   Description: The result of an Availability operation on a Domain Name
+   Data Object.
+
+   Reference: [This-ID]
+
+   Data Elements: (None)
+
+   Object: contactAvailability
+
+   Object Name: Contact Availability Object
+
+   Object Type: Component
+
+   Extends: baseAvailability
+
+   Description: The result of an Availability operation on a Contact
+   Data Object.
+
+   Reference: [This-ID]
+
+   Data Elements: (None)
+
+   Object: hostAvailability
+
+   Object Name: Host Availability Object
+
+   Object Type: Component
+
+   Extends: baseAvailability
+
+   Description: The result of an Availability operation on a Host Data
+   Object.
+
+   Reference: [This-ID]
+
+   Data Elements: (None)
+
    Object: baseMessage
 
    Object Name: Base Message Object
@@ -6574,7 +6799,7 @@ Table of Contents
    |            |            |     |            |      | operation.    |
    +------------+------------+-----+------------+------+---------------+
 
-                                  Table 28
+                                  Table 29
 
    Object: reviewResponseMessage
 
@@ -6643,7 +6868,7 @@ Table of Contents
    |                   |           |     |          |         |review.    |
    +-------------------+-----------+-----+----------+---------+-----------+
 
-                                  Table 29
+                                  Table 30
 
    Object: transferRequestMessage
 
@@ -6689,7 +6914,7 @@ Table of Contents
    |             |        |     |            |         | pertains to. |
    +-------------+--------+-----+------------+---------+--------------+
 
-                                 Table 30
+                                 Table 31
 
    Object: transferOutcomeMessage
 
@@ -6743,7 +6968,7 @@ Table of Contents
    |             |        |     |            |         | pertains to.  |
    +-------------+--------+-----+------------+---------+---------------+
 
-                                  Table 31
+                                  Table 32
 
    Object: expirationDeletionMessage
 
@@ -6771,7 +6996,7 @@ Table of Contents
    |              |        |     |            |         | object.     |
    +--------------+--------+-----+------------+---------+-------------+
 
-                                 Table 32
+                                 Table 33
 
    Object: autoRenewalMessage
 
@@ -6804,7 +7029,7 @@ Table of Contents
    |             |       |     |            |           | object.     |
    +-------------+-------+-----+------------+-----------+-------------+
 
-                                 Table 33
+                                 Table 34
 
    Object: serviceNoticeMessage
 
@@ -6832,7 +7057,7 @@ Table of Contents
    |            |         |     |            |      | organisation.   |
    +------------+---------+-----+------------+------+-----------------+
 
-                                 Table 34
+                                 Table 35
 
    Object: transferProcess
 
@@ -6916,7 +7141,7 @@ Table of Contents
    |               |          |     |           |          |date.      |
    +---------------+----------+-----+-----------+----------+-----------+
 
-                                  Table 35
+                                  Table 36
 
    Operations
 
@@ -6979,7 +7204,7 @@ Table of Contents
     |            |        |       |        | for rejection.           |
     +------------+--------+-------+--------+--------------------------+
 
-                                  Table 36
+                                  Table 37
 
    Parameters: (None)
 
@@ -7036,7 +7261,7 @@ Table of Contents
    |               |       |     |           |         | the server.   |
    +---------------+-------+-----+-----------+---------+---------------+
 
-                                  Table 37
+                                  Table 38
 
    Operations
 
@@ -7122,7 +7347,7 @@ Table of Contents
    |            |         |     |             |        | name.        |
    +------------+---------+-----+-------------+--------+--------------+
 
-                                 Table 38
+                                 Table 39
 
    Operations
 
@@ -7202,7 +7427,7 @@ Table of Contents
    |                |        |     |           |         |the server.  |
    +----------------+--------+-----+-----------+---------+-------------+
 
-                                  Table 39
+                                  Table 40
 
    Operations
 
@@ -7235,7 +7460,7 @@ Table of Contents
     +============+=========+=======+============+======+=============+
     +------------+---------+-------+------------+------+-------------+
 
-                                 Table 40
+                                 Table 41
 
    Object: restoreProcess
 
@@ -7290,7 +7515,7 @@ Table of Contents
    |             |       |     |          |         |process.            |
    +-------------+-------+-----+----------+---------+--------------------+
 
-                                  Table 41
+                                  Table 42
 
    Operations
 
@@ -7333,7 +7558,7 @@ Table of Contents
    |               |         |       |         | operation.            |
    +---------------+---------+-------+---------+-----------------------+
 
-                                  Table 42
+                                  Table 43
 
    Parameters: (None)
 
@@ -7370,7 +7595,7 @@ Table of Contents
    |               |         |       |         | process.              |
    +---------------+---------+-------+---------+-----------------------+
 
-                                  Table 43
+                                  Table 44
 
    Parameters: (None)
 
@@ -7454,7 +7679,7 @@ Table of Contents
    |             |            |     |          |         |the client.  |
    +-------------+------------+-----+----------+---------+-------------+
 
-                                  Table 44
+                                  Table 45
 
    Object: domainName
 
@@ -7549,9 +7774,20 @@ Table of Contents
    |                |             |     |          |                   |object.      |
    +----------------+-------------+-----+----------+-------------------+-------------+
 
-                                  Table 45
+                                  Table 46
 
    Operations
+
+   Operation: Availability
+
+   Operation Identifier: availability
+
+   Description: Determines whether a Domain Name resource can be
+   created.
+
+   Input Data Elements: (None)
+
+   Parameters: (None)
 
    Operation: Create
 
@@ -7581,7 +7817,7 @@ Table of Contents
    |             | Filter |       |        | information is returned. |
    +-------------+--------+-------+--------+--------------------------+
 
-                                 Table 46
+                                 Table 47
 
    Operation: Update
 
@@ -7668,9 +7904,19 @@ Table of Contents
    |            |             |     |          |             |object.      |
    +------------+-------------+-----+----------+-------------+-------------+
 
-                                  Table 47
+                                  Table 48
 
    Operations
+
+   Operation: Availability
+
+   Operation Identifier: availability
+
+   Description: Determines whether a Contact resource can be created.
+
+   Input Data Elements: (None)
+
+   Parameters: (None)
 
    Operation: Create Operation
 
@@ -7769,9 +8015,19 @@ Table of Contents
    |            |            |     |          |            |object.    |
    +------------+------------+-----+----------+------------+-----------+
 
-                                  Table 48
+                                  Table 49
 
    Operations
+
+   Operation: Availability
+
+   Operation Identifier: availability
+
+   Description: Determines whether a Host Data Object can be created.
+
+   Input Data Elements: (None)
+
+   Parameters: (None)
 
    Operation: Create
 
@@ -7838,7 +8094,7 @@ Table of Contents
    |          |          |     |          |              | ID.         |
    +----------+----------+-----+----------+--------------+-------------+
 
-                                  Table 49
+                                  Table 50
 
    Object: organisation
 
@@ -7918,7 +8174,7 @@ Table of Contents
    |            |            |     |          |                           |object.       |
    +------------+------------+-----+----------+---------------------------+--------------+
 
-                                  Table 50
+                                  Table 51
 
    Operations
 
@@ -8014,7 +8270,7 @@ Table of Contents
    |            |        |     |           |          | response.      |
    +------------+--------+-----+-----------+----------+----------------+
 
-                                  Table 51
+                                  Table 52
 
    Operations
 
@@ -8061,7 +8317,7 @@ Table of Contents
     |            |         |       |        | message objects.       |
     +------------+---------+-------+--------+------------------------+
 
-                                 Table 52
+                                 Table 53
 
    Operation: Delete
 
@@ -8124,7 +8380,7 @@ Table of Contents
    |            |            |     |          |             |object.     |
    +------------+------------+-----+----------+-------------+------------+
 
-                                  Table 53
+                                  Table 54
 
    Operations
 
@@ -8241,7 +8497,7 @@ Table of Contents
    |              |           |     |          |           |profile.    |
    +--------------+-----------+-----+----------+-----------+------------+
 
-                                  Table 54
+                                  Table 55
 
    Operations
 
@@ -8290,7 +8546,7 @@ Table of Contents
    |            |         |       |            |        | templates.   |
    +------------+---------+-------+------------+--------+--------------+
 
-                                  Table 55
+                                  Table 56
 
    Object: discoveryEnvironment
 
@@ -8319,7 +8575,7 @@ Table of Contents
    |            |         |       |            |        | server.     |
    +------------+---------+-------+------------+--------+-------------+
 
-                                 Table 56
+                                 Table 57
 
    Object: extension
 
@@ -8356,7 +8612,7 @@ Table of Contents
     |            |         |     |            |      | specification. |
     +------------+---------+-----+------------+------+----------------+
 
-                                  Table 57
+                                  Table 58
 
    Object: discoveryIdnLgr
 
@@ -8395,7 +8651,7 @@ Table of Contents
    |            |       |     |            |       | specified TLDs.   |
    +------------+-------+-----+------------+-------+-------------------+
 
-                                  Table 58
+                                  Table 59
 
    Object: discoveryNotice
 
@@ -8424,7 +8680,7 @@ Table of Contents
    |          |           |     |          |         | the notice.     |
    +----------+-----------+-----+----------+---------+-----------------+
 
-                                  Table 59
+                                  Table 60
 
    Object: discovery
 
@@ -8511,7 +8767,7 @@ Table of Contents
    |           |           |     |          |                   |operator.  |
    +-----------+-----------+-----+----------+-------------------+-----------+
 
-                                  Table 60
+                                  Table 61
 
    Operations
 
@@ -8823,7 +9079,7 @@ Table of Contents
    |                          |      | described above.      |         |
    +--------------------------+------+-----------------------+---------+
 
-       Table 61: Initial RPP Domain Name Status Values Registrations
+       Table 62: Initial RPP Domain Name Status Values Registrations
 
 19.5.  RPP Host Status Values Registry
 
@@ -8971,7 +9227,7 @@ Table of Contents
    |                        |        | party action.       |           |
    +------------------------+--------+---------------------+-----------+
 
-           Table 62: Initial RPP Host Status Values Registrations
+           Table 63: Initial RPP Host Status Values Registrations
 
 19.6.  RPP Contact Status Values Registry
 
@@ -9140,7 +9396,7 @@ Table of Contents
    |                          |        | action.           |           |
    +--------------------------+--------+-------------------+-----------+
 
-         Table 63: Initial RPP Contact Status Values Registrations
+         Table 64: Initial RPP Contact Status Values Registrations
 
 19.7.  RPP Organisation Role Status Values Registry
 
@@ -9202,7 +9458,7 @@ Table of Contents
    |                      |        | added or removed.     |           |
    +----------------------+--------+-----------------------+-----------+
 
-    Table 64: Initial RPP Organisation Role Status Values Registrations
+    Table 65: Initial RPP Organisation Role Status Values Registrations
 
 19.8.  RPP Organisation Status Values Registry
 
@@ -9364,7 +9620,7 @@ Table of Contents
    |                        |         | action.            |           |
    +------------------------+---------+--------------------+-----------+
 
-       Table 65: Initial RPP Organisation Status Values Registrations
+       Table 66: Initial RPP Organisation Status Values Registrations
 
 19.9.  RPP User Status Values Registry
 
@@ -9425,7 +9681,7 @@ Table of Contents
    |             |         | MUST be rejected.             |           |
    +-------------+---------+-------------------------------+-----------+
 
-           Table 66: Initial RPP User Status Values Registrations
+           Table 67: Initial RPP User Status Values Registrations
 
 19.10.  URN Sub-namespace for RPP (urn:ietf:params:rpp)
 
@@ -9522,6 +9778,8 @@ Table of Contents
 
 draft-ietf-rpp-data-objects -01 - -02
 
+   -  added Availability operation to the uniform interface and to the
+      Domain Name, Contact and Host Data Objects (Issue #46)
    -  add Abstract keyword to flag objects used only as base objects;
       Base Process Object and Base Message Object declared abstract #188
    -  Clarification on Processes supported and extended by a Data Object
