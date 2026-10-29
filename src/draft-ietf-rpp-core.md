@@ -803,10 +803,10 @@ Content-Length: 42
 The Object Info request MUST use the HTTP GET method on a resource identifying an object instance (Rule 2, `read` operation). If the object has authorization information attached then the client MUST use an empty message body and include the RPP-Authorization HTTP header. If the authorization is linked to a database object the client MUST also include the roid in the RPP-Authorization header. The client MAY also use a message body that includes the authorization information, the client MUST then not use the RPP-Authorization header.
 
 
-Example request for an object not using authorization information:
+Example request for an object not using authorization information, using the `hostsFilter` operation parameter to only return delegated hosts:
 
 ```http-message
-GET /domainNames/foo.example HTTP/1.1
+GET /domainNames/foo.example?hostsFilter=del HTTP/1.1
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
