@@ -706,7 +706,7 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Processes: list | `GET` | `"/{collection}/{id}/processes"` |
 | Profile: read | `GET` | `"/profiles/{name}"` |
 
-A> TODO: add availability and message queue 
+A> TODO: add availability
 
 ## Internationalized Domain Names (IDN)
 
