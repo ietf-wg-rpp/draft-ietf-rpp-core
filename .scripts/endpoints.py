@@ -53,6 +53,9 @@ REPO = Path(__file__).resolve().parent.parent
 DEFAULT_DRAFT = REPO / "src" / "draft-ietf-rpp-core.md"
 DEFAULT_MODEL = REPO / ".work" / "draft-ietf-rpp-data-objects.yaml"
 TABLE_HEADING = "## Derived Endpoint Reference"
+# A TODO naming an issue, directly after an example block or the table, turns
+# the errors it covers into warnings.
+TODO_ISSUE_RE = re.compile(r"^(?:A>\s*)?(?:<!--\s*)?\**TODO\b.*?(https?://\S+/issues/\d+)")
 
 # Discovery has no Unique Identifier and is not served below the base URL;
 # the core draft maps it to this fixed well-known path (Discoverability).
@@ -485,6 +488,22 @@ def find_table(lines):
     return i, j
 
 
+def table_todos(lines, end):
+    """Return [(line_no, text, issue)] for the TODO lines with an issue link
+    directly following the table ending at line index end (blank lines
+    skipped)."""
+    out = []
+    i = end
+    while i < len(lines):
+        if lines[i].strip():
+            m = TODO_ISSUE_RE.match(lines[i])
+            if not m:
+                break
+            out.append((i + 1, lines[i], m.group(1)))
+        i += 1
+    return out
+
+
 def parse_table(rows):
     out = []
     for row in rows[2:]:
@@ -573,8 +592,9 @@ URI_HEADER_RE = re.compile(r"^(Location|Content-Location|Link):\s*(.*)$", re.I)
 
 
 def example_blocks(lines):
-    """Yield (first_line_no, [(line_no, text)]) for every http example block,
-    with RFC 8792 '\\' line folding undone."""
+    """Yield (first_line_no, [(line_no, text)], issue) for every http example
+    block, with RFC 8792 '\\' line folding undone; issue is the issue URL of
+    a TODO directly following the block (blank lines skipped), else None."""
     i = 0
     while i < len(lines):
         m = re.match(r"^```\s*([\w-]*)", lines[i])
@@ -590,13 +610,18 @@ def example_blocks(lines):
         i += 1
         if lang not in HTTP_FENCES:
             continue
+        j = i
+        while j < len(lines) and not lines[j].strip():
+            j += 1
+        todo = TODO_ISSUE_RE.match(lines[j]) if j < len(lines) else None
+        issue = todo.group(1) if todo else None
         unfolded = []
         for no, text in body:
             if unfolded and unfolded[-1][1].endswith("\\"):
                 unfolded[-1] = (unfolded[-1][0], unfolded[-1][1][:-1] + text.lstrip())
             else:
                 unfolded.append((no, text))
-        yield start + 1, unfolded
+        yield start + 1, unfolded, issue
 
 
 def check_examples(model, lines, rep, base_path, strip_prefixes, allow_params):
@@ -605,6 +630,13 @@ def check_examples(model, lines, rep, base_path, strip_prefixes, allow_params):
     collections = {ep.path.split("/")[1] for ep in model.endpoints} - {"{collection}"}
     count = 0
     used = set()    # (endpoint label, parameter) used in an example request
+    issue = None    # TODO issue following the current block: errors become warnings
+
+    def error(msg):
+        if issue:
+            rep.warn(f"{msg} (known issue: {issue})")
+        else:
+            rep.error(msg)
 
     def check(no, method, target, absolute_ok):
         nonlocal count
@@ -614,14 +646,14 @@ def check_examples(model, lines, rep, base_path, strip_prefixes, allow_params):
         path, query = parts.path, parts.query
         if parts.scheme or parts.netloc:
             if not absolute_ok:
-                rep.error(f"{where}: absolute-form request target")
+                error(f"{where}: absolute-form request target")
                 return
             if base_path and not (path == base_path or path.startswith(base_path + "/")):
-                rep.error(f"{where}: does not start with the base path {base_path!r}")
+                error(f"{where}: does not start with the base path {base_path!r}")
                 return
             path = path[len(base_path):] if base_path else path
         elif not path.startswith("/"):
-            rep.error(f"{where}: path is not absolute (missing leading '/')")
+            error(f"{where}: path is not absolute (missing leading '/')")
             return
         for prefix in strip_prefixes:
             if path.startswith(prefix + "/"):
@@ -634,14 +666,14 @@ def check_examples(model, lines, rep, base_path, strip_prefixes, allow_params):
             hint = ""
             if seg not in collections and not path.startswith("/.well-known/"):
                 hint = f" (unknown collection segment {seg!r}; known: {', '.join(sorted(collections))})"
-            rep.error(f"{where}: no endpoint derived for this path{hint}")
+            error(f"{where}: no endpoint derived for this path{hint}")
             return
         if method:
             want = {method, "GET"} if method == "HEAD" else {method}
             ok = [(ep, o) for ep, o in hits if want & set(ep.methods)]
             if not ok:
                 allowed = sorted({m for ep, _ in hits for m in ep.methods})
-                rep.error(f"{where}: method {method} not derived for this path "
+                error(f"{where}: method {method} not derived for this path "
                           f"(allowed: {', '.join(allowed)})")
                 return
             hits = ok
@@ -659,7 +691,7 @@ def check_examples(model, lines, rep, base_path, strip_prefixes, allow_params):
                     rep.warn(f"{where}: query parameter {name!r} is not an operation "
                              f"parameter of {', '.join(sorted({ep.label for ep, _ in hits}))}")
 
-    for _, block in example_blocks(lines):
+    for _, block, issue in example_blocks(lines):
         for no, text in block:
             m = REQUEST_RE.match(text)
             if m:
@@ -720,6 +752,19 @@ def main():
     model = Model(data, irregular)
     lines = text.split("\n")
 
+    # A model error whose path is named by a TODO with an issue link
+    # directly after the table is a known issue: report it as a warning.
+    todos = table_todos(lines, find_table(lines)[1])
+    errors = []
+    for e in model.errors:
+        subject = e.split(": ", 1)[0]
+        issue = next((iss for _, text, iss in todos if subject in text), None)
+        if issue:
+            model.warnings.append(f"{e} (known issue: {issue})")
+        else:
+            errors.append(e)
+    model.errors = errors
+
     for w in model.warnings:
         print(f"model: WARNING {w}", file=sys.stderr)
     for e in model.errors:
@@ -751,7 +796,8 @@ def main():
     if "examples" in checks:
         check_examples(model, lines, rep, args.base_path.rstrip("/"),
                        [p.rstrip("/") for p in args.strip_prefix], set(args.allow_param))
-    print(f"== {rep.errors + len(model.errors)} error(s), {rep.warnings} warning(s)")
+    print(f"== {rep.errors + len(model.errors)} error(s), "
+          f"{rep.warnings + len(model.warnings)} warning(s)")
     return 1 if rep.errors or model.errors else status
 
 

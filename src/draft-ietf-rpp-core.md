@@ -710,6 +710,8 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Processes: list | `GET` | `"/{collection}/{id}/processes"` |
 | Profile: read | `GET` | `"/profiles/{name}"` |
 
+A> TODO: The User Data Object derives the path `/organisations/{id}/users/{id}`, in which the placeholder `{id}` occurs twice. See https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/196
+
 ## Internationalized Domain Names (IDN)
 
 When an Internationalized Domain Name (IDN) is used to identify a Domain Name Data Object or Host Data Object instance in a URL, in particular as the `{id}` path segment described in Rule 2, the ASCII Compatible Encoding (ACE) A-label form of the name, as defined in [@!RFC5890], MUST be used. This requirement ensures that the resulting URL remains a valid URI as defined in [@!RFC3986], since the A-label form is composed exclusively of ASCII characters and therefore requires no percent-encoding or additional Unicode normalization when used as a URL path segment.
