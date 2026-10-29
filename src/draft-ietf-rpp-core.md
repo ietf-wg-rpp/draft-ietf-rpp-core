@@ -1006,8 +1006,6 @@ When the server creates a process object as a side effect of the operation, it M
 
 The Restore operation manages the recovery of an object that has entered the Redemption Grace Period (RGP) [@RFC3915]. Restore is modelled as a Process Object with its own lifecycle. The `restoreProcess` object identifier yields the `restoreProcesses` collection segment per Rule 3.
 
-Not every object resource includes support for the restore process; support is only available when the server supports the RGP feature.
-
 The client MUST use the HTTP POST method to create a new restore process (Rule 4, `create`). The server MUST reject the request with HTTP status code 409 (Conflict) and RPP result code `02304` if the object is not in the `rgpRedemptionPeriod` state. The response MUST include the Location header for the created restore process resource.
 
 Example Domain Restore request:
