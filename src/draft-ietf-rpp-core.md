@@ -770,6 +770,34 @@ Content-Length: 0
 
 ```
 
+Example request for an internationalized domain name, using the `uName` and `lgr` operation parameters to have the availability determined for the Unicode Name `bücher.example` against a specific LGR:
+
+```http-message
+GET /domainNames/xn--bcher-kva.example/availability?\
+   uName=b%C3%BCcher.example&lgr=example-latn-1.0 HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+Accept-Language: en
+RPP-Cltrid: ABC-12345
+
+```
+
+Example response:
+
+```http-message
+HTTP/1.1 200 OK
+Date: Wed, 24 Jan 2024 12:00:00 UTC
+Server: Example RPP server v1.0
+Content-Type: application/rpp+json
+Content-Language: en
+RPP-Cltrid: ABC-12345
+RPP-Svtrid: XYZ-12345
+RPP-code: 01000
+Content-Length: 42
+
+```
+
 ## Resource Information
 
 The Object Info request MUST use the HTTP GET method on a resource identifying an object instance (Rule 2, `read` operation). If the object has authorization information attached then the client MUST use an empty message body and include the RPP-Authorization HTTP header. If the authorization is linked to a database object the client MUST also include the roid in the RPP-Authorization header. The client MAY also use a message body that includes the authorization information, the client MUST then not use the RPP-Authorization header.

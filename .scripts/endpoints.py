@@ -15,7 +15,8 @@ Checks performed (default: all of them):
             URI in ```http-message (and ```http) example blocks addresses a
             derived endpoint, with an allowed method, a process type the
             owning Data Object supports, and query parameters the operation
-            defines (Rule 7)
+            defines (Rule 7); every operation parameter the data objects
+            define is used in at least one example request
 
 Usage:
   .scripts/endpoints.py                    # run all checks
@@ -603,6 +604,7 @@ def check_examples(model, lines, rep, base_path, strip_prefixes, allow_params):
     matcher = Matcher(model)
     collections = {ep.path.split("/")[1] for ep in model.endpoints} - {"{collection}"}
     count = 0
+    used = set()    # (endpoint label, parameter) used in an example request
 
     def check(no, method, target, absolute_ok):
         nonlocal count
@@ -652,6 +654,7 @@ def check_examples(model, lines, rep, base_path, strip_prefixes, allow_params):
         if query and method:
             known = set().union(*(ep.params for ep, _ in hits)) | allow_params
             for name, _ in parse_qsl(query, keep_blank_values=True):
+                used.update((ep.label, name) for ep, _ in hits if name in ep.params)
                 if name not in known:
                     rep.warn(f"{where}: query parameter {name!r} is not an operation "
                              f"parameter of {', '.join(sorted({ep.label for ep, _ in hits}))}")
@@ -671,6 +674,13 @@ def check_examples(model, lines, rep, base_path, strip_prefixes, allow_params):
             else:
                 check(no, None, h.group(2).strip(), absolute_ok=True)
     print(f"  {count} path(s) checked")
+
+    print("== Operation parameters used in examples")
+    for ep in model.endpoints:
+        for name in sorted(ep.params):
+            if (ep.label, name) not in used:
+                rep.error(f"{ep.label}: no example request uses operation parameter {name!r}")
+    print(f"  {sum(len(ep.params) for ep in model.endpoints)} parameter(s) checked")
 
 
 # --------------------------------------------------------------------------

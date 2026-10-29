@@ -235,6 +235,11 @@ section_notes:
   - This section defines the Process Objects used in this document.
   - Each Process Object extends the Base Process Object (#base-process) and therefore carries its OPTIONAL
     Process ID data element.
+  '## Availability {#availability}':
+  - The Availability Objects define the output of the Availability operation (see (#uniform-availability)).
+    Each Data Object that supports the Availability operation defines its own Availability Object extending
+    the Base Availability Object. Extensions add availability information, for example pricing, as data
+    elements of these objects.
   '## Messages':
   - The Message Components define the structure and data elements for all message objects used in the
     protocol. Each specific message type extends the Base Message Object to include additional data elements
@@ -2041,6 +2046,89 @@ components:
   subsections: []
   supported_processes: []
   conditions: []
+- identifier: baseAvailability
+  name: Base Availability Object
+  object_type: Component
+  unique_identifier: ''
+  owner: ''
+  extends: ''
+  abstract: true
+  description: Base structure for the result of an Availability operation, indicating whether the referenced
+    object can be created.
+  preamble: []
+  elements:
+  - identifier: available
+    name: Available
+    cardinality: '1'
+    mutability: read-only
+    data_type: Boolean
+    description: Indicates whether the referenced object can be created at the time the operation is completed.
+      The value `true` means that the object can be created. It does not guarantee that a subsequent Create
+      operation for the same object succeeds, as the state of the server can change between the two operations.
+      The value `false` means that the object cannot be created.
+    constraints: []
+    restrictions: {}
+    direct_access: false
+    visibility: default
+    notes: []
+  - identifier: reason
+    name: Reason
+    cardinality: 0-1
+    mutability: read-only
+    data_type: String
+    description: Server-specific text explaining why the referenced object cannot be created.
+    constraints:
+    - The element is present only when `available` is `false`.
+    restrictions: {}
+    direct_access: false
+    visibility: default
+    notes: []
+  operations: []
+  subsections: []
+  supported_processes: []
+  conditions: []
+- identifier: domainNameAvailability
+  name: Domain Name Availability Object
+  object_type: Component
+  unique_identifier: ''
+  owner: ''
+  extends: Base Availability Object
+  abstract: false
+  description: The result of an Availability operation on a Domain Name Data Object.
+  preamble: []
+  elements: []
+  operations: []
+  subsections: []
+  supported_processes: []
+  conditions: []
+- identifier: contactAvailability
+  name: Contact Availability Object
+  object_type: Component
+  unique_identifier: ''
+  owner: ''
+  extends: Base Availability Object
+  abstract: false
+  description: The result of an Availability operation on a Contact Data Object.
+  preamble: []
+  elements: []
+  operations: []
+  subsections: []
+  supported_processes: []
+  conditions: []
+- identifier: hostAvailability
+  name: Host Availability Object
+  object_type: Component
+  unique_identifier: ''
+  owner: ''
+  extends: Base Availability Object
+  abstract: false
+  description: The result of an Availability operation on a Host Data Object.
+  preamble: []
+  elements: []
+  operations: []
+  subsections: []
+  supported_processes: []
+  conditions: []
 - identifier: baseMessage
   name: Base Message Object
   object_type: Component
@@ -3470,6 +3558,54 @@ resources:
     visibility: default
     notes: []
   operations:
+  - identifier: availability
+    name: Availability Operation
+    description: 'The Availability operation allows a client to determine whether a Domain Name resource
+      with the given name can be created.
+
+      The operation has no input data elements and takes no object representation as input. The client
+      identifies the resource by its Reference only, i.e. only the Unique Identifier (Name) is taken into
+      consideration.'
+    authorisation:
+    - Any authenticated client is authorised to perform this operation.
+    input:
+    - kind: Reference
+      target: This Object
+      cardinality: '1'
+    - kind: Parameters
+      definitions:
+      - identifier: uName
+        name: Unicode Name
+        cardinality: 0-1
+        data_type: String
+        description: The Unicode Name (uName) of the domain name for which availability is determined.
+          If the parameter is absent, the server determines availability from the referenced domain name
+          only.
+        constraints:
+        - The value MUST satisfy the constraints of the Unicode Name data element of the Domain Name Data
+          Object.
+        - If the value does not map to the referenced domain name, the server MUST return an error indicating
+          the mismatch.
+        restrictions: {}
+        notes: []
+      - identifier: lgr
+        name: LGR
+        cardinality: 0-1
+        data_type: String
+        description: The name of the Label Generation Ruleset (LGR) against which the server determines
+          availability of the domain name. If the parameter is absent, the server uses its default LGR
+          for the top-level domain, as indicated by the Discovery IDN LGR Object.
+        constraints:
+        - The value MUST be a valid LGR name registered in the IANA IDN Tables registry [IDN-Tables].
+        - If the domain name contains a code point not available in the specified LGR, the server MUST
+          return an error indicating the invalid code point.
+        restrictions: {}
+        notes: []
+    output:
+    - kind: Object
+      target: Domain Name Availability Object
+      cardinality: '1'
+    notes: []
   - identifier: create
     name: Create Operation
     description: The Create operation allows a client to provision a new Domain Name resource. The operation
@@ -3700,6 +3836,25 @@ resources:
     visibility: default
     notes: []
   operations:
+  - identifier: availability
+    name: Availability Operation
+    description: 'The Availability operation allows a client to determine whether a Contact resource with
+      the given Handle ID can be created.
+
+      The operation has no input data elements and takes no object representation as input. The client
+      identifies the resource by its Reference only, i.e. only the Unique Identifier (Handle ID) is taken
+      into consideration.'
+    authorisation:
+    - Any authenticated client is authorised to perform this operation.
+    input:
+    - kind: Reference
+      target: This Object
+      cardinality: '1'
+    output:
+    - kind: Object
+      target: Contact Availability Object
+      cardinality: '1'
+    notes: []
   - identifier: create
     name: Create Operation
     description: The Create operation allows a client to provision a new Contact resource. The operation
@@ -3876,6 +4031,25 @@ resources:
     visibility: default
     notes: []
   operations:
+  - identifier: availability
+    name: Availability Operation
+    description: 'The Availability operation allows a client to determine whether a Host Data Object with
+      the given host name can be created.
+
+      The operation has no input data elements and takes no object representation as input. The client
+      identifies the resource by its Reference only, i.e. only the Unique Identifier (Host Name) is taken
+      into consideration.'
+    authorisation:
+    - Any authenticated client is authorised to perform this operation.
+    input:
+    - kind: Reference
+      target: This Object
+      cardinality: '1'
+    output:
+    - kind: Object
+      target: Host Availability Object
+      cardinality: '1'
+    notes: []
   - identifier: create
     name: Create Operation
     description: The Create operation allows a client to provision a new Host Data Object. The operation
