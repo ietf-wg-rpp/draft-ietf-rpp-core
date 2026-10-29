@@ -664,20 +664,20 @@ The following table lists all current RPP endpoints, each derived by applying th
 
 | Operation | HTTP Method | URL path |
 |---|---|---|
-| Domain: read | `GET` | `"/domainNames/{id}"` |
-| Domain: create | `POST` | `"/domainNames"` |
-| Domain: update | `PUT` or `PATCH` | `"/domainNames/{id}"` |
-| Domain: delete | `DELETE` | `"/domainNames/{id}"` |
+| Domain Name: read | `GET` | `"/domainNames/{name}"` |
+| Domain Name: create | `POST` | `"/domainNames"` |
+| Domain Name: update | `PUT` or `PATCH` | `"/domainNames/{name}"` |
+| Domain Name: delete | `DELETE` | `"/domainNames/{name}"` |
 | Domain Name: availability | `HEAD` or `GET` | `"/domainNames/{name}/availability"` |
 | Contact: read | `GET` | `"/contacts/{id}"` |
 | Contact: create | `POST` | `"/contacts"` |
 | Contact: update | `PUT` or `PATCH` | `"/contacts/{id}"` |
 | Contact: delete | `DELETE` | `"/contacts/{id}"` |
 | Contact: availability | `HEAD` or `GET` | `"/contacts/{id}/availability"` |
-| Host: read | `GET` | `"/hosts/{id}"` |
+| Host: read | `GET` | `"/hosts/{hostName}"` |
 | Host: create | `POST` | `"/hosts"` |
-| Host: update | `PUT` or `PATCH` | `"/hosts/{id}"` |
-| Host: delete | `DELETE` | `"/hosts/{id}"` |
+| Host: update | `PUT` or `PATCH` | `"/hosts/{hostName}"` |
+| Host: delete | `DELETE` | `"/hosts/{hostName}"` |
 | Host: availability | `HEAD` or `GET` | `"/hosts/{hostName}/availability"` |
 | Organisation: read | `GET` | `"/organisations/{id}"` |
 | Organisation: create | `POST` | `"/organisations"` |
