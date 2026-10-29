@@ -461,7 +461,7 @@ Client processing:
 Example of a request and the corresponding response headers, using `application/rpp+json` for illustration:
 
 ```http
-GET /rpp/v1/domainNames/foo.example HTTP/1.1
+GET /domainNames/foo.example HTTP/1.1
 Host: rpp.example
 Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"
 
@@ -615,7 +615,6 @@ The operation `"Identifier"` MUST be used as-is with no transformation. The foll
 |---|---|
 | `"transferApprove"` | `"/domains/foo.example/processes/transferProcesses/latest/transferApprove"` |
 | `"transferReject"` | `"/domains/foo.example/processes/transferProcesses/latest/transferReject"` |
-| `"report"` | `"/domains/foo.example/processes/restoreProcesses/latest/report"` |
 
 ### Rule 6: Process Listing
 
@@ -665,48 +664,53 @@ The following table lists all current RPP endpoints, each derived by applying th
 
 | Operation | HTTP Method | URL path |
 |---|---|---|
-| Domain: read | `GET` | `"/domainNames/{id}"` |
-| Domain: create | `POST` | `"/domainNames"` |
-| Domain: update | `PUT` or `PATCH` | `"/domainNames/{id}"` |
-| Domain: delete | `DELETE` | `"/domainNames/{id}"` |
+| Domain Name: read | `GET` | `"/domainNames/{name}"` |
+| Domain Name: create | `POST` | `"/domainNames"` |
+| Domain Name: update | `PUT` or `PATCH` | `"/domainNames/{name}"` |
+| Domain Name: delete | `DELETE` | `"/domainNames/{name}"` |
 | Domain Name: availability | `HEAD` or `GET` | `"/domainNames/{name}/availability"` |
 | Contact: read | `GET` | `"/contacts/{id}"` |
 | Contact: create | `POST` | `"/contacts"` |
 | Contact: update | `PUT` or `PATCH` | `"/contacts/{id}"` |
 | Contact: delete | `DELETE` | `"/contacts/{id}"` |
 | Contact: availability | `HEAD` or `GET` | `"/contacts/{id}/availability"` |
-| Host: read | `GET` | `"/hosts/{id}"` |
+| Host: read | `GET` | `"/hosts/{hostName}"` |
 | Host: create | `POST` | `"/hosts"` |
-| Host: update | `PUT` or `PATCH` | `"/hosts/{id}"` |
-| Host: delete | `DELETE` | `"/hosts/{id}"` |
+| Host: update | `PUT` or `PATCH` | `"/hosts/{hostName}"` |
+| Host: delete | `DELETE` | `"/hosts/{hostName}"` |
 | Host: availability | `HEAD` or `GET` | `"/hosts/{hostName}/availability"` |
 | Organisation: read | `GET` | `"/organisations/{id}"` |
 | Organisation: create | `POST` | `"/organisations"` |
-| Organisation: update | `PATCH` | `"/organisations/{id}"` |
+| Organisation: update | `PUT` or `PATCH` | `"/organisations/{id}"` |
 | Organisation: delete | `DELETE` | `"/organisations/{id}"` |
-| User: read | `GET` | `"/organisations/{id}/users/{userId}"` |
+| User: read | `GET` | `"/organisations/{id}/users/{id}"` |
 | User: create | `POST` | `"/organisations/{id}/users"` |
-| User: update | `PATCH` | `"/organisations/{id}/users/{userId}"` |
-| User: delete | `DELETE` | `"/organisations/{id}/users/{userId}"` |
+| User: update | `PUT` or `PATCH` | `"/organisations/{id}/users/{id}"` |
+| User: delete | `DELETE` | `"/organisations/{id}/users/{id}"` |
+| Discovery: read | `GET` | `"/.well-known/rpp"` |
 | Message: read | `GET` | `"/messages/{id}"` |
 | Message: create | `POST` | `"/messages"` |
 | Message: query | `GET` | `"/messages"` |
 | Message: delete | `DELETE` | `"/messages/{id}"` |
-| Transfer: create | `POST` | `"/{collection}/{id}/processes/transferProcesses"` |
 | Transfer: read | `GET` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
-| Transfer: delete (cancel) | `DELETE` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
+| Transfer: create | `POST` | `"/{collection}/{id}/processes/transferProcesses"` |
+| Transfer: delete | `DELETE` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
 | Transfer: transferApprove | `POST` | `"/{collection}/{id}/processes/transferProcesses/latest/transferApprove"` |
 | Transfer: transferReject | `POST` | `"/{collection}/{id}/processes/transferProcesses/latest/transferReject"` |
-| Restore: create | `POST` | `"/{collection}/{id}/processes/restoreProcesses"` |
-| Restore: read | `GET` | `"/{collection}/{id}/processes/restoreProcesses/latest"` |
-| Restore: report | `POST` | `"/{collection}/{id}/processes/restoreProcesses/latest/report"` |
-| Renew: create | `POST` | `"/{collection}/{id}/processes/renewProcesses"` |
-| Renew: read | `GET` | `"/{collection}/{id}/processes/renewProcesses/latest"` |
 | Transfer: list | `GET` | `"/{collection}/{id}/processes/transferProcesses"` |
+| Restore: read | `GET` | `"/{collection}/{id}/processes/restoreProcesses/latest"` |
+| Restore: create | `POST` | `"/{collection}/{id}/processes/restoreProcesses"` |
+| Restore: update | `PUT` or `PATCH` | `"/{collection}/{id}/processes/restoreProcesses/latest"` |
+| Restore: list | `GET` | `"/{collection}/{id}/processes/restoreProcesses"` |
+| Renew: create | `POST` | `"/{collection}/{id}/processes/renewProcesses"` |
+| Renew: list | `GET` | `"/{collection}/{id}/processes/renewProcesses"` |
+| Create: read | `GET` | `"/{collection}/{id}/processes/createProcesses/latest"` |
+| Create: create | `POST` | `"/{collection}/{id}/processes/createProcesses"` |
+| Create: list | `GET` | `"/{collection}/{id}/processes/createProcesses"` |
 | Processes: list | `GET` | `"/{collection}/{id}/processes"` |
-| Profile: read | `GET` | `"/profiles/{profileId}"` |
+| Profile: read | `GET` | `"/profiles/{name}"` |
 
-A> TODO: message queue 
+A> TODO: The User Data Object derives the path `/organisations/{id}/users/{id}`, in which the placeholder `{id}` occurs twice. See https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/196
 
 ## Internationalized Domain Names (IDN)
 
@@ -768,15 +772,43 @@ Content-Length: 0
 
 ```
 
+Example request for an internationalized domain name, using the `uName` and `lgr` operation parameters to have the availability determined for the Unicode Name `bücher.example` against a specific LGR:
+
+```http-message
+GET /domainNames/xn--bcher-kva.example/availability?\
+   uName=b%C3%BCcher.example&lgr=example-latn-1.0 HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+Accept-Language: en
+RPP-Cltrid: ABC-12345
+
+```
+
+Example response:
+
+```http-message
+HTTP/1.1 200 OK
+Date: Wed, 24 Jan 2024 12:00:00 UTC
+Server: Example RPP server v1.0
+Content-Type: application/rpp+json
+Content-Language: en
+RPP-Cltrid: ABC-12345
+RPP-Svtrid: XYZ-12345
+RPP-code: 01000
+Content-Length: 42
+
+```
+
 ## Resource Information
 
 The Object Info request MUST use the HTTP GET method on a resource identifying an object instance (Rule 2, `read` operation). If the object has authorization information attached then the client MUST use an empty message body and include the RPP-Authorization HTTP header. If the authorization is linked to a database object the client MUST also include the roid in the RPP-Authorization header. The client MAY also use a message body that includes the authorization information, the client MUST then not use the RPP-Authorization header.
 
 
-Example request for an object not using authorization information:
+Example request for an object not using authorization information, using the `hostsFilter` operation parameter to only return delegated hosts:
 
 ```http-message
-GET /domainNames/foo.example HTTP/1.1
+GET /domainNames/foo.example?hostsFilter=del HTTP/1.1
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
@@ -972,7 +1004,57 @@ When the server creates a process object as a side effect of the operation, it M
 
 ### Restore Resource
 
-A> TODO: this needs update once restoreProcess is defined in Data Objects
+The Restore operation manages the recovery of an object that has entered the Redemption Grace Period (RGP) [@RFC3915]. Restore is modelled as a Process Object with its own lifecycle. The `restoreProcess` object identifier yields the `restoreProcesses` collection segment per Rule 3.
+
+The client MUST use the HTTP POST method to create a new restore process (Rule 4, `create`). The server MUST reject the request with HTTP status code 409 (Conflict) and RPP result code `02304` if the object is not in the `rgpRedemptionPeriod` state. The response MUST include the Location header for the created restore process resource.
+
+Example Domain Restore request:
+
+```http-message
+POST /domainNames/foo.example/processes/restoreProcesses HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+Content-Type: application/rpp+json
+RPP-Cltrid: ABC-12345
+Accept-Language: en
+Content-Length: 96
+
+```
+
+Example Restore response:
+
+```http-message
+HTTP/1.1 201 Created
+Date: Wed, 24 Jan 2024 12:00:00 UTC
+Server: Example RPP server v1.0
+Content-Language: en
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
+Content-Length: 85
+Location: https://rpp.example/rpp/domainNames/foo.example/processes/restoreProcesses/XYZ-12345
+Content-Type: application/rpp+json
+RPP-code: 01000
+
+```
+
+To submit a restore report for an object in the `rgpPendingRestore` state, the client MUST use the HTTP PUT or PATCH method to update the restore process (Rule 4, `update`). The server MUST reject the request with HTTP status code 409 (Conflict) and RPP result code `02304` if the object is not in the `rgpPendingRestore` state.
+
+Example Domain Restore Report request:
+
+```http-message
+PUT /domainNames/foo.example/processes/restoreProcesses/latest HTTP/1.1
+Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+Content-Type: application/rpp+json
+RPP-Cltrid: ABC-12346
+Accept-Language: en
+Content-Length: 180
+
+```
+
+To retrieve the current state of the restore process, the client MUST use the HTTP GET method (Rule 4, `read`) and MUST NOT add content to the HTTP message body.
 
 ### Renew Resource
 
@@ -1011,6 +1093,8 @@ Content-Type: application/rpp+json
 RPP-code: 01000
 
 ```
+A> TODO: See https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/195 - read for renew?
+
 
 ### Transfer Resource
 
@@ -1287,7 +1371,7 @@ The client MUST use the HTTP DELETE method to acknowledge receipt of a single me
 Example request:
 
 ```http-message
-DELETE messages/12345 HTTP/1.1
+DELETE /messages/12345 HTTP/1.1
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
@@ -1537,6 +1621,7 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
 - Added Redirection section, requiring the use of the 307 and 308 status codes and forbidding clients to change the request method when following a redirect.
+- Added Restore Resource process based on the Restore Process Object (Issue #117)
 - Added paths for availability operation and aligned "Availability for Creation" with the Availability operation defined in rpp-data-objects
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00

@@ -3560,14 +3560,47 @@ resources:
   operations:
   - identifier: availability
     name: Availability Operation
-    description: The Availability operation allows a client to determine whether a Domain Name resource
+    description: 'The Availability operation allows a client to determine whether a Domain Name resource
       with the given name can be created.
+
+      The operation has no input data elements and takes no object representation as input. The client
+      identifies the resource by its Reference only, i.e. only the Unique Identifier (Name) is taken into
+      consideration.'
     authorisation:
     - Any authenticated client is authorised to perform this operation.
     input:
     - kind: Reference
       target: This Object
       cardinality: '1'
+    - kind: Parameters
+      definitions:
+      - identifier: uName
+        name: Unicode Name
+        cardinality: 0-1
+        data_type: String
+        description: The Unicode Name (uName) of the domain name for which availability is determined.
+          If the parameter is absent, the server determines availability from the referenced domain name
+          only.
+        constraints:
+        - The value MUST satisfy the constraints of the Unicode Name data element of the Domain Name Data
+          Object.
+        - If the value does not map to the referenced domain name, the server MUST return an error indicating
+          the mismatch.
+        restrictions: {}
+        notes: []
+      - identifier: lgr
+        name: LGR
+        cardinality: 0-1
+        data_type: String
+        description: The name of the Label Generation Ruleset (LGR) against which the server determines
+          availability of the domain name. If the parameter is absent, the server uses its default LGR
+          for the top-level domain, as indicated by the Discovery IDN LGR Object.
+        constraints:
+        - The value MUST be a valid LGR name registered in the IANA IDN Tables registry [IDN-Tables].
+        - If the domain name contains a code point not available in the specified LGR, the server MUST
+          return an error indicating the invalid code point.
+        restrictions: {}
+        notes: []
     output:
     - kind: Object
       target: Domain Name Availability Object
@@ -3805,8 +3838,12 @@ resources:
   operations:
   - identifier: availability
     name: Availability Operation
-    description: The Availability operation allows a client to determine whether a Contact resource with
+    description: 'The Availability operation allows a client to determine whether a Contact resource with
       the given Handle ID can be created.
+
+      The operation has no input data elements and takes no object representation as input. The client
+      identifies the resource by its Reference only, i.e. only the Unique Identifier (Handle ID) is taken
+      into consideration.'
     authorisation:
     - Any authenticated client is authorised to perform this operation.
     input:
@@ -3996,8 +4033,12 @@ resources:
   operations:
   - identifier: availability
     name: Availability Operation
-    description: The Availability operation allows a client to determine whether a Host Data Object with
+    description: 'The Availability operation allows a client to determine whether a Host Data Object with
       the given host name can be created.
+
+      The operation has no input data elements and takes no object representation as input. The client
+      identifies the resource by its Reference only, i.e. only the Unique Identifier (Host Name) is taken
+      into consideration.'
     authorisation:
     - Any authenticated client is authorised to perform this operation.
     input:
