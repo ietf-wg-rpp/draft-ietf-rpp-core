@@ -725,9 +725,9 @@ The following table lists all current RPP endpoints, each derived by applying th
 | Processes: list | `GET` | `/{collection}/{id}/processes` |
 | Profile: read | `GET` | `/profiles/{name}` |
 
-All URL paths in the table above are relative to the discovered base URL, except the Discovery endpoint, which is located at `/.well-known/rpp` relative to the origin of the RPP server.
-
 A> TODO: The User Data Object derives the path `/organisations/{id}/users/{id}`, in which the placeholder `{id}` occurs twice. See <https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/196>
+
+All URL paths in the table above are relative to the discovered base URL, except the Discovery endpoint, which is located at `/.well-known/rpp` relative to the origin of the RPP server.
 
 ## Internationalized Domain Names (IDN) {#idn}
 
