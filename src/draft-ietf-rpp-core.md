@@ -6,11 +6,11 @@ workgroup = "Network Working Group"
 submissiontype = "IETF"
 keyword = [""]
 TocDepth = 4
-date = 2026-07-06
+date = 2026-10-30
 
 [seriesInfo]
 name = "Internet-Draft"
-value = "draft-ietf-rpp-core-00"
+value = "draft-ietf-rpp-core-01"
 stream = "IETF"
 status = "standard"
 
@@ -1605,24 +1605,20 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
 - Added generic mapping of operation parameter to HTTP query parameter (Issue #135)
-- Added text describing client behavior when handling TLS-certificates and HTTP-redirects (Issue #133)
-- Updated the draft to comply with the HTTP Editorial Style Guide. (Issue #103)
-- Removed all JSON examples, these are now found in the rpp-json draft. (Issue #74)
-- Moved specification of discover and profile data objects to rpp-data-objects and examples to rpp-json (Issue #153)
-- Moved IANA registration requests to rpp-data-objects (Issue #153)
+- Added Redirection section and TLS server certificate validation requirements in Security Considerations (Issue #133)
+- Updated the draft to comply with the HTTP Editorial Style Guide (Issue #103)
+- Removed all JSON examples, these are now found in the rpp-json draft (Issue #74)
+- Moved specification of discovery and profile data objects and the related IANA registration requests to rpp-data-objects (Issue #153)
 - Updated the reference for the HTTP specification (Issue #90)
-- Removed hardcoded version segment from examples (Issue #97)
-- Added "profile" and "version" parameters to the RPP media type (Issue #101)
-- Added support for the `links` array in the discovery document (Issue #130)
+- Removed hardcoded version segment from paths and added "profile" and "version" parameters to the RPP media type (Issues #97, #101)
 - Updated "Request Headers" and "Response Headers" section to use Structured Headers [@!RFC9651] (Issue #95)
 - Added support for Internationalized Domain Names (IDN) (Issue #126)
 - Added text to the "messages" section, describing service messages (Issue #116)
-- Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
+- Consolidated multiple paragraphs into a single "Result codes" section (Issue #92)
 - Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
-- Added Redirection section, requiring the use of the 307 and 308 status codes and forbidding clients to change the request method when following a redirect.
 - Added Restore Resource process based on the Restore Process Object (Issue #117)
-- Added paths for availability operation and aligned "Availability for Creation" with the Availability operation defined in rpp-data-objects
+- Added paths for availability operation and aligned "Availability for Creation" with the Availability operation defined in rpp-data-objects (Issue #149)
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
