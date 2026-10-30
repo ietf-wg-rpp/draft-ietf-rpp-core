@@ -405,27 +405,71 @@ Run this process **only when the user asks for a final pre-release review**
 pass, so it is the one case where every section is read — still in
 `offset`/`limit` chunks guided by the Document Index, never in a single read.
 
-The review itself is **read-only**: collect findings first, then present them
-grouped by the four checks below, each with line number, current text, and the
-proposed fix. Apply nothing until the user approves (Edit Workflow, Steps 1–2).
-Repeated mechanical fixes (e.g. the same spelling change in many places) MUST be
-applied with a verified throwaway script, per the bulk-edit rule above. Run
-`./update-index.sh` after applying.
+### Process
+
+1. **Prepare.** Run `./update-index.sh` and read `.agent-index.md`. Run the IANA
+   consistency script (`cd src && python3 ../.scripts/check_iana_consistency.py`)
+   as a baseline and note its result. Check `git diff` for uncommitted manual
+   edits (e.g. to the title block) — they are the user's and are authoritative.
+2. **Read and collect (read-only).** Read the title block and Changes History,
+   then the whole body, IANA Considerations, and backmatter in chunks of a few
+   hundred lines. Note findings as you read; apply nothing.
+3. **Mechanical sweeps.** Complement the reading with greps for things that are
+   easy to miss by eye: trailing whitespace, non-ASCII characters, semicolons in
+   prose, mixed-case BCP 14 keywords (`MUST not`, `Must`, `MAY not`), citations
+   without `@` (`[RFCxxxx]`), cited references vs references defined in the
+   backmatter, `(#anchor)` targets without a matching `{#anchor}`, US spellings,
+   `TODO`/`TBD`/`TBC` notes and HTML comments, and first use of acronyms.
+4. **Cross-check what the script does not.** The IANA script compares elements
+   and operations, but also verify by hand: `Extends` values, operation
+   identifiers present on every IANA operation, and element descriptions whose
+   meaning (not only wording) differs between normative text and IANA.
+5. **Number the findings.** Use one ID per issue (split grouped findings so each
+   can be approved individually):
+   * `Mxx` — Check 1 (header metadata).
+   * `Hxx` — Check 2 (Changes History).
+   * `Sxx` — Check 3 (spelling and UK/US consistency).
+   * `Cxx` — Check 4 (whole-document consistency), grouped under subheadings
+     (substantive defects, citations and references, BCP 14, open items and
+     placeholders, style and mechanics), most severe first.
+6. **Record the to-do list.** Write the findings to `.work/review_YYYYMMDD.md`
+   (date of the review) as a checklist: one line per ID with line number(s),
+   current text, and proposed fix. Note at the top that line numbers refer to
+   the file state at review time, and record the IANA script baseline.
+   Legend: `[ ]` open, `[x]` applied, `[-]` rejected, `[>]` deferred; mark
+   approvals inline as `(approved)`.
+7. **Present.** Show the findings to the user grouped by the four checks, with
+   the same IDs. Flag findings that rename wire identifiers (element or
+   operation identifiers, IANA entries) as needing an explicit decision.
+8. **Apply on approval only.** Apply nothing until the user approves specific
+   IDs or ranges (Edit Workflow, Steps 1–2). Repeated mechanical fixes (e.g. the
+   same spelling change in many places, trailing whitespace) MUST be applied
+   with a verified throwaway script, per the bulk-edit rule above. Substantive
+   findings get exact proposed wording first.
+9. **Keep the to-do file current.** After every approval, application,
+   rejection, or deferral, update the item's state in
+   `.work/review_YYYYMMDD.md`. After applying edits, run `./update-index.sh`,
+   re-run the IANA script, and add Changes History entries where the edit is
+   not itself a Changes History fix.
 
 ### Check 1 — Header Metadata
 
 In the TOML title block:
 
-- `date` MUST be today's date (`YYYY-MM-DD`).
+- `date` MUST be today's date (`YYYY-MM-DD`), unless the user has set a planned
+  submission date — report the difference and let the user decide.
 - `[seriesInfo] value` MUST be the exact name of the revision being released
-  (`draft-ietf-rpp-core-NN`) with no suffixes or annotations such as
+  (`draft-ietf-rpp-data-objects-NN`) with no suffixes or annotations such as
   `(editorial)`, `-wip`, or `draft`/`tmp` markers.
-- The revision number in `value` MUST match the newest Change History
-  subsection heading ("Version ietf-rpp-core-(NN-1) to ietf-rpp-core-NN").
-- Sanity-check `title`, `abbrev`, `workgroup`, and the `[[author]]` tables for
-  stale or placeholder values.
+- The revision number in `value` MUST match the newest Changes History
+  subsection heading (`draft-ietf-rpp-data-objects -(NN-1) - -NN`).
+- Sanity-check `title`, `abbrev`, `area`, `workgroup`, `keyword`, and the
+  `[[author]]` tables for stale, empty, or placeholder values.
+- Check the Abstract: no citations, no BCP 14 key words, and a scope that
+  matches the objects the document actually defines (same for the
+  Introduction).
 
-### Check 2 — Change History Consolidation
+### Check 2 — Changes History Consolidation
 
 Review **only the subsection for the revision being released**. Look for entries
 that:
@@ -433,59 +477,74 @@ that:
 - describe the same change made in several iterations (e.g. "Added X", later
   "Fixed X", later "Renamed X") — merge them into one entry describing the net
   result;
-- touch the same area/section and can be expressed as one entry;
+- touch the same area/section or the same issue number and can be expressed as
+  one entry;
 - describe a change that was later reverted within the same revision — propose
   removing both;
 - are duplicates or near-duplicates.
 
-Merged entries MUST still follow "Writing Change History Entries" (terse, one
-logical change, cross-reference the section, no rationale). Propose each merge as
-"entries A + B → new entry"; never silently drop an entry. Do not touch older
-revisions' subsections.
+Also check each entry against the **Changes History** rules above (lowercase
+bullet text, `#NN` issue references, concise, WHAT not WHY, ASCII only).
+Propose each merge as "entries A + B → new entry"; never silently drop an
+entry. Do not touch older revisions' subsections.
 
 ### Check 3 — Full Spell Check and UK/US Consistency
 
 Spell-check the entire document (prose, headings, table cells, figure captions,
-and Change History). Spelling policy:
+and Changes History). Spelling policy:
 
 - **Prose is UK English** (e.g. "behaviour", "authorisation", "organisation",
-  "recognise", "licence" (noun), "summarise", "centre").
-- **Protocol elements and literals stay US English, exactly as defined** — never
-  "correct" them: HTTP header names (`RPP-Authorization`, `Authorization`), JSON
-  keys, media types, URNs, enum/status values, query parameters, registry names,
-  and anything inside backticks or fenced code blocks.
-- **Titles and quoted text of external documents** (RFC titles, reference
-  entries, terms quoted from other specifications such as RFC 9110 or the EPP
-  RFCs) keep their original spelling.
-- When prose refers to a concept that is also a literal (e.g. "the authorisation
-  header `RPP-Authorization`"), the prose word is UK and the literal is US.
+  "standardise", "recognise", "licence" (noun), "catalogue", "centre").
+- **Protocol elements and literals stay exactly as defined** — never "correct"
+  them: element, object, and operation identifiers, status values, URNs,
+  registry field names, and anything inside backticks or fenced code blocks.
+- **Titles and quoted terms of external documents** keep their original
+  spelling: RFC and reference titles, organisation names in reference entries,
+  and established external terms such as "Internationalized Domain Names" or
+  "Unicode Normalization Form C".
+- When prose refers to a concept that is also a literal, the prose word is UK
+  and the literal is unchanged.
 
-Report typos, UK/US inconsistencies, and inconsistent hyphenation/capitalisation
-of recurring terms (e.g. "sub-resource" vs "subresource", "RPP Server" vs
-"RPP server"). A tool such as `aspell --lang=en_GB` or `hunspell -d en_GB` can be
-used to generate candidates if available, but every candidate MUST be checked
-against the literal/quotation exceptions above before it is proposed.
+Report typos, grammar slips, UK/US inconsistencies, and inconsistent
+hyphenation/capitalisation of recurring terms (e.g. "nameserver" vs
+"name server", "lowercase" vs "lower case", "offline review" vs
+"offline-review", "Uniform Interface" vs "Uniform interface", constraint
+placeholders `(None)` vs `None` vs `-`, title case in headings). A tool such as
+`aspell --lang=en_GB` or `hunspell -d en_GB` can be used to generate candidates
+if available, but every candidate MUST be checked against the literal/quotation
+exceptions above before it is proposed.
 
 ### Check 4 — Whole-Document Consistency Scan
 
-Scan the full document for obvious inconsistencies, including:
+Scan the full document for inconsistencies, including:
 
-- defined terms used inconsistently or with synonyms (see Terminology table);
-  acronyms not expanded on first use;
-- header names, JSON keys, media types, URNs, result codes, and HTTP status codes
-  that differ between prose, tables, and examples;
-- endpoint paths in examples that do not follow the HTTP Mapping Rules or the
-  Derived Endpoint Reference;
-- broken or dangling `(#anchor)` cross-references and citations without a
-  matching reference; normative/informative classification that looks wrong;
-- result codes used in the body but missing from the RPP Result Codes table or
-  the IANA registry section (and vice versa);
-- example hosts/domains not using reserved `.example` names; inconsistent
-  `RPP-Cltrid`/`RPP-Svtrid` or other header values within a single example
-  exchange;
-- leftover `TODO`, `TBD` (other than IANA placeholders), editor notes, or
-  commented-out text;
-- BCP 14 keywords in the Abstract, IANA Considerations, examples, or appendices.
+- **Object model:** stray or duplicated attribute bullets; elements referenced
+  in prose (operations, constraints, examples) that no longer exist; content
+  left over from earlier restructurings that contradicts the Changes History;
+  `Extends`, identifiers, cardinality, or meaning differing between normative
+  definitions and IANA tables; inconsistent operation identifiers across
+  similar objects; the same requirement stated in two places.
+- **Status models:** status values, exclusions, transition diagrams, state
+  descriptions, and the corresponding IANA registries agree, and equivalent
+  rules are stated consistently across objects.
+- **Terminology:** defined terms (Conventions and Terminology) used
+  consistently, without synonyms (e.g. "Data Object" vs "resource object") or
+  EPP-only wording where RPP terms exist; acronyms expanded on first use.
+- **Cross-references and citations:** broken or dangling `(#anchor)`
+  references; references written without `@` (not rendered as citations);
+  cited documents missing from References and defined references never cited;
+  normative/informative classification that looks wrong (e.g. an informative
+  reference that a MUST depends on); figure/table captions and anchors.
+- **BCP 14:** mixed-case or non-keyword forms (`MUST not`, `MAY not`, `Must`);
+  key words used as plain adjectives ("OPTIONAL elements"); key words in the
+  Abstract, IANA Considerations, examples, or appendices.
+- **Open items:** leftover `TODO`, `TBD`, `TBC` editor notes (including ones
+  made stale by later changes), commented-out text, empty sections, IANA
+  placeholders other than `TBDn`, and missing required sections (Security
+  Considerations, Privacy Considerations where personal data is handled).
+- **Mechanics:** semicolons in prose, non-ASCII characters, trailing
+  whitespace, double spaces, missing blank lines before lists, example
+  domains not using reserved names.
 
 Report findings only; do not restructure or rewrite prose beyond the minimal fix
 for each finding.
