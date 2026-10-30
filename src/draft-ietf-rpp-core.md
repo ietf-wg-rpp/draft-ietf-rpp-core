@@ -611,10 +611,10 @@ Operations on a Process Object beyond the uniform interface (e.g. `"transferAppr
 
 The operation `"Identifier"` MUST be used as-is with no transformation. The following examples are derived directly from the operation identifiers defined in the RPP data object specification:
 
-| Operation `"Identifier"` | Derived URL path (relative to `"domains/foo.example"`) |
+| Operation `"Identifier"` | Derived URL path (relative to `"domainNames/foo.example"`) |
 |---|---|
-| `"transferApprove"` | `"/domains/foo.example/processes/transferProcesses/latest/transferApprove"` |
-| `"transferReject"` | `"/domains/foo.example/processes/transferProcesses/latest/transferReject"` |
+| `"transferApprove"` | `"/domainNames/foo.example/processes/transferProcesses/latest/transferApprove"` |
+| `"transferReject"` | `"/domainNames/foo.example/processes/transferProcesses/latest/transferReject"` |
 
 ### Rule 6: Process Listing
 
@@ -763,11 +763,11 @@ Example response:
 
 ```http-message
 HTTP/1.1 404 Not Found
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 RPP-Cltrid: ABC-12345
 RPP-Svtrid: XYZ-12345
-RPP-code: 01000
+RPP-Code: 01000
 Content-Length: 0
 
 ```
@@ -789,13 +789,13 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Type: application/rpp+json
 Content-Language: en
 RPP-Cltrid: ABC-12345
 RPP-Svtrid: XYZ-12345
-RPP-code: 01000
+RPP-Code: 01000
 Content-Length: 42
 
 ```
@@ -834,12 +834,12 @@ Example Info response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 424
 Content-Type: application/rpp+json
 Content-Language: en
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -865,13 +865,13 @@ Example Domain Create response for a new domain name `foo.example`:
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 Content-Length: 642
 Content-Type: application/rpp+json
 Location: https://rpp.example/rpp/domainNames/foo.example
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -879,13 +879,13 @@ Example Domain Create response where a `createProcess` object was implicitly cre
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 Content-Type: application/rpp+json
 Location: https://rpp.example/rpp/domainNames/foo.example
-Link: <https://rpp.example/rpp/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
-RPP-code: 01000
+Link: <https://rpp.example/rpp/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process"; process="createProcess"; processId="XYZ-12345"
+RPP-Code: 01000
 
 ```
 
@@ -910,12 +910,12 @@ Example Domain Delete response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -950,13 +950,13 @@ Example full update response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
 Content-Type: application/rpp+json
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -978,13 +978,13 @@ Example partial update response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
 Content-Type: application/rpp+json
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -1026,7 +1026,7 @@ Example Restore response:
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 RPP-Svtrid: XYZ-12345
@@ -1034,7 +1034,7 @@ RPP-Cltrid: ABC-12345
 Content-Length: 85
 Location: https://rpp.example/rpp/domainNames/foo.example/processes/restoreProcesses/XYZ-12345
 Content-Type: application/rpp+json
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -1082,7 +1082,7 @@ Example Renew response:
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 RPP-Svtrid: XYZ-12345
@@ -1090,7 +1090,7 @@ RPP-Cltrid: ABC-12345
 Content-Length: 85
 Location: https://rpp.example/rpp/domainNames/foo.example/processes/renewProcesses/XYZ-12345
 Content-Type: application/rpp+json
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 A> TODO: See https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/195 - read for renew?
@@ -1135,13 +1135,13 @@ Example Transfer response:
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 Content-Length: 182
 Content-Type: application/rpp+json
 Location: https://rpp.example/rpp/domainNames/foo.example/processes/transferProcesses/latest
-RPP-code: 01001
+RPP-Code: 01001
 
 ```
 
@@ -1167,12 +1167,12 @@ Example Transfer Query response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 230
 Content-Type: application/rpp+json
 Content-Language: en
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -1197,12 +1197,12 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -1227,12 +1227,12 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -1258,12 +1258,12 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -1277,7 +1277,7 @@ Notwithstanding the guarantees described in this section, the server MAY delete 
 
 The server MAY include the `RPP-Queue-Size` header (see (#response-headers)) in any RPP response, not only in responses to Messages requests, to inform the client of the current number of unacknowledged messages in its queue without requiring a dedicated Retrieve request.
 
-Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "removed". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing MUST be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
+Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "removed". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate an acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing MUST be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
 
 The following diagram illustrates the message state transitions described above, including the deletion of a message by the client or server which is permitted while the message is in either the "queued" or the "delivered" state:
 
@@ -1354,12 +1354,12 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 312
 Content-Type: application/rpp+json
 Content-Language: en
-RPP-code: 01301
+RPP-Code: 01301
 RPP-Queue-Size: 4
 
 ```
@@ -1384,10 +1384,10 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
-RPP-code: 01000
+RPP-Code: 01000
 RPP-Queue-Size: 0
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
@@ -1620,6 +1620,7 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 - Added Restore Resource process based on the Restore Process Object (Issue #117)
 - Added paths for availability operation and aligned "Availability for Creation" with the Availability operation defined in rpp-data-objects (Issue #149)
 - Fixed spelling errors and harmonised spelling to British English
+- Fixed inconsistencies in the HTTP examples
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
