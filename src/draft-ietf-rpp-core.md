@@ -82,7 +82,7 @@ Label Generation Ruleset (LGR) - A set of rules defining the valid labels for a 
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT","SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [@!RFC2119].
 
-All example requests assume an RPP server is available on the standard HTTPS port on host `rpp.example`. An authorization token has been provided by an out of band process and MUST be used by the client to authenticate each request.
+All example requests assume an RPP server is available on the standard HTTPS port on host `rpp.example`. An authorisation token has been provided by an out of band process and MUST be used by the client to authenticate each request.
 
 # Notational Conventions
 
@@ -105,9 +105,9 @@ HTTP header fields defined by RPP MUST use the "RPP-" prefix and MUST be defined
 This document defines the "RPP-Cltrid", "RPP-Authorization" and "RPP-Profile" request header fields.
 
 - `RPP-Cltrid`: A client-assigned transaction identifier. The client MUST include this header field in every request. It serves two independent purposes: as an idempotency key, allowing the server to detect and safely handle duplicate requests, and as an audit-trail identifier, enabling end-to-end correlation of a request across client and server logs. The value MUST be unique per request. The `RPP-Cltrid` header field's value is an Item of type String.
-- `RPP-Authorization`: The client MAY use this header field to send authorization information in the format `<method> <authorization information>`, similar to the `Authorization` header field defined in [@!HTTP, Section 11.6.2]. The `RPP-Authorization` header field is specific for each User Agent and MUST NOT be cached, as recommended by [@!HTTP, Section 16.4.2]. The `<method>` indicates the type of authorization being used. For EPP object authorization information, for example the authorization information used for domain names described in [@!RFC5731, Section 2.6], a new `authinfo` method is defined. The `<authorization information>` defines the following comma separated fields:
- - value (REQUIRED): Base64 encoded EPP password-based authorization information. The content of the `value` field is case sensitive.
- - roid (OPTIONAL): A Roid as defined in [@!RFC5731], [@!RFC5733], and [@!RFC5730]. The roid is used to identify the object for which the authorization information is provided. If the roid is not provided, then the server MUST assume that the authorization information is linked to the object identified by the URL of the request.
+- `RPP-Authorization`: The client MAY use this header field to send authorisation information in the format `<method> <authorization information>`, similar to the `Authorization` header field defined in [@!HTTP, Section 11.6.2]. The `RPP-Authorization` header field is specific for each User Agent and MUST NOT be cached, as recommended by [@!HTTP, Section 16.4.2]. The `<method>` indicates the type of authorisation being used. For EPP object authorisation information, for example the authorisation information used for domain names described in [@!RFC5731, Section 2.6], a new `authinfo` method is defined. The `<authorization information>` defines the following comma separated fields:
+ - value (REQUIRED): Base64 encoded EPP password-based authorisation information. The content of the `value` field is case sensitive.
+ - roid (OPTIONAL): A Roid as defined in [@!RFC5731], [@!RFC5733], and [@!RFC5730]. The roid is used to identify the object for which the authorisation information is provided. If the roid is not provided, then the server MUST assume that the authorisation information is linked to the object identified by the URL of the request.
 
 Example request using the RPP-Authorization header field:
 
@@ -197,7 +197,7 @@ An RPP client MUST NOT follow a response with any other redirection status code,
 
 When an error occurs that prevents processing of the requested action, an RPP server MUST respond using a Problem Detail
 document [@!RFC9457] detailing what went wrong, or what was not acceptable to the server.
-The `type` field MUST be the `urn:ietf:params:rpp:problem` URN.
+The `type` field MUST be the `urn:ietf:params:rpp:error` URN.
 The `status` field MUST reflect the HTTP status code.
 The document MUST contain an `errors` element, as a list of objects detailing individual errors.
 
@@ -252,20 +252,20 @@ Problem Detail response containing multiple errors for a domain create request u
     "type": "https://rpp.example/problems/domains/domain-syntax",
     "result": "02005",
     "paths": ["$.domain.name"],
-    "reason": "Invalid character(s) in domain name",
+    "reason": "Invalid character(s) in domain name"
   },
   {
     "type": "https://rpp.example/problems/domains/domain-allowed-length",
     "result": "02004",
     "paths": ["$.domain.name"],
-    "reason": "Domain name length must be between 3 and 63 characters",
+    "reason": "Domain name length must be between 3 and 63 characters"
   }]
 }
 ```
 
 # Bootstrapping
 
-The server MUST provide a mechanism for clients to discover the location of the RPP server, two methods are defined for this purpose, using the IANA registry for RPP servers or using DNS-based bootstrapping. The server MUST provide at least one of these methods, and MAY provide both methods. The client MUST use either the IANA registry for RPP servers or a DNS lookup using an HTTPS resource record as defined in [@!RFC9460]. The client MUST be able to handle the case where the choosen method does not return a valid RPP server location, and MUST be able to use the other method as a fallback to discover the RPP server location.
+The server MUST provide a mechanism for clients to discover the location of the RPP server, two methods are defined for this purpose, using the IANA registry for RPP servers or using DNS-based bootstrapping. The server MUST provide at least one of these methods, and MAY provide both methods. The client MUST use either the IANA registry for RPP servers or a DNS lookup using an HTTPS resource record as defined in [@!RFC9460]. The client MUST be able to handle the case where the chosen method does not return a valid RPP server location, and MUST be able to use the other method as a fallback to discover the RPP server location.
 
 The format and procedure for adding an RPP server to the IANA registry is defined in the IANA Considerations section below. If the server uses both the IANA registry and DNS-based bootstrapping, then both methods MUST return the same location for the RPP server.
 
@@ -547,7 +547,7 @@ A data element whose `"Direct Access"` flag is set to `true` in its Data Object 
 
 The fixed path segment for such a sub-resource MUST be derived from the Direct Access data element's own `"Identifier"` — not from the `"Identifier"` of the associated object type the element references.
 
-If the Direct Access element's cardinality is 0-1 or 1, the element's own `"Identifier"` MUST be used as the path segment, unpluralized; the resulting path already addresses a single instance unambiguously.
+If the Direct Access element's cardinality is 0-1 or 1, the element's own `"Identifier"` MUST be used as the path segment, unpluralised; the resulting path already addresses a single instance unambiguously.
 
 ```
 {direct-access-path} = {container-path} "/" directAccessElement.identifier
@@ -637,7 +637,7 @@ An operation parameter defined in [@!I-D.ietf-rpp-data-objects], such as `includ
 The query component is derived as follows:
 
 - The parameter name MUST be the `"Identifier"` of the operation parameter, unchanged.
-- The parameter value MUST be the value of the data element, serialized as defined for its Data Type, only primitive types SHOULD be used.
+- The parameter value MUST be the value of the data element, serialised as defined for its Data Type, only primitive types SHOULD be used.
 - An operation parameter with a cardinality of `0+` or `1+` MUST be repeated in the query component, once for each value.
 - Multiple operation parameters are allowed, no specific ordering is required.
 
@@ -714,7 +714,7 @@ A> TODO: The User Data Object derives the path `/organisations/{id}/users/{id}`,
 
 ## Internationalized Domain Names (IDN)
 
-When an Internationalized Domain Name (IDN) is used to identify a Domain Name Data Object or Host Data Object instance in a URL, in particular as the `{id}` path segment described in Rule 2, the ASCII Compatible Encoding (ACE) A-label form of the name, as defined in [@!RFC5890], MUST be used. This requirement ensures that the resulting URL remains a valid URI as defined in [@!RFC3986], since the A-label form is composed exclusively of ASCII characters and therefore requires no percent-encoding or additional Unicode normalization when used as a URL path segment.
+When an Internationalized Domain Name (IDN) is used to identify a Domain Name Data Object or Host Data Object instance in a URL, in particular as the `{id}` path segment described in Rule 2, the ASCII Compatible Encoding (ACE) A-label form of the name, as defined in [@!RFC5890], MUST be used. This requirement ensures that the resulting URL remains a valid URI as defined in [@!RFC3986], since the A-label form is composed exclusively of ASCII characters and therefore requires no percent-encoding or additional Unicode normalisation when used as a URL path segment.
 
 The Unicode (U-label) form of an internationalized name MUST NOT be used to address a resource in a URL. A client MAY submit or receive the U-label form as a separate data element as part of a resource representation, but this Unicode representation of the name as a whole MUST NOT be used when constructing or matching a URL.
 
@@ -802,10 +802,10 @@ Content-Length: 42
 
 ## Resource Information
 
-The Object Info request MUST use the HTTP GET method on a resource identifying an object instance (Rule 2, `read` operation). If the object has authorization information attached then the client MUST use an empty message body and include the RPP-Authorization HTTP header. If the authorization is linked to a database object the client MUST also include the roid in the RPP-Authorization header. The client MAY also use a message body that includes the authorization information, the client MUST then not use the RPP-Authorization header.
+The Object Info request MUST use the HTTP GET method on a resource identifying an object instance (Rule 2, `read` operation). If the object has authorisation information attached then the client MUST use an empty message body and include the RPP-Authorization HTTP header. If the authorisation is linked to a database object the client MUST also include the roid in the RPP-Authorization header. The client MAY also use a message body that includes the authorisation information, the client MUST then not use the RPP-Authorization header.
 
 
-Example request for an object not using authorization information, using the `hostsFilter` operation parameter to only return delegated hosts:
+Example request for an object not using authorisation information, using the `hostsFilter` operation parameter to only return delegated hosts:
 
 ```http-message
 GET /domainNames/foo.example?hostsFilter=del HTTP/1.1
@@ -817,7 +817,7 @@ RPP-Cltrid: ABC-12345
 
 ```
 
-Example request using RPP-Authorization header for an object that has attached authorization information:
+Example request using RPP-Authorization header for an object that has attached authorisation information:
 
 ```http-message
 GET /domainNames/foo.example HTTP/1.1
@@ -1104,7 +1104,7 @@ The Transfer operation manages the change of sponsoring client for a provisioned
 
 The initiating client MUST use the HTTP POST method to create a new transfer process (Rule 4, `create`).
 
-Example request not using object authorization:
+Example request not using object authorisation:
 
 ```http-message
 POST /domainNames/foo.example/processes/transferProcesses HTTP/1.1
@@ -1117,7 +1117,7 @@ Content-Length: 320
 
 ```
 
-Example request using object authorization:
+Example request using object authorisation:
 
 ```http-message
 POST /domainNames/foo.example/processes/transferProcesses HTTP/1.1
@@ -1431,7 +1431,7 @@ The third digit groups the results into one of six categories:
 
 For example, the RPP result code "02303" is an EPP derived (0) failure (2) in the data management category (3), with the detail "Object does not exist" (03).
 
-Every RPP result code defined in this document and in future standardized RPP extensions MUST be registered with IANA to ensure uniqueness and avoid conflicts. An IANA registry for RPP result codes is defined in the IANA Considerations section.
+Every RPP result code defined in this document and in future standardised RPP extensions MUST be registered with IANA to ensure uniqueness and avoid conflicts. An IANA registry for RPP result codes is defined in the IANA Considerations section.
 
 Newly defined RPP result codes, for example in future extensions, MUST NOT use the name space reserved for result codes derived from EPP.
 
@@ -1500,13 +1500,13 @@ The generic class-based mapping in Table (#tbl-rpp-unknown-result-codes) is used
 Table: Mapping RPP Result Codes to generic HTTP Status Codes
 {#tbl-rpp-unknown-result-codes}
 
-# Authentication and Authorization
+# Authentication and Authorisation
 
-<!--  TODO: this is for now placeholder section and maybe needs to be renamed or split into multiple sections to better fit the content, but for now it is added here to describe authentication and authorization mechanisms -->
+<!--  TODO: this is for now placeholder section and maybe needs to be renamed or split into multiple sections to better fit the content, but for now it is added here to describe authentication and authorisation mechanisms -->
 
 Due to the stateless nature of RPP, the client MUST include the authentication credentials in each HTTP request. This MAY be done by using JSON Web Tokens (JWT) [@!RFC7519] or Basic authentication [@!RFC7617]. The server MUST validate the authentication credentials on each request and reject any request with invalid credentials with an appropriate HTTP status code.
 
-When using JWTs for OAuth 2.0 [@!RFC6749] Access Tokens, the JWT profile described in [@!RFC9068] MUST be used. It is RECOMMENDED to use short-lived tokens and to implement token revocation mechanisms to mitigate the risk of token compromise. If sensitive information is included in the JWT payload, it MUST be encrypted to prevent unauthorized access when the token is persistent to a storage device. Furthermore, the best practices for JWT usage as outlined in [@!RFC8725] MUST be followed.
+When using JWTs for OAuth 2.0 [@!RFC6749] Access Tokens, the JWT profile described in [@!RFC9068] MUST be used. It is RECOMMENDED to use short-lived tokens and to implement token revocation mechanisms to mitigate the risk of token compromise. If sensitive information is included in the JWT payload, it MUST be encrypted to prevent unauthorised access when the token is persistent to a storage device. Furthermore, the best practices for JWT usage as outlined in [@!RFC8725] MUST be followed.
 
 # IANA Considerations
 
@@ -1586,7 +1586,7 @@ Description:   Identifies a process resource that was implicitly created as a
 Reference:     This document
 ```
 
-# Internationalization Considerations
+# Internationalisation Considerations
 
 TODO
 
@@ -1619,6 +1619,7 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
 - Added Restore Resource process based on the Restore Process Object (Issue #117)
 - Added paths for availability operation and aligned "Availability for Creation" with the Availability operation defined in rpp-data-objects (Issue #149)
+- Fixed spelling errors and harmonised spelling to British English
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
@@ -1642,7 +1643,7 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 - Added IANA request for RPP Result codes registry, and added a table with example RPP result codes. (Issue #39)
 - Added IANA request for URN sub-namespace for RPP. (Issue #39)
 - Added a new "Profiles" section to describe how to define and use profiles. (Issue #43)
-- Added a new section "Authentication and Authorization". (Issue #37)
+- Added a new section "Authentication and Authorisation". (Issue #37)
 - Updated the "Security Considerations" section to include transport security. (Issue #37)
 - Added IANA registration request for the new RPP media type. (Issue #40)
 
