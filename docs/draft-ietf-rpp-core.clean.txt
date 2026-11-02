@@ -10,7 +10,7 @@ Expires: 6 May 2027                                                DENIC
 
 
                   RESTful Provisioning Protocol (RPP)
-                         draft-ietf-rpp-core-01
+                   draft-ietf-rpp-core-02 (editorial)
 
 Abstract
 
@@ -122,15 +122,16 @@ Table of Contents
    21. Internationalisation Considerations
    22. Security Considerations
    23. Change History
-     23.1.  Version ietf-rpp-core-00 to ietf-rpp-core-01
-     23.2.  Version draft-wullink-rpp-core-05 to
+     23.1.  Version ietf-rpp-core-01 to ietf-rpp-core-02
+     23.2.  Version ietf-rpp-core-00 to ietf-rpp-core-01
+     23.3.  Version draft-wullink-rpp-core-05 to
             draft-ietf-rpp-core-00
-     23.3.  Version 04 to 05
-     23.4.  Version 03 to 04
-     23.5.  Version 02 to 03
-     23.6.  Version 01 to 02
-     23.7.  Version 00 to 01
-     23.8.  Version 00 (draft-rpp-core) to 00 (draft-wullink-rpp-core)
+     23.4.  Version 04 to 05
+     23.5.  Version 03 to 04
+     23.6.  Version 02 to 03
+     23.7.  Version 01 to 02
+     23.8.  Version 00 to 01
+     23.9.  Version 00 (draft-rpp-core) to 00 (draft-wullink-rpp-core)
    24. Acknowledgements
    25. References
      25.1.  Normative References
@@ -2562,7 +2563,9 @@ Table of Contents
 
 23.  Change History
 
-23.1.  Version ietf-rpp-core-00 to ietf-rpp-core-01
+23.1.  Version ietf-rpp-core-01 to ietf-rpp-core-02
+
+23.2.  Version ietf-rpp-core-00 to ietf-rpp-core-01
 
    -  Added generic mapping of operation parameters to HTTP query
       parameters in Section 16.1.7 (Issue #135)
@@ -2618,7 +2621,7 @@ Table of Contents
    -  Reclassified RFC 5321, RFC 8259, RFC 10008, and REST as
       informative references
 
-23.2.  Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
+23.3.  Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
    -  Renamed the document name to "draft-ietf-rpp-core" and reset
       version number to 00 (Issue #80)
@@ -2643,7 +2646,7 @@ Table of Contents
       the {process-collection}/{process-id} naming used in the Endpoints
       section; removed the unused process_name variable.
 
-23.3.  Version 04 to 05
+23.4.  Version 04 to 05
 
    -  Added Bootstrap and Discovery sections to the document, describing
       how a client can discover the location and capabilities of an RPP
@@ -2651,7 +2654,7 @@ Table of Contents
    -  Added IANA Considerations section with a request for new RPP
       discovery URLs, extensions and profile URLs.
 
-23.4.  Version 03 to 04
+23.5.  Version 03 to 04
 
    -  Added a new section on versioning, describing how versioning is
       applied to different RPP elements.  (Issue #39)
@@ -2667,11 +2670,11 @@ Table of Contents
    -  Added IANA registration request for the new RPP media type.
       (Issue #40)
 
-23.5.  Version 02 to 03
+23.6.  Version 02 to 03
 
    -  Added use of Problem Detail [RFC9457] for error responses
 
-23.6.  Version 01 to 02
+23.7.  Version 01 to 02
 
    -  Updated the examples, changed from "_.example.org" to "_.example"
    -  Merged the RPP-EPP-Code and RPP-Code headers into a single RPP-
@@ -2682,13 +2685,13 @@ Table of Contents
    -  Updated the Check request to now use an "availability" path
       segment and support both GET and HEAD methods
 
-23.7.  Version 00 to 01
+23.8.  Version 00 to 01
 
    -  Updated "Request Headers" and "Response Headers" section
    -  Changed transfer resource URL and HTTP method for reject, approve
       and cancel, in order to make the API easier to use
 
-23.8.  Version 00 (draft-rpp-core) to 00 (draft-wullink-rpp-core)
+23.9.  Version 00 (draft-rpp-core) to 00 (draft-wullink-rpp-core)
 
    -  Renamed the document name to "draft-wullink-rpp-core"
    -  Removed sections: Design Considerations, Resource Naming
