@@ -573,7 +573,7 @@ RPP-Code: 01000
 
 <section anchor="rule-3-direct-access-sub-resource-path-segment"><name>Rule 3: Direct Access Sub-Resource Path Segment</name>
 <t>A data element whose <tt>Direct Access</tt> flag is set to <tt>true</tt> in its Data Object definition is additionally exposed as a sub-resource, nested under the URL of the resource instance that contains it. This rule applies uniformly and recursively: the containing resource instance MAY itself be a Direct Access sub-resource of a further-enclosing resource.</t>
-<t>The fixed path segment for such a sub-resource MUST be derived from the Direct Access data element's own <tt>Identifier</tt> — not from the <tt>Identifier</tt> of the associated object type the element references.</t>
+<t>The fixed path segment for such a sub-resource MUST be derived from the Direct Access data element's own <tt>Identifier</tt> - not from the <tt>Identifier</tt> of the associated object type the element references.</t>
 <t>If the Direct Access element's cardinality is 0-1 or 1, the element's own <tt>Identifier</tt> MUST be used as the path segment, unpluralised; the resulting path already addresses a single instance unambiguously.</t>
 
 <artwork><![CDATA[{direct-access-path} = {container-path} "/" directAccessElement.identifier
