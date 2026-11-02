@@ -559,7 +559,7 @@ A> TODO: the paragraph above looks like misplaced. Do we need it at all? The pro
 
 A data element whose `Direct Access` flag is set to `true` in its Data Object definition is additionally exposed as a sub-resource, nested under the URL of the resource instance that contains it. This rule applies uniformly and recursively: the containing resource instance MAY itself be a Direct Access sub-resource of a further-enclosing resource.
 
-The fixed path segment for such a sub-resource MUST be derived from the Direct Access data element's own `Identifier` — not from the `Identifier` of the associated object type the element references.
+The fixed path segment for such a sub-resource MUST be derived from the Direct Access data element's own `Identifier` - not from the `Identifier` of the associated object type the element references.
 
 If the Direct Access element's cardinality is 0-1 or 1, the element's own `Identifier` MUST be used as the path segment, unpluralised; the resulting path already addresses a single instance unambiguously.
 

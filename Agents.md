@@ -310,6 +310,16 @@ Acknowledgements, then `{backmatter}` references. Section-specific rules:
   `rpp.example` as the server host and `https://rpp.example/...` in examples — keep
   using `.example` / `example.com` / `example.net`, never real domains or addresses.
 - Wrap bare URIs in angle brackets (`<https://example.com/>`).
+- **ASCII only, except intentional Unicode.** idnits warns on every line with a
+  non-ASCII character, so do not introduce any as typography: use ` - `, `--`, or a
+  comma/rephrase instead of an em/en dash, straight quotes instead of curly
+  quotes, `...` instead of an ellipsis, and a plain space instead of a
+  non-breaking space. Non-ASCII is intentional, and MUST be kept as-is, where
+  the text is about Unicode itself, e.g. IDN U-label examples such as
+  `bücher.example` (never replace these with escapes or `<U+XXXX>` notation,
+  which xml2rfc does not render), and in author names of auto-resolved
+  references (e.g. RFC 9535). RFC 7997 permits both, so the remaining idnits
+  warning for these lines is expected.
 - When in doubt about style: RFC 7322 (Style Guide), <https://authors.ietf.org/>,
   and for keywords RFC 2119, RFC 8174, and the IESG BCP 14 statement above. Run
   **idnits** (or the datatracker submission checks) before submitting.
@@ -415,7 +425,10 @@ pass, so it is the one case where every section is read — still in
    then the whole body, IANA Considerations, and backmatter in chunks of a few
    hundred lines. Note findings as you read; apply nothing.
 3. **Mechanical sweeps.** Complement the reading with greps for things that are
-   easy to miss by eye: trailing whitespace, non-ASCII characters, semicolons in
+   easy to miss by eye: trailing whitespace, non-ASCII characters
+   (`grep -nP '[^\x00-\x7F]' src/draft-ietf-rpp-core.md`; report only
+   typographic ones, not intentional IDN/U-label examples or reference author
+   names), semicolons in
    prose, mixed-case BCP 14 keywords (`MUST not`, `Must`, `MAY not`), citations
    without `@` (`[RFCxxxx]`), cited references vs references defined in the
    backmatter, `(#anchor)` targets without a matching `{#anchor}`, US spellings,
@@ -542,7 +555,8 @@ Scan the full document for inconsistencies, including:
   made stale by later changes), commented-out text, empty sections, IANA
   placeholders other than `TBDn`, and missing required sections (Security
   Considerations, Privacy Considerations where personal data is handled).
-- **Mechanics:** semicolons in prose, non-ASCII characters, trailing
+- **Mechanics:** semicolons in prose, non-ASCII characters (idnits
+  "non-ascii characters" warning, see Tone and mechanics), trailing
   whitespace, double spaces, missing blank lines before lists, example
   domains not using reserved names.
 
