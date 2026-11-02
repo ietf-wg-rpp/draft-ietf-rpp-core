@@ -19,3 +19,4 @@ report.xml
 !requirements.txt
 build/*
 .DS_Store
+.agent-index.md

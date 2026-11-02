@@ -1,16 +1,16 @@
 %%%
 title = "RESTful Provisioning Protocol (RPP)"
 abbrev = "RESTful Provisioning Protocol"
-area = "Internet"
-workgroup = "Network Working Group"
+area = "Applications and Real-Time"
+workgroup = "RPP"
 submissiontype = "IETF"
-keyword = [""]
+keyword = ["RPP", "EPP", "REST", "registry", "provisioning"]
 TocDepth = 4
-date = 2026-07-06
+date = 2026-11-02
 
 [seriesInfo]
 name = "Internet-Draft"
-value = "draft-ietf-rpp-core-00"
+value = "draft-ietf-rpp-core-01"
 stream = "IETF"
 status = "standard"
 
@@ -44,7 +44,7 @@ This document defines the mapping of the RESTful Provisioning Protocol (RPP) to 
 
 # Introduction
 
-This document describes an Application Programming Interface (API) based on HTTP as defined in [@!HTTP] and the principles of [@!REST]. Conforming to the REST constraints is generally referred to as being "RESTful". Hence the API is dubbed: "RESTful Provisioning Protocol" or "RPP" for short.
+This document describes an Application Programming Interface (API) based on HTTP as defined in [@!HTTP] and the principles of [@REST]. Conforming to the REST constraints is generally referred to as being "RESTful". Hence the API is dubbed: "RESTful Provisioning Protocol" or "RPP" for short.
 
 The RPP API is designed to be used for the provisioning and management of objects in a shared database, such as domain names and their name servers (hosts).
 
@@ -58,9 +58,9 @@ This document does not define a data format. The representation of RPP messages 
 
 In this document the following terminology is used.
 
-REST - Representational State Transfer ([@!REST]). An architectural style.
+REST - Representational State Transfer ([@REST]). An architectural style.
 
-RESTful - A RESTful web service is a web service or API implemented using HTTP and the principles of [@!REST].
+RESTful - A RESTful web service is a web service or API implemented using HTTP and the principles of [@REST].
 
 RESTful Provisioning Protocol or RPP - The protocol described in this document.
 
@@ -76,15 +76,15 @@ JWT - JSON Web Token as defined in [@!RFC7519].
 
 RPP media type - A media type, defined in a representation specification, that carries RPP messages in a specific data format.
 
-Label Generation Ruleset (LGR) - A set of rules defining the valid labels for a registry, including the permitted repertoire, contextual rules, and, where applicable, variant mappings. Also historically known as IDN tables.
+Label Generation Ruleset (LGR) - A set of rules defining the valid labels for a registry, including the permitted repertoire, contextual rules, and, where applicable, variant mappings. Also historically known as IDN tables [@IDN-Tables].
 
 # Conventions Used in This Document
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT","SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in [@!RFC2119].
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and "OPTIONAL" in this document are to be interpreted as described in BCP 14 [@!RFC2119] [@!RFC8174] when, and only when, they appear in all capitals, as shown here.
 
-All example requests assume an RPP server is available on the standard HTTPS port on host `rpp.example`. An authorization token has been provided by an out of band process and MUST be used by the client to authenticate each request.
+All example requests assume an RPP server is available on the standard HTTPS port on host `rpp.example`. An authorisation token has been provided by an out-of-band process and is used by the client to authenticate each request.
 
-# Notational Conventions
+# Notational Conventions {#notational-conventions}
 
 This document uses the following terminology from [@!RFC9651, Section 3] to specify syntax and parsing: Item, String, and Integer.
 
@@ -92,24 +92,24 @@ This document does not mandate any particular authority (host and port) or path 
 
 # Mapping to EPP
 
-RPP is designed as an independent protocol and does not require an EPP server. RPP concepts such as transaction identifiers, result codes, and object attributes are defined in their own right and serve RPP purposes regardless of whether an EPP backend is present, however compatibility with EPP is to the great extent preserved. Implementers with no prior EPP experience are be able to implement RPP based solely on this specification.
+RPP is designed as an independent protocol and does not require an EPP server. RPP concepts such as transaction identifiers, result codes, and object attributes are defined in their own right and serve RPP purposes regardless of whether an EPP backend is present. However, compatibility with EPP is preserved to a great extent. Implementers with no prior EPP experience are able to implement RPP based solely on this specification.
 
-Some RPP concepts are functionally similar to EPP concepts, but they are not directly derived from EPP and MAY have different semantics. To avoid confusion, RPP elements SHOULD NOT use an "EPP" prefix or suffix. For implementers who operate an EPP backend and need to bridge RPP requests to EPP commands, a separate RPP-to-EPP mapping document [TODO REF] is provided. Any extensions to RPP are not covered by that mapping document; the mapping of extension elements MUST be defined in the respective extension specification.
+Some RPP concepts are functionally similar to EPP concepts, but they are not directly derived from EPP and MAY have different semantics. To avoid confusion, RPP elements SHOULD NOT use an `EPP` prefix or suffix. For implementers who operate an EPP backend and need to bridge RPP requests to EPP commands, a separate RPP-to-EPP mapping document [TODO REF] is provided. Any extensions to RPP are not covered by that mapping document; the mapping of extension elements MUST be defined in the respective extension specification.
 
 # Header Fields {#header-fields}
 
-HTTP header fields defined by RPP MUST use the "RPP-" prefix and MUST be defined as Structured Fields [@!RFC9651], unless the syntax of the field value cannot be expressed as an Item, List or Dictionary. A header field definition that is not a Structured Field MUST state this explicitly. RPP also uses existing standard header fields, such as `Link` [@!RFC8288], which do not use the "RPP-" prefix.
+HTTP header fields defined by RPP MUST use the `RPP-` prefix and MUST be defined as Structured Fields [@!RFC9651], unless the syntax of the field value cannot be expressed as an Item, List or Dictionary. A header field definition that is not a Structured Field MUST state this explicitly. RPP also uses existing standard header fields, such as `Link` [@!RFC8288], which do not use the `RPP-` prefix.
 
 ## Request Header Fields {#request-headers}
 
-This document defines the "RPP-Cltrid", "RPP-Authorization" and "RPP-Profile" request header fields.
+This document defines the `RPP-Cltrid`, `RPP-Authorization` and `RPP-Profile` request header fields.
 
 - `RPP-Cltrid`: A client-assigned transaction identifier. The client MUST include this header field in every request. It serves two independent purposes: as an idempotency key, allowing the server to detect and safely handle duplicate requests, and as an audit-trail identifier, enabling end-to-end correlation of a request across client and server logs. The value MUST be unique per request. The `RPP-Cltrid` header field's value is an Item of type String.
-- `RPP-Authorization`: The client MAY use this header field to send authorization information in the format `<method> <authorization information>`, similar to the `Authorization` header field defined in [@!HTTP, Section 11.6.2]. The `RPP-Authorization` header field is specific for each User Agent and MUST NOT be cached, as recommended by [@!HTTP, Section 16.4.2]. The `<method>` indicates the type of authorization being used. For EPP object authorization information, for example the authorization information used for domain names described in [@!RFC5731, Section 2.6], a new `authinfo` method is defined. The `<authorization information>` defines the following comma separated fields:
- - value (REQUIRED): Base64 encoded EPP password-based authorization information. The content of the `value` field is case sensitive.
- - roid (OPTIONAL): A Roid as defined in [@!RFC5731], [@!RFC5733], and [@!RFC5730]. The roid is used to identify the object for which the authorization information is provided. If the roid is not provided, then the server MUST assume that the authorization information is linked to the object identified by the URL of the request.
+- `RPP-Authorization`: The client MAY use this header field to send authorisation information in the format `<method> <authorization information>`, similar to the `Authorization` header field defined in [@!HTTP, Section 11.6.2]. The `RPP-Authorization` header field is specific for each User Agent and MUST NOT be cached, as recommended by [@!HTTP, Section 16.4.2]. The `<method>` indicates the type of authorisation being used. For EPP object authorisation information, for example the authorisation information used for domain names described in [@!RFC5731, Section 2.6], a new `authinfo` method is defined. The `<authorization information>` defines the following comma-separated fields:
+ - value (REQUIRED): Base64 encoded EPP password-based authorisation information. The content of the `value` field is case sensitive.
+ - roid (OPTIONAL): A Roid as defined in [@!RFC5731], [@!RFC5733], and [@!RFC5730]. The roid is used to identify the object for which the authorisation information is provided. If the roid is not provided, then the server MUST assume that the authorisation information is linked to the object identified by the URL of the request.
 
-Example request using the RPP-Authorization header field:
+Example request using the `RPP-Authorization` header field:
 
 ```http-message
 GET /domainNames/foo.example HTTP/1.1
@@ -117,7 +117,7 @@ Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
 RPP-Cltrid: ABC-12345
-RPP-Authorization: authinfo value=TXkgU2VjcmFRva2Vu, roid=REG-X-123
+RPP-Authorization: authinfo value=TXkgU2VjcmV0IFRva2Vu, roid=REG-123
 
 ```
 
@@ -125,35 +125,37 @@ RPP-Authorization: authinfo value=TXkgU2VjcmFRva2Vu, roid=REG-X-123
 
 ## Response Header Fields {#response-headers}
 
-This document defines the "RPP-Svtrid", "RPP-Cltrid", "RPP-Code", "RPP-Queue-Size" and "RPP-Profile" response header fields.
+This document defines the `RPP-Svtrid`, `RPP-Cltrid`, `RPP-Code`, `RPP-Queue-Size` and `RPP-Profile` response header fields.
 
 - `RPP-Svtrid`: A server-assigned transaction identifier. The server MUST include this header field in every response, providing a unique, server-side audit-trail reference for the processed request. Because this header field maps the EPP `svTRID` element, whose syntax differs from the String type defined in [@!RFC9651, Section 3], `RPP-Svtrid` MUST NOT be defined as a Structured Field.
 
-Example response including the RPP-Svtrid header field:
+Example response including the `RPP-Svtrid` header field:
 
 ```http-message
 HTTP/1.1 200 OK
 Date: Wed, 24 Jan 2024 12:00:00 GMT
-RPP-Svtrid: 12345-XYZ
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
 RPP-Code: 01000
 
 ```
 
 - `RPP-Cltrid`: The server MUST echo the client transaction identifier from the request back to the client in this response header field. This allows the client to correlate responses to their originating requests. Because this header field maps the EPP `clTRID` element, whose syntax differs from the String type defined in [@!RFC9651, Section 3], `RPP-Cltrid` MUST NOT be defined as a Structured Field.
 
-Example response including the RPP-Cltrid header field:
+Example response including the `RPP-Cltrid` header field:
 
 ```http-message
 HTTP/1.1 200 OK
 Date: Wed, 24 Jan 2024 12:00:00 GMT
-RPP-Cltrid: 12345-ABC
+RPP-Cltrid: ABC-12345
+RPP-Svtrid: XYZ-12345
 RPP-Code: 01000
 
 ```
-  
+
 - `RPP-Code`: This header field contains the RPP result code indicating the outcome of the request. This header field MUST be included in all responses and MAY be used by the client for easy access to the result code, without having to parse the HTTP response content. The `RPP-Code` header field's value is an Item of type String.
 
-- `RPP-Queue-Size`: Return the number of unacknowledged messages in the client message queue. The server MAY include this header field in all RPP responses. The `RPP-Queue-Size` header field's value is an Item of type Integer and MUST be greater than or equal to 0.
+- `RPP-Queue-Size`: Returns the number of unacknowledged messages in the client message queue. The server MAY include this header field in all RPP responses. The `RPP-Queue-Size` header field's value is an Item of type Integer and MUST be greater than or equal to 0.
 
 - `Link`: When a uniform interface operation implicitly creates a process object as a side effect, the server MUST communicate the URL of the created process resource using the `Link` response header field [@!RFC8288] with the `rpp-process` relation type. If multiple process objects are created, the server MUST include one `Link` header field per created process resource, each with `rel="rpp-process"`.
 
@@ -165,6 +167,8 @@ Location: https://rpp.example/rpp/domainNames/foo.example
 Link: <https://rpp.example/rpp/domainNames/foo.example/processes/\
    createProcesses/latest>; rel="rpp-process"; process="createProcess"; \
    processId="XYZ-12345"
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
 RPP-Code: 01000
 
 ```
@@ -189,15 +193,15 @@ An RPP server, or an HTTP intermediary, can redirect a request to another URL. D
 
 An RPP server MUST use only the 307 (Temporary Redirect) or 308 (Permanent Redirect) status code ([@!HTTP, Section 15.4.8] and [@!HTTP, Section 15.4.9]) when redirecting a request, because these status codes do not allow the client to change the request method. A redirect response MUST include a `Location` header field containing an absolute URL using the `https` scheme.
 
-An RPP client MAY follow a 307 or 308 redirect response. When following a redirect, the client must send the same request content and the same header fields as in the original request, including the `RPP-Cltrid` header field, so that the redirected request is the same request for the purpose of idempotency. The client MUST NOT send the `Authorization` and `RPP-Authorization` header fields to an origin that differs from the origin of the original request, unless the client knows that the target origin is an alias of the origin of the original request, or the client has credentials that are valid for the new target origin. In the latter case the client uses the credentials for the new target origin, which can differ from the credentials used for the original request.
+An RPP client MAY follow a 307 or 308 redirect response. When following a redirect, the client MUST send the same request content and the same header fields as in the original request, including the `RPP-Cltrid` header field, so that the redirected request is the same request for the purpose of idempotency. The client MUST NOT send the `Authorization` and `RPP-Authorization` header fields to an origin that differs from the origin of the original request, unless the client knows that the target origin is an alias of the origin of the original request, or the client has credentials that are valid for the new target origin. In the latter case the client uses the credentials for the new target origin, which can differ from the credentials used for the original request.
 
 An RPP client MUST NOT follow a response with any other redirection status code, for example because an HTTP intermediary generated it, and MUST treat such a response as a protocol error.
 
-# Problem Detail responses for errors {#problem-detail}
+# Problem Detail Responses for Errors {#problem-detail}
 
 When an error occurs that prevents processing of the requested action, an RPP server MUST respond using a Problem Detail
 document [@!RFC9457] detailing what went wrong, or what was not acceptable to the server.
-The `type` field MUST be the `urn:ietf:params:rpp:problem` URN.
+The `type` field MUST be the `urn:ietf:params:rpp:error` URN.
 The `status` field MUST reflect the HTTP status code.
 The document MUST contain an `errors` element, as a list of objects detailing individual errors.
 
@@ -212,7 +216,7 @@ This document consists of the following fields:
 `errors`
 : (optional, array of error objects) MUST contain objects detailing information about the specific errors that occurred, including optional references to which values in the original request were not acceptable to the server.
 
-The `error` object consist of the following fields:
+The `error` object consists of the following fields:
 
 `type`
 : (required, string) This field SHOULD be a URI that identifies the error type. This URI MAY be dereferenceable to obtain human-readable documentation about the error type.
@@ -252,24 +256,24 @@ Problem Detail response containing multiple errors for a domain create request u
     "type": "https://rpp.example/problems/domains/domain-syntax",
     "result": "02005",
     "paths": ["$.domain.name"],
-    "reason": "Invalid character(s) in domain name",
+    "reason": "Invalid character(s) in domain name"
   },
   {
     "type": "https://rpp.example/problems/domains/domain-allowed-length",
     "result": "02004",
     "paths": ["$.domain.name"],
-    "reason": "Domain name length must be between 3 and 63 characters",
+    "reason": "Domain name length must be between 3 and 63 characters"
   }]
 }
 ```
 
-# Bootstrapping
+# Bootstrapping {#bootstrapping}
 
-The server MUST provide a mechanism for clients to discover the location of the RPP server, two methods are defined for this purpose, using the IANA registry for RPP servers or using DNS-based bootstrapping. The server MUST provide at least one of these methods, and MAY provide both methods. The client MUST use either the IANA registry for RPP servers or a DNS lookup using an HTTPS resource record as defined in [@!RFC9460]. The client MUST be able to handle the case where the choosen method does not return a valid RPP server location, and MUST be able to use the other method as a fallback to discover the RPP server location.
+The server MUST provide a mechanism for clients to discover the location of the RPP server, two methods are defined for this purpose, using the IANA registry for RPP servers or using DNS-based bootstrapping. The server MUST provide at least one of these methods, and MAY provide both methods. The client MUST use either the IANA registry for RPP servers or a DNS lookup using an HTTPS resource record as defined in [@!RFC9460]. The client MUST be able to handle the case where the chosen method does not return a valid RPP server location, and MUST be able to use the other method as a fallback to discover the RPP server location.
 
 The format and procedure for adding an RPP server to the IANA registry is defined in the IANA Considerations section below. If the server uses both the IANA registry and DNS-based bootstrapping, then both methods MUST return the same location for the RPP server.
 
-For DNS-based bootstrapping, an RPP server MUST publish an HTTPS resource record in a `_rpp` child zone for each DNS zone that is managed by the RPP server. The owner name of the HTTPS resource record MUST be the managed zone name itself, prepended with the `_rpp.` label (e.g., `_rpp.<zone>`).
+For DNS-based bootstrapping, an RPP server MUST publish an HTTPS resource record in a `_rpp` child zone for each DNS zone that is managed by the RPP server. The owner name of the HTTPS resource record MUST be the managed zone name itself, prepended with the `_rpp.` label (i.e., `_rpp.<zone>`).
 
 If multiple HTTPS resource records are returned, the client MUST process them according to the priority rules defined in [@!RFC9460]. If multiple records have the same SvcPriority, the client SHOULD select one based on local policy.
 
@@ -278,19 +282,19 @@ The client MUST construct the URL for the well-known endpoint of the RPP server 
 - `https://<TargetName>:<port>/.well-known/rpp` when the `port` SvcParam is present and not 443
 - `https://<TargetName>/.well-known/rpp` when the `port` SvcParam is absent or is 443
 
-Example HTTPS resource record for an RPP server for the TLD "example" running HTTPS on port 443 at `rpp.example.`:
+Example HTTPS resource record for an RPP server for the TLD `example` running HTTPS on port 443 at `rpp.example.`:
 
 ```dns
-@ORIGIN example.
-_rpp IN HTTPS 1 . alpn=h2,h3
+$ORIGIN example.
+_rpp IN HTTPS 1 rpp.example. alpn=h2,h3
 ```
 
 In this example, the well-known endpoint URL is `https://rpp.example/.well-known/rpp`.
 
-Example HTTPS resource record for an RPP server using a different TargetName (rpp-svr2.registry.example) and a non-standard port (8443) for the TLD "example":
+Example HTTPS resource record for an RPP server using a different TargetName (rpp-svr2.registry.example) and a non-standard port (8443) for the TLD `example`:
 
 ```dns
-@ORIGIN example.
+$ORIGIN example.
 _rpp IN HTTPS 1 rpp-svr2.registry.example. alpn=h2,h3 port=8443
 ```
 
@@ -298,7 +302,7 @@ In this example, the well-known endpoint URL is `https://rpp-svr2.registry.examp
 
 # Discoverability {#discoverability}
 
-A RPP client MUST be able to discover the capabilities of the RPP server before performing any provisioning operations. The Discovery Data Object defined in [@!I-D.ietf-rpp-data-objects] MUST be mapped to the well-known endpoint at `/.well-known/rpp`, and MUST return a representation describing the capabilities of the RPP server. The well-known endpoint MUST be accessible, using the HTTP GET method, without authentication and MUST return the 200 (OK) status code if the request was successful.
+An RPP client MUST be able to discover the capabilities of the RPP server before performing any provisioning operations. The Discovery Data Object defined in [@!I-D.ietf-rpp-data-objects] MUST be mapped to the well-known endpoint at `/.well-known/rpp`, and MUST return a representation describing the capabilities of the RPP server. The well-known endpoint MUST be accessible, using the HTTP GET method, without authentication and MUST return the 200 (OK) status code if the request was successful.
 
 ## Workflow
 
@@ -311,7 +315,7 @@ The steps for a typical workflow of provisioning an object using RPP without kno
 
 # Versioning {#versioning}
 
-RPP operator MAY support more than one version of RPP. The versioning scheme uses the Semantic Versioning format defined in [@!SemVer], where major version number is used to indicate breaking changes. In this case of incompatible versions the operator MUST deploy them on distinct `"base_url"` and announce them in discovery document.
+RPP operator MAY support more than one version of RPP. The versioning scheme uses the Semantic Versioning format defined in [@!SemVer], where major version number is used to indicate breaking changes. In this case of incompatible versions the operator MUST deploy them on distinct `base_url` and announce them in discovery document.
 
 The client MUST indicate the version of RPP it is using by including an RPP media type with a `version` parameter in the `Accept` header field of each request, for example: `application/rpp+json; version=1.0`. The server MUST include the media type used in the request in its response to the client. The server MUST reject requests using an unsupported version of RPP, and MUST return a 406 (Not Acceptable) status code.
 
@@ -329,21 +333,21 @@ The `base_url` element of the RPP Discovery response may include a version segme
 
 ## Messages
 
-The `version` element of the RPP request and response messages MUST include the version of the RPP API that the message is compatible with. The server MUST reject requests with a version that is not supported by the server, and MUST return a RPP Client error code.
+The `version` element of the RPP request and response messages MUST include the version of the RPP API that the message is compatible with. The server MUST reject requests with a version that is not supported by the server, and MUST return an RPP Client error code.
 
 <!-- TODO: see media type below, this version element may be redundant -->
 
 ## Extensions
 
-The RPP server MUST include all supported extensions and the version for each extension in the RPP Discovery response. The client MUST use this version information to determine which extensions are supported by the server, and to ensure that it uses the correct version of the extension when making requests to the server. The server MUST reject requests requiring extensions or unsupported versions of an extension that are not supported by the server. The set of extensions required by the client must be signalled by the client by using the correct "profile", see (#profiles).
+The RPP server MUST include all supported extensions and the version for each extension in the RPP Discovery response. The client MUST use this version information to determine which extensions are supported by the server, and to ensure that it uses the correct version of the extension when making requests to the server. The server MUST reject requests requiring extensions or unsupported versions of an extension that are not supported by the server. The set of extensions required by the client MUST be signalled by the client by using the correct `profile`, see (#profiles).
 
 ## Profiles {#profiles}
 
-The RPP server MUST provide the set of supported profiles in the RPP Discovery response in the `profiles` element. The client can then request the appropriate profile from the server, using the "profiles" endpoint. The client MUST use this version information to determine which profiles are supported by the server, and to ensure that it uses the correct version of the profile when making requests to the server. A request using a profile MUST include the version of the profile. The server MUST reject requests using profiles with a version that is not supported by the server, and MUST return a RPP Client error code.
+The RPP server MUST provide the set of supported profiles in the RPP Discovery response in the `profiles` element. The client can then request the appropriate profile from the server, using the `profiles` endpoint. The client MUST use this version information to determine which profiles are supported by the server, and to ensure that it uses the correct version of the profile when making requests to the server. A request using a profile MUST include the version of the profile. The server MUST reject requests using profiles with a version that is not supported by the server, and MUST return an RPP Client error code.
 
 # Media Types {#media-types}
 
-RPP data can be transmitted using different representation formats, for example JSON or YAML. This document does not define a representation. Each representation is defined in a separate specification that registers an RPP media type for that representation, for example `application/rpp+json`. Each such specification also documents the security considerations of its underlying data format. Every RPP media type MUST support the `profile` and `profile-version` parameters defined in (#profile-signalling), so that profile signalling is identical for all representations.
+RPP data can be transmitted using different representation formats, for example JSON or YAML. This document does not define a representation. Each representation is defined in a separate specification that registers an RPP media type for that representation, for example `application/rpp+json`. Each such specification also documents the security considerations of its underlying data format. Every RPP media type MUST support the `profile` and `profile-version` parameters defined in (#media-type-signalling), so that profile signalling is identical for all representations.
 
 An RPP client and an RPP server indicate and negotiate the media type of a message using the `Content-Type` ([@!HTTP, Section 8.3]) and `Accept` ([@!HTTP, Section 12.5.1]) header fields, as follows.
 
@@ -375,11 +379,11 @@ Client processing:
 - The RPP client MUST determine the data format of response content only from the `Content-Type` header field and MUST NOT infer it from the content.
 - Except for Problem Detail responses, if the media type of a response was not listed in the `Accept` header field of the request, the client MUST NOT process the content as an RPP response and MUST treat the response as a protocol error.
 
-# Media Type Signalling {#profile-signalling}
+# Profile Signalling {#profile-signalling}
 
-This document describes two distinct methods for signalling the profile used in a RPP request or response, the first method uses a dedicated HTTP header field, the second method uses media type parameters. The two methods MUST not be used simultaneously in a single request or response. If both methods are used in a single request or response, then the server MUST return an HTTP error response and include a Problem Detail response in the content.
+This document describes two distinct methods for signalling the profile used in an RPP request or response, the first method uses a dedicated HTTP header field, the second method uses media type parameters. The two methods MUST NOT be used simultaneously in a single request or response. If both methods are used in a single request or response, then the server MUST return an HTTP error response and include a Problem Detail response in the content.
 
-## Rationale for header field signalling {#signalling-rationale}
+## Rationale for Header Field Signalling {#signalling-rationale}
 
 This section is not normative. Signalling the profile using a dedicated HTTP header field is preferable to signalling it using media type parameters, for the following reasons:
 
@@ -390,11 +394,11 @@ This section is not normative. Signalling the profile using a dedicated HTTP hea
 
 A> TODO: the working group has not yet decided on the signalling method to use, the two methods are both described until that decision is made.
 
-## Header signalling
+## Header Signalling
 
-The client MUST use the `RPP-Profile` header to indicate the name of the profile that is to be used for the request. The value of this header MUST be of the type `parameter` described in [@!RFC9651], the first parameter MUST uniquely identify a profile, for example `urn:ietf:params:rpp:profile:example-profile`, followed by the version parameter. If the server does not support the indicated profile or version, then the server MUST return an HTTP error response and include a Problem Detail response in the message body.
+The client MUST use the `RPP-Profile` header field to indicate the name of the profile that is to be used for the request. The value of this header field is a Dictionary as defined in [@!RFC9651, Section 3.2]. The Dictionary MUST contain a `profile` member whose value uniquely identifies a profile, for example `urn:ietf:params:rpp:profile:example-profile`, and this member MUST carry a `version` parameter indicating the version of the profile. If the server does not support the indicated profile or version, then the server MUST return an HTTP error response and include a Problem Detail response in the content.
 
-The ABNF for Profile header value is as follows:
+The ABNF for the `RPP-Profile` header field value is as follows:
 
 ```abnf
 profile-header = "profile" "=" profile-name ";" OWS "version" "=" version
@@ -407,8 +411,10 @@ Example:
 ```http-message
 GET /domainNames/foo.example HTTP/1.1
 Host: rpp.example
+Authorization: Bearer <token>
 Accept: application/rpp+json
 RPP-Profile: profile=urn:ietf:params:rpp:profile:example-profile;version=1.0
+RPP-Cltrid: ABC-12345
 
 ```
 
@@ -432,51 +438,57 @@ version           = 1*DIGIT "." 1*DIGIT
 Requests:
 
 - Each media range in the `Accept` header field of a request MUST include the `profile` and `profile-version` parameters of a profile the client is able to process in the response. The client MAY list more than one profile and MAY use quality values to indicate preference.
-- The media type in the `Content-Type` header field of a request with a message body MUST include the `profile` and `profile-version` parameters of the profile that the message body conforms to.
+- The media type in the `Content-Type` header field of a request with content MUST include the `profile` and `profile-version` parameters of the profile that the content conforms to.
 - The profile indicated in the `Content-Type` header field MUST also be listed in the `Accept` header field of the same request.
 
 Server processing:
 
-- The RPP server MUST determine the profile of a request message body only from the `Content-Type` header field and MUST NOT infer it from the message body, and MUST process the message body according to that profile.
+- The RPP server MUST determine the profile of request content only from the `Content-Type` header field and MUST NOT infer it from the content, and MUST process the content according to that profile.
 - If the server does not support the indicated profile or profile version, the server MUST reject the request with HTTP status code 415 (Unsupported Media Type).
-- The RPP server MUST select the profile for the response from the `Accept` header field using proactive negotiation as described in [@!RFC9110, section 12.5.1]. If the server supports none of the listed profiles, the server MUST reject the request with HTTP status code 406 (Not Acceptable).
+- The RPP server MUST select the profile for the response from the `Accept` header field using proactive negotiation as described in [@!HTTP, Section 12.5.1]. If the server supports none of the listed profiles, the server MUST reject the request with HTTP status code 406 (Not Acceptable).
 - If the profile in the `Content-Type` header field is not listed in the `Accept` header field, the server MUST reject the request with HTTP status code 400 (Bad Request).
 - If a request does not include profile parameters, the server MUST apply the default profile advertised in the RPP Discovery document (see (#discoverability)).
-- The requested profile may include extensions that include additional HTTP headers or query parameters that the server need to understand and process correctly.
+- The requested profile may include extensions that include additional HTTP header fields or query parameters that the server needs to understand and process correctly.
 - In all rejection cases above, the server MUST include the `RPP-Code` header field and a Problem Detail response as described in (#problem-detail).
 
 <!-- TODO: the Discovery document does not yet define a default profile field -->
 
 Responses:
 
-- The media type in the `Content-Type` header field of a successful response that contains a message body MUST include the `profile` and `profile-version` parameters of the profile the server applied, and that profile MUST be one listed in the `Accept` header field of the request.
+- The media type in the `Content-Type` header field of a successful response that contains content MUST include the `profile` and `profile-version` parameters of the profile the server applied, and that profile MUST be one listed in the `Accept` header field of the request.
 - Problem Detail responses do not carry profile parameters.
 
 Client processing:
 
-- The RPP client MUST determine the profile of a response message body only from the `Content-Type` header field and MUST interpret the message body according to that profile.
-- If that profile or profile version was not listed in the `Accept` header field of the request, the client MUST NOT process the message body as an RPP response and MUST treat the response as a protocol error.
-- The requested profile may include extensions that include additional HTTP headers or query parameters that the client needs to understand and process correctly.
+- The RPP client MUST determine the profile of response content only from the `Content-Type` header field and MUST interpret the content according to that profile.
+- If that profile or profile version was not listed in the `Accept` header field of the request, the client MUST NOT process the content as an RPP response and MUST treat the response as a protocol error.
+- The requested profile may include extensions that include additional HTTP header fields or query parameters that the client needs to understand and process correctly.
 
-Example of a request and the corresponding response headers, using `application/rpp+json` for illustration:
+Example of a request and the corresponding response header fields, using `application/rpp+json` for illustration:
 
-```http
+```http-message
 GET /domainNames/foo.example HTTP/1.1
 Host: rpp.example
+Authorization: Bearer <token>
 Accept: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"
+RPP-Cltrid: ABC-12345
 
 HTTP/1.1 200 OK
 Content-Type: application/rpp+json; profile="urn:ietf:params:rpp:profile:example-profile"; profile-version="1.0"
 Vary: Accept
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
+RPP-Code: 01000
+
 ```
 
-# Process signalling {#process-signalling}
+# Process Signalling {#process-signalling}
 
-When a server creates a process resource as a side effect of a uniform interface operation, it signals this to the client using the `Link` response header [@!RFC8288] with `rel="rpp-process"`. The following target attributes are defined for this relation type:
+When a server creates a process resource as a side effect of a uniform interface operation, it signals this to the client using the `Link` response header field [@!RFC8288] with `rel="rpp-process"`. The following target attributes are defined for this relation type:
 
 - `process`: (REQUIRED) The process object identifier of the created process (e.g. `process="transferProcess"`).
 - `processId`: (OPTIONAL) The server-assigned persistent identifier of the created process instance (e.g. `processId="XYZ-12345"`). If the server assigns a persistent identifier, this attribute MUST be included.
-- `latest`: (OPTIONAL) The boolean value `"true"`, indicating that the target URL is the latest process created of a given type. The target URL MAY use the `"latest"` mnemonic rather than a specific process identifier. There MUST NOT be more than one process of a given type with this attribute set to `"true"`.
+- `latest`: (OPTIONAL) The boolean value `true`, indicating that the target URL is the latest process created of a given type. The target URL MAY use the `latest` mnemonic rather than a specific process identifier. There MUST NOT be more than one process of a given type with this attribute set to `true`.
 
 If multiple process objects are created, the server MUST include one `Link` header field per created process resource.
 
@@ -486,7 +498,9 @@ Example:
 HTTP/1.1 201 Created
 Link: <https://rpp.example/rpp/domainNames/foo.example/processes/\
    transferProcesses/XYZ-12345>; rel="rpp-process"; \
-   process="transferProcess"; processId="XYZ-12345"; latest=true
+   process="transferProcess"; processId="XYZ-12345"; latest="true"
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
 RPP-Code: 01000
 
 ```
@@ -501,7 +515,7 @@ All RPP endpoints are derived mechanically from the Data Object definitions in [
 
 ### Rule 1: Collection Path Segment
 
-Each Data Object has a stable, `"Identifier"` (e.g. `"domainName"`, `"contact"`, `"host"`). The URL path segment for a collection of such objects MUST be derived by applying the `plural()` function to the object's `"Identifier"`. The `"plural()"` function appends an "s" or "es" to the identifier as per English language rules. Any irregular plural version MUST be defined in the data object specification.
+Each Data Object has a stable, `Identifier` (e.g. `domainName`, `contact`, `host`). The URL path segment for a collection of such objects MUST be derived by applying the `plural()` function to the object's `Identifier`. The `plural()` function appends an "s" or "es" to the identifier as per English language rules. Any irregular plural version MUST be defined in the data object specification.
 
 ```
 {collection} = plural(dataObject.identifier)
@@ -509,18 +523,18 @@ Each Data Object has a stable, `"Identifier"` (e.g. `"domainName"`, `"contact"`,
 
 Examples derived from current data object identifiers:
 
-| Data Object `"Identifier"` | `"plural()"` result | URL collection segment |
+| Data Object `Identifier` | `plural()` result | URL collection segment |
 |---|---|---|
-| `"domainName"` | `"domainNames"` | `"/domainNames"` |
-| `"contact"` | `"contacts"` | `"/contacts"` |
-| `"host"` | `"hosts"` | `"/hosts"` |
-| `"organisation"` | `"organisations"` | `"/organisations"` |
-| `"message"` | `"messages"` | `"/messages"` |
-| `"profile"` | `"profiles"` | `"/profiles"` |
+| `domainName` | `domainNames` | `/domainNames` |
+| `contact` | `contacts` | `/contacts` |
+| `host` | `hosts` | `/hosts` |
+| `organisation` | `organisations` | `/organisations` |
+| `message` | `messages` | `/messages` |
+| `profile` | `profiles` | `/profiles` |
 
 ### Rule 2: Uniform Interface Operations
 
-The uniform interface operations defined in the RPP data object specification map to HTTP methods and URL paths as follows. `"{collection}"` is derived per Rule 1. `"{id}"` is the unique identifier value of the specific object instance.
+The uniform interface operations defined in the RPP data object specification map to HTTP methods and URL paths as follows. `{collection}` is derived per Rule 1. `{id}` is the unique identifier value of the specific object instance.
 
 <!-- commented out as it does not fit this section at all.
 
@@ -529,92 +543,93 @@ A RPP client MAY use the HTTP GET method for informational requests only when no
 A> TODO: the paragraph above looks like misplaced. Do we need it at all? The protocol defines if anything MAY be posted to the message body, so maybe this is a design consideration which does not belong to the final document?
 -->
 
-| Operation `"Identifier"` | HTTP Method | URL path |
+| Operation `Identifier` | HTTP Method | URL path |
 |---|---|---|
-| `"create"` | `POST` | `/"{collection}"` |
-| `"read"` | `GET` | `"/{collection}/{id}"` |
-| `"query"` | `GET` | `/"{collection}"` |
-| `"update"` | `PUT` or `PATCH` | `"/{collection}/{id}"` |
-| `"delete"` | `DELETE` | `"/{collection}/{id}"` |
-| `"availability"` | `HEAD` or `GET` | `"/{collection}/{id}/availability"` |
+| `create` | `POST` | `/{collection}` |
+| `read` | `GET` | `/{collection}/{id}` |
+| `query` | `GET` | `/{collection}` |
+| `update` | `PUT` or `PATCH` | `/{collection}/{id}` |
+| `delete` | `DELETE` | `/{collection}/{id}` |
+| `availability` | `HEAD` or `GET` | `/{collection}/{id}/availability` |
 
 <!-- The query operation retrieves a collection of resource instances based on the specified criteria.
  we may want to also allow the use of HTTP Query method here. -->
 
 ### Rule 3: Direct Access Sub-Resource Path Segment
 
-A data element whose `"Direct Access"` flag is set to `true` in its Data Object definition is additionally exposed as a sub-resource, nested under the URL of the resource instance that contains it. This rule applies uniformly and recursively: the containing resource instance MAY itself be a Direct Access sub-resource of a further-enclosing resource.
+A data element whose `Direct Access` flag is set to `true` in its Data Object definition is additionally exposed as a sub-resource, nested under the URL of the resource instance that contains it. This rule applies uniformly and recursively: the containing resource instance MAY itself be a Direct Access sub-resource of a further-enclosing resource.
 
-The fixed path segment for such a sub-resource MUST be derived from the Direct Access data element's own `"Identifier"` — not from the `"Identifier"` of the associated object type the element references.
+The fixed path segment for such a sub-resource MUST be derived from the Direct Access data element's own `Identifier` — not from the `Identifier` of the associated object type the element references.
 
-If the Direct Access element's cardinality is 0-1 or 1, the element's own `"Identifier"` MUST be used as the path segment, unpluralized; the resulting path already addresses a single instance unambiguously.
+If the Direct Access element's cardinality is 0-1 or 1, the element's own `Identifier` MUST be used as the path segment, unpluralised; the resulting path already addresses a single instance unambiguously.
 
 ```
 {direct-access-path} = {container-path} "/" directAccessElement.identifier
 ```
 
-If the Direct Access element's cardinality is greater than 1, the `plural()` function MUST be applied to the element's `"Identifier"` to derive the path segment, and an individual associated object instance MUST be additionally addressed by appending its Unique Identifier value as a further path segment, `"{unique-id}"`. [@!I-D.ietf-rpp-data-objects] requires that any object type referenced by a Direct Access element of cardinality greater than 1 define a Unique Identifier for exactly this purpose.
+If the Direct Access element's cardinality is greater than 1, the `plural()` function MUST be applied to the element's `Identifier` to derive the path segment, and an individual associated object instance MUST be additionally addressed by appending its Unique Identifier value as a further path segment, `{unique-id}`. [@!I-D.ietf-rpp-data-objects] requires that any object type referenced by a Direct Access element of cardinality greater than 1 define a Unique Identifier for exactly this purpose.
 
 ```
 {direct-access-path} = {container-path} "/" plural(directAccessElement.identifier) "/" {unique-id}
 ```
 
-Applying Rule 3 recursively from the top-level Data Object down to every Direct Access element defined in [@!I-D.ietf-rpp-data-objects] yields the following paths (`"{id}"` denotes the Unique Identifier value of the resource instance immediately to its left; it is instantiated per resource type as shown in the Derived Endpoint Reference below):
+Applying Rule 3 recursively from the top-level Data Object down to every Direct Access element defined in [@!I-D.ietf-rpp-data-objects] yields the following paths (`{id}` denotes the Unique Identifier value of the resource instance immediately to its left; it is instantiated per resource type as shown in the Derived Endpoint Reference below):
 
-| Container path | Direct Access element `"Identifier"` | Cardinality | Resulting path |
+| Container path | Direct Access element `Identifier` | Cardinality | Resulting path |
 |---|---|---|---|
-| `"/domainNames/{id}"` | `"processes"` | 0-1 | `"/domainNames/{id}/processes"` |
-| `"/contacts/{id}"` | `"processes"` | 0-1 | `"/contacts/{id}/processes"` |
-| `"/hosts/{id}"` | `"processes"` | 0-1 | `"/hosts/{id}/processes"` |
-| `"/organisations/{id}"` | `"processes"` | 0-1 | `"/organisations/{id}/processes"` |
-| `"/organisations/{id}/users/{id}"` | `"processes"` | 0-1 | `"/organisations/{id}/users/{id}/processes"` |
-| `"/{collection}/{id}/processes"` | `"transferProcess"` | 0+ | `"/{collection}/{id}/processes/transferProcesses/{process-id}"` |
-| `"/{collection}/{id}/processes"` | `"renewProcess"` | 0+ | `"/{collection}/{id}/processes/renewProcesses/{process-id}"` |
-| `"/{collection}/{id}/processes"` | `"restoreProcess"` | 0+ | `"/{collection}/{id}/processes/restoreProcesses/{process-id}"` |
-| `"/{collection}/{id}/processes"` | `"createProcess"` | 0+ | `"/{collection}/{id}/processes/createProcesses/{process-id}"` |
+| `/domainNames/{id}` | `processes` | 0-1 | `/domainNames/{id}/processes` |
+| `/contacts/{id}` | `processes` | 0-1 | `/contacts/{id}/processes` |
+| `/hosts/{id}` | `processes` | 0-1 | `/hosts/{id}/processes` |
+| `/organisations/{id}` | `processes` | 0-1 | `/organisations/{id}/processes` |
+| `/organisations/{id}` | `users` | 0+ | `/organisations/{id}/users/{id}` |
+| `/organisations/{id}/users/{id}` | `processes` | 0-1 | `/organisations/{id}/users/{id}/processes` |
+| `/{collection}/{id}/processes` | `transferProcess` | 0+ | `/{collection}/{id}/processes/transferProcesses/{process-id}` |
+| `/{collection}/{id}/processes` | `renewProcess` | 0+ | `/{collection}/{id}/processes/renewProcesses/{process-id}` |
+| `/{collection}/{id}/processes` | `restoreProcess` | 0+ | `/{collection}/{id}/processes/restoreProcesses/{process-id}` |
+| `/{collection}/{id}/processes` | `createProcess` | 0+ | `/{collection}/{id}/processes/createProcesses/{process-id}` |
 
-`"{collection}"` in the last four rows is derived per Rule 1 and stands for any owner Data Object's collection segment (e.g. `"domainNames"`, `"contacts"`); the `Processes` element and its nested Process Object elements are defined once, generically, and Direct Access sub-resources derive identically regardless of the owner Data Object type. `"{process-id}"` is the Process Object's Unique Identifier value; Rule 4 defines the `"latest"` mnemonic as an additional way to address it.
+`{collection}` in the last four rows is derived per Rule 1 and stands for any owner Data Object's collection segment (e.g. `domainNames`, `contacts`); the `Processes` element and its nested Process Object elements are defined once, generically, and Direct Access sub-resources derive identically regardless of the owner Data Object type. `{process-id}` is the Process Object's Unique Identifier value; Rule 4 defines the `latest` mnemonic as an additional way to address it.
 
 The remaining rules in this section (Rules 4 through 6) apply Rule 3 specifically to Process Objects and describe how they are further exposed and interacted with.
 
 ### Rule 4: Process Uniform Interface Operations
 
-The four uniform interface operations from Rule 2 apply to Process Objects at the path derived per Rule 3. A server MAY assign a unique identifier `"{process-id}"` to each process instance and make it addressable by this identifier. The fixed keyword `"latest"` is used to address the most recent process instance when no specific process `"{process-id}"` is known or assigned.
+The four uniform interface operations from Rule 2 apply to Process Objects at the path derived per Rule 3. A server MAY assign a unique identifier `{process-id}` to each process instance and make it addressable by this identifier. The fixed keyword `latest` is used to address the most recent process instance when no specific process `{process-id}` is known or assigned.
 
-| Operation `"Identifier"` | HTTP Method | URL path |
+| Operation `Identifier` | HTTP Method | URL path |
 |---|---|---|
-| `"create"` | `POST` | `"/{collection}/{id}/processes/{process-collection}"` |
-| `"read"` | `GET` | `"/{collection}/{id}/processes/{process-collection}/latest"` |
-| `"read"` (specific instance) | `GET` | `"/{collection}/{id}/processes/{process-collection}/{process-id}"` |
-| `"delete"` | `DELETE` | `"/{collection}/{id}/processes/{process-collection}/latest"` |
-| `"delete"` (specific instance) | `DELETE` | `"/{collection}/{id}/processes/{process-collection}/{process-id}"` |
+| `create` | `POST` | `/{collection}/{id}/processes/{process-collection}` |
+| `read` | `GET` | `/{collection}/{id}/processes/{process-collection}/latest` |
+| `read` (specific instance) | `GET` | `/{collection}/{id}/processes/{process-collection}/{process-id}` |
+| `delete` | `DELETE` | `/{collection}/{id}/processes/{process-collection}/latest` |
+| `delete` (specific instance) | `DELETE` | `/{collection}/{id}/processes/{process-collection}/{process-id}` |
 
-A started process MAY create a resource accessible using both the `"latest"` mnemonic and a server-assigned `"{process-id}"`. If the server exposes any access to a process instances, access to the most recent instance via `"latest"` MUST be supported.
+A started process MAY create a resource accessible using both the `latest` mnemonic and a server-assigned `{process-id}`. If the server exposes any access to a process instance, access to the most recent instance via `latest` MUST be supported.
 
-When a process is created and immediately completed by the server, a 201 Created response MAY still be provided with a `"Location"` header pointing to the created process resource.
+When a process is created and immediately completed by the server, a 201 Created response MAY still be provided with a `Location` header field pointing to the created process resource.
 
 If the server chooses not to expose any persistent process resource, it MUST return 200 OK instead of 201 Created.
 
-The operations using the DELETE method MUST NOT accept a request body. Because the semantic of the HTTP DELETE method are not defined and may cause deployment issues.
-If a request body is present for any operation using the DELETE method, the server MUST reject the request with an appropriate error response.
+The operations using the DELETE method MUST NOT accept request content, because the semantics of content in a DELETE request are not defined [@!HTTP, Section 9.3.5] and may cause deployment issues.
+If request content is present for any operation using the DELETE method, the server MUST reject the request with an appropriate error response.
 
-This means that the "delete" operation (HTTP DELETE method) is not extensible, if the server needs to support additional data for a special "delete" operation, then a new process MUST be defined for this purpose.
+This means that the `delete` operation (HTTP DELETE method) is not extensible, if the server needs to support additional data for a special `delete` operation, then a new process MUST be defined for this purpose.
 
 ### Rule 5: Extended Process Operations
 
-Operations on a Process Object beyond the uniform interface (e.g. `"transferApprove"`, `"transferReject"`, `"report"`) are mapped to sub-resources of a specific process instance. The operation's `"Identifier"` is used unchanged as the final path segment. The HTTP method for all such extended operations MUST be `POST`.
+Operations on a Process Object beyond the uniform interface (e.g. `transferApprove`, `transferReject`, `report`) are mapped to sub-resources of a specific process instance. The operation's `Identifier` is used unchanged as the final path segment. The HTTP method for all such extended operations MUST be `POST`.
 
-| Operation `"Identifier"` | HTTP Method | URL path |
+| Operation `Identifier` | HTTP Method | URL path |
 |---|---|---|
-| `"{operationIdentifier}"` | `POST` | `"/{collection}/{id}/processes/{process-collection}/latest/{operationIdentifier}"` |
-| `"{operationIdentifier}"` (specific instance) | `POST` | `"/{collection}/{id}/processes/{process-collection}/{process-id}/{operationIdentifier}"` |
+| `{operationIdentifier}` | `POST` | `/{collection}/{id}/processes/{process-collection}/latest/{operationIdentifier}` |
+| `{operationIdentifier}` (specific instance) | `POST` | `/{collection}/{id}/processes/{process-collection}/{process-id}/{operationIdentifier}` |
 
-The operation `"Identifier"` MUST be used as-is with no transformation. The following examples are derived directly from the operation identifiers defined in the RPP data object specification:
+The operation `Identifier` MUST be used as-is with no transformation. The following examples are derived directly from the operation identifiers defined in the RPP data object specification:
 
-| Operation `"Identifier"` | Derived URL path (relative to `"domains/foo.example"`) |
+| Operation `Identifier` | Derived URL path (relative to `domainNames/foo.example`) |
 |---|---|
-| `"transferApprove"` | `"/domains/foo.example/processes/transferProcesses/latest/transferApprove"` |
-| `"transferReject"` | `"/domains/foo.example/processes/transferProcesses/latest/transferReject"` |
+| `transferApprove` | `/domainNames/foo.example/processes/transferProcesses/latest/transferApprove` |
+| `transferReject` | `/domainNames/foo.example/processes/transferProcesses/latest/transferReject` |
 
 ### Rule 6: Process Listing
 
@@ -622,11 +637,11 @@ A server MAY implement a listing facility for processes. If implemented, the fol
 
 To retrieve all process instances of a given process type:
 
-`GET /{collection}/{id}/processes/{process-collection}/`
+`GET /{collection}/{id}/processes/{process-collection}`
 
 To retrieve all process instances across all process types for an object:
 
-`GET /{collection}/{id}/processes/`
+`GET /{collection}/{id}/processes`
 
 A server MAY choose not to implement these endpoints, in which case it MUST return 404 Not Found or 501 Not Implemented.
 
@@ -636,8 +651,8 @@ An operation parameter defined in [@!I-D.ietf-rpp-data-objects], such as `includ
 
 The query component is derived as follows:
 
-- The parameter name MUST be the `"Identifier"` of the operation parameter, unchanged.
-- The parameter value MUST be the value of the data element, serialized as defined for its Data Type, only primitive types SHOULD be used.
+- The parameter name MUST be the `Identifier` of the operation parameter, unchanged.
+- The parameter value MUST be the value of the data element, serialised as defined for its Data Type, only primitive types SHOULD be used.
 - An operation parameter with a cardinality of `0+` or `1+` MUST be repeated in the query component, once for each value.
 - Multiple operation parameters are allowed, no specific ordering is required.
 
@@ -652,7 +667,7 @@ RPP-Cltrid: ABC-12345
 
 ```
 
-The server MUST reject the request with the 400 (Bad Request) status code, the `RPP-Code` header field if:
+The server MUST reject the request with the 400 (Bad Request) status code, the `RPP-Code` header field, and a Problem Detail response as described in (#problem-detail) if:
 
 - The query component contains a parameter name that is not an operation parameter of the requested operation or of a supported extension;
 - A parameter with a cardinality of `0-1` or `1` occurs more than once;
@@ -660,90 +675,95 @@ The server MUST reject the request with the 400 (Bad Request) status code, the `
 
 ## Derived Endpoint Reference
 
-The following table lists all current RPP endpoints, each derived by applying the rules above to the relevant data object and operation identifiers. The following table is non normative.
+The following table lists all current RPP endpoints, each derived by applying the rules above to the relevant data object and operation identifiers. The following table is non-normative.
 
 | Operation | HTTP Method | URL path |
 |---|---|---|
-| Domain Name: read | `GET` | `"/domainNames/{name}"` |
-| Domain Name: create | `POST` | `"/domainNames"` |
-| Domain Name: update | `PUT` or `PATCH` | `"/domainNames/{name}"` |
-| Domain Name: delete | `DELETE` | `"/domainNames/{name}"` |
-| Domain Name: availability | `HEAD` or `GET` | `"/domainNames/{name}/availability"` |
-| Contact: read | `GET` | `"/contacts/{id}"` |
-| Contact: create | `POST` | `"/contacts"` |
-| Contact: update | `PUT` or `PATCH` | `"/contacts/{id}"` |
-| Contact: delete | `DELETE` | `"/contacts/{id}"` |
-| Contact: availability | `HEAD` or `GET` | `"/contacts/{id}/availability"` |
-| Host: read | `GET` | `"/hosts/{hostName}"` |
-| Host: create | `POST` | `"/hosts"` |
-| Host: update | `PUT` or `PATCH` | `"/hosts/{hostName}"` |
-| Host: delete | `DELETE` | `"/hosts/{hostName}"` |
-| Host: availability | `HEAD` or `GET` | `"/hosts/{hostName}/availability"` |
-| Organisation: read | `GET` | `"/organisations/{id}"` |
-| Organisation: create | `POST` | `"/organisations"` |
-| Organisation: update | `PUT` or `PATCH` | `"/organisations/{id}"` |
-| Organisation: delete | `DELETE` | `"/organisations/{id}"` |
-| User: read | `GET` | `"/organisations/{id}/users/{id}"` |
-| User: create | `POST` | `"/organisations/{id}/users"` |
-| User: update | `PUT` or `PATCH` | `"/organisations/{id}/users/{id}"` |
-| User: delete | `DELETE` | `"/organisations/{id}/users/{id}"` |
-| Discovery: read | `GET` | `"/.well-known/rpp"` |
-| Message: read | `GET` | `"/messages/{id}"` |
-| Message: create | `POST` | `"/messages"` |
-| Message: query | `GET` | `"/messages"` |
-| Message: delete | `DELETE` | `"/messages/{id}"` |
-| Transfer: read | `GET` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
-| Transfer: create | `POST` | `"/{collection}/{id}/processes/transferProcesses"` |
-| Transfer: delete | `DELETE` | `"/{collection}/{id}/processes/transferProcesses/latest"` |
-| Transfer: transferApprove | `POST` | `"/{collection}/{id}/processes/transferProcesses/latest/transferApprove"` |
-| Transfer: transferReject | `POST` | `"/{collection}/{id}/processes/transferProcesses/latest/transferReject"` |
-| Transfer: list | `GET` | `"/{collection}/{id}/processes/transferProcesses"` |
-| Restore: read | `GET` | `"/{collection}/{id}/processes/restoreProcesses/latest"` |
-| Restore: create | `POST` | `"/{collection}/{id}/processes/restoreProcesses"` |
-| Restore: update | `PUT` or `PATCH` | `"/{collection}/{id}/processes/restoreProcesses/latest"` |
-| Restore: list | `GET` | `"/{collection}/{id}/processes/restoreProcesses"` |
-| Renew: create | `POST` | `"/{collection}/{id}/processes/renewProcesses"` |
-| Renew: list | `GET` | `"/{collection}/{id}/processes/renewProcesses"` |
-| Create: read | `GET` | `"/{collection}/{id}/processes/createProcesses/latest"` |
-| Create: create | `POST` | `"/{collection}/{id}/processes/createProcesses"` |
-| Create: list | `GET` | `"/{collection}/{id}/processes/createProcesses"` |
-| Processes: list | `GET` | `"/{collection}/{id}/processes"` |
-| Profile: read | `GET` | `"/profiles/{name}"` |
+| Domain Name: read | `GET` | `/domainNames/{name}` |
+| Domain Name: create | `POST` | `/domainNames` |
+| Domain Name: update | `PUT` or `PATCH` | `/domainNames/{name}` |
+| Domain Name: delete | `DELETE` | `/domainNames/{name}` |
+| Domain Name: availability | `HEAD` or `GET` | `/domainNames/{name}/availability` |
+| Contact: read | `GET` | `/contacts/{id}` |
+| Contact: create | `POST` | `/contacts` |
+| Contact: update | `PUT` or `PATCH` | `/contacts/{id}` |
+| Contact: delete | `DELETE` | `/contacts/{id}` |
+| Contact: availability | `HEAD` or `GET` | `/contacts/{id}/availability` |
+| Host: read | `GET` | `/hosts/{hostName}` |
+| Host: create | `POST` | `/hosts` |
+| Host: update | `PUT` or `PATCH` | `/hosts/{hostName}` |
+| Host: delete | `DELETE` | `/hosts/{hostName}` |
+| Host: availability | `HEAD` or `GET` | `/hosts/{hostName}/availability` |
+| Organisation: read | `GET` | `/organisations/{id}` |
+| Organisation: create | `POST` | `/organisations` |
+| Organisation: update | `PUT` or `PATCH` | `/organisations/{id}` |
+| Organisation: delete | `DELETE` | `/organisations/{id}` |
+| User: read | `GET` | `/organisations/{id}/users/{id}` |
+| User: create | `POST` | `/organisations/{id}/users` |
+| User: update | `PUT` or `PATCH` | `/organisations/{id}/users/{id}` |
+| User: delete | `DELETE` | `/organisations/{id}/users/{id}` |
+| Discovery: read | `GET` | `/.well-known/rpp` |
+| Message: read | `GET` | `/messages/{id}` |
+| Message: create | `POST` | `/messages` |
+| Message: query | `GET` | `/messages` |
+| Message: delete | `DELETE` | `/messages/{id}` |
+| Transfer: read | `GET` | `/{collection}/{id}/processes/transferProcesses/latest` |
+| Transfer: create | `POST` | `/{collection}/{id}/processes/transferProcesses` |
+| Transfer: delete | `DELETE` | `/{collection}/{id}/processes/transferProcesses/latest` |
+| Transfer: transferApprove | `POST` | `/{collection}/{id}/processes/transferProcesses/latest/transferApprove` |
+| Transfer: transferReject | `POST` | `/{collection}/{id}/processes/transferProcesses/latest/transferReject` |
+| Transfer: list | `GET` | `/{collection}/{id}/processes/transferProcesses` |
+| Restore: read | `GET` | `/{collection}/{id}/processes/restoreProcesses/latest` |
+| Restore: create | `POST` | `/{collection}/{id}/processes/restoreProcesses` |
+| Restore: update | `PUT` or `PATCH` | `/{collection}/{id}/processes/restoreProcesses/latest` |
+| Restore: list | `GET` | `/{collection}/{id}/processes/restoreProcesses` |
+| Renew: create | `POST` | `/{collection}/{id}/processes/renewProcesses` |
+| Renew: list | `GET` | `/{collection}/{id}/processes/renewProcesses` |
+| Create: read | `GET` | `/{collection}/{id}/processes/createProcesses/latest` |
+| Create: create | `POST` | `/{collection}/{id}/processes/createProcesses` |
+| Create: list | `GET` | `/{collection}/{id}/processes/createProcesses` |
+| Processes: list | `GET` | `/{collection}/{id}/processes` |
+| Profile: read | `GET` | `/profiles/{name}` |
 
-A> TODO: The User Data Object derives the path `/organisations/{id}/users/{id}`, in which the placeholder `{id}` occurs twice. See https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/196
+A> TODO: The User Data Object derives the path `/organisations/{id}/users/{id}`, in which the placeholder `{id}` occurs twice. See <https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/196>
 
-## Internationalized Domain Names (IDN)
+All URL paths in the table above are relative to the discovered base URL, except the Discovery endpoint, which is located at `/.well-known/rpp` relative to the origin of the RPP server.
 
-When an Internationalized Domain Name (IDN) is used to identify a Domain Name Data Object or Host Data Object instance in a URL, in particular as the `{id}` path segment described in Rule 2, the ASCII Compatible Encoding (ACE) A-label form of the name, as defined in [@!RFC5890], MUST be used. This requirement ensures that the resulting URL remains a valid URI as defined in [@!RFC3986], since the A-label form is composed exclusively of ASCII characters and therefore requires no percent-encoding or additional Unicode normalization when used as a URL path segment.
+## Internationalized Domain Names (IDN) {#idn}
+
+When an Internationalized Domain Name (IDN) is used to identify a Domain Name Data Object or Host Data Object instance in a URL, in particular as the `{id}` path segment described in Rule 2, the ASCII Compatible Encoding (ACE) A-label form of the name, as defined in [@!RFC5890], MUST be used. This requirement ensures that the resulting URL remains a valid URI as defined in [@!RFC3986], since the A-label form is composed exclusively of ASCII characters and therefore requires no percent-encoding or additional Unicode normalisation when used as a URL path segment.
 
 The Unicode (U-label) form of an internationalized name MUST NOT be used to address a resource in a URL. A client MAY submit or receive the U-label form as a separate data element as part of a resource representation, but this Unicode representation of the name as a whole MUST NOT be used when constructing or matching a URL.
 
 This is consistent with the use of IDN in the DNS, the actual DNS name is naturally represented using its A-label form. This also avoids ambiguity: the URL identifies the DNS domain name rather than a particular Unicode representation of it.
 
-For example, to address the domain name whose U-label is `"bücher.example"`, a client MUST use the corresponding A-label, `"xn--bcher-kva.example"`, when constructing the `{id}` path segment:
+For example, to address the domain name whose U-label is `bücher.example`, a client MUST use the corresponding A-label, `xn--bcher-kva.example`, when constructing the `{id}` path segment:
 
 ```http-message
 GET /domainNames/xn--bcher-kva.example HTTP/1.1
 Host: rpp.example
+Authorization: Bearer <token>
+Accept: application/rpp+json
+RPP-Cltrid: ABC-12345
 
 ```
 
-## Availability for Creation
+## Availability for Creation {#availability}
 
 The Availability for Creation endpoint maps the Availability operation defined in [@!I-D.ietf-rpp-data-objects] and is used to check whether an object can be successfully provisioned. Two distinct methods are defined for checking the availability of provisioning of an object, the first method uses the HEAD method for a quick check to find out if the object can be provisioned. The second method uses the GET method to retrieve the Availability Object, which may contain additional information, for example about pricing or additional requirements to be able to provision the requested object.
 
 When the client uses the HTTP HEAD method, the server MUST respond with an HTTP status code 200 (OK) if the object can be provisioned or with an HTTP status code 404 (Not Found) if the object cannot be provisioned.
 
-When the client uses the HTTP GET method, the server MUST respond with an HTTP status code 200 (OK) if the object can be provisioned. The server MUST include the Availability Object in the message body.
+When the client uses the HTTP GET method, the server MUST respond with an HTTP status code 200 (OK) if the object can be provisioned. The server MUST include the Availability Object in the response content.
 
-If the object cannot be provisioned then the server MUST return an HTTP status code 404 (Not Found) and include the Availability Object in the message body.
+If the object cannot be provisioned then the server MUST return an HTTP status code 404 (Not Found) and include the Availability Object in the response content.
 
 Parameters added to the Availability operation by extensions, for example to request a certain currency as defined in the Registry Fee Extension [@RFC8748], are mapped to query parameters as described in (#operation-parameters).
 
 The server MUST respond with the same HTTP status code if the same URL is requested with HEAD and with GET.
 
 ```
-- Request: HEAD|GET {collection}/{id}/availability
+- Request: HEAD|GET /{collection}/{id}/availability
 - Request message: None
 - Response message: Availability Object (GET only)
 ```
@@ -753,6 +773,7 @@ Example request for a domain name that is not available for provisioning:
 ```http-message
 HEAD /domainNames/foo.example/availability HTTP/1.1
 Host: rpp.example
+Accept: application/rpp+json
 Authorization: Bearer <token>
 Accept-Language: en
 RPP-Cltrid: ABC-12345
@@ -763,11 +784,11 @@ Example response:
 
 ```http-message
 HTTP/1.1 404 Not Found
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 RPP-Cltrid: ABC-12345
 RPP-Svtrid: XYZ-12345
-RPP-code: 01000
+RPP-Code: 01000
 Content-Length: 0
 
 ```
@@ -789,23 +810,23 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Type: application/rpp+json
 Content-Language: en
 RPP-Cltrid: ABC-12345
 RPP-Svtrid: XYZ-12345
-RPP-code: 01000
+RPP-Code: 01000
 Content-Length: 42
 
 ```
 
 ## Resource Information
 
-The Object Info request MUST use the HTTP GET method on a resource identifying an object instance (Rule 2, `read` operation). If the object has authorization information attached then the client MUST use an empty message body and include the RPP-Authorization HTTP header. If the authorization is linked to a database object the client MUST also include the roid in the RPP-Authorization header. The client MAY also use a message body that includes the authorization information, the client MUST then not use the RPP-Authorization header.
+The Object Info request MUST use the HTTP GET method on a resource identifying an object instance (Rule 2, `read` operation). If the object has authorisation information attached then the client MUST send no content and include the `RPP-Authorization` header field. If the authorisation is linked to a database object the client MUST also include the roid in the `RPP-Authorization` header field. The client MAY also send content that includes the authorisation information, the client MUST then not use the `RPP-Authorization` header field.
 
 
-Example request for an object not using authorization information, using the `hostsFilter` operation parameter to only return delegated hosts:
+Example request for an object not using authorisation information, using the `hostsFilter` operation parameter to only return delegated hosts:
 
 ```http-message
 GET /domainNames/foo.example?hostsFilter=del HTTP/1.1
@@ -817,7 +838,7 @@ RPP-Cltrid: ABC-12345
 
 ```
 
-Example request using RPP-Authorization header for an object that has attached authorization information:
+Example request using the `RPP-Authorization` header field for an object that has attached authorisation information:
 
 ```http-message
 GET /domainNames/foo.example HTTP/1.1
@@ -834,12 +855,14 @@ Example Info response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 424
 Content-Type: application/rpp+json
 Content-Language: en
-RPP-code: 01000
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
+RPP-Code: 01000
 
 ```
 
@@ -856,6 +879,7 @@ Authorization: Bearer <token>
 Accept: application/rpp+json
 Content-Type: application/rpp+json
 Accept-Language: en
+RPP-Cltrid: ABC-12345
 Content-Length: 220
 
 TODO
@@ -865,13 +889,15 @@ Example Domain Create response for a new domain name `foo.example`:
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 Content-Length: 642
 Content-Type: application/rpp+json
 Location: https://rpp.example/rpp/domainNames/foo.example
-RPP-code: 01000
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
+RPP-Code: 01000
 
 ```
 
@@ -879,13 +905,15 @@ Example Domain Create response where a `createProcess` object was implicitly cre
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 Content-Type: application/rpp+json
 Location: https://rpp.example/rpp/domainNames/foo.example
-Link: <https://rpp.example/rpp/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process" process="createProcess"; processId="XYZ-12345";
-RPP-code: 01000
+Link: <https://rpp.example/rpp/domainNames/foo.example/processes/createProcesses/latest>; rel="rpp-process"; process="createProcess"; processId="XYZ-12345"
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
+RPP-Code: 01000
 
 ```
 
@@ -910,12 +938,13 @@ Example Domain Delete response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
+Content-Type: application/rpp+json
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -923,14 +952,14 @@ RPP-code: 01000
 
 RPP supports two complementary update operations for modifying an existing object instance, each with its own semantics and use cases:
 
-- **Full update** (HTTP PUT): The client sends a complete replacement representation of the object. The server MUST replace the stored object with the provided representation. Any attributes not present in the request body MUST be treated as absent and cleared or reset to their default values, subject to server policy. The client MUST send all read-write attributes required by the data model, not just the changed ones. The client MUST not send any create-only attributes. 
+- **Full update** (HTTP PUT): The client sends a complete replacement representation of the object. The server MUST replace the stored object with the provided representation. Any attributes not present in the request content MUST be treated as absent and cleared or reset to their default values, subject to server policy. The client MUST send all read-write attributes required by the data model, not just the changed ones. The client MUST NOT send any create-only attributes.
 
-- **Partial update** (HTTP PATCH): The client sends only the attributes to be modified. The server MUST apply only the changes indicated in the request body and leave all other attributes unchanged. Data representation of the partial update payload determines how the changes are transmitted between client and server and applied to the data object.
-The client MAY send changes to any read-write attributes defined in the data model. The client MUST not send any create-only attributes. 
+- **Partial update** (HTTP PATCH): The client sends only the attributes to be modified. The server MUST apply only the changes indicated in the request content and leave all other attributes unchanged. Data representation of the partial update payload determines how the changes are transmitted between client and server and applied to the data object.
+The client MAY send changes to any read-write attributes defined in the data model. The client MUST NOT send any create-only attributes.
 
-Both operations MUST be performed on a URL identifying a unique object instance (Rule 2). The request body MUST contain a valid object representation in the negotiated media type.
+Both operations MUST be performed on a URL identifying a unique object instance (Rule 2). The request content MUST contain a valid object representation in the negotiated media type.
 
-The server MUST respond with HTTP status code 200 (OK) and include the updated object representation in the response body.
+The server MUST respond with HTTP status code 200 (OK) and include the updated object representation in the response content.
 
 Example full update request (PUT):
 
@@ -950,13 +979,13 @@ Example full update response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
 Content-Type: application/rpp+json
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -978,13 +1007,13 @@ Example partial update response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
 Content-Type: application/rpp+json
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -994,19 +1023,19 @@ Each provisioning object may be related to one or more running processes, such a
 
 All process resources MUST exist under the `/{collection}/{id}/processes/{process-collection}` path, where `{process-collection}` is derived per Rule 3.
 
-### Relation to object representation
+### Relation to Object Representation
 
-A uniform interface operation MAY require process data in addition to the object representation data. How the process data is embedded in the request body MUST be defined in the corresponding representation specification.
+A uniform interface operation MAY require process data in addition to the object representation data. How the process data is embedded in the request content MUST be defined in the corresponding representation specification.
 
-### Response with information about created process
+### Response with Information about Created Process
 
 When the server creates a process object as a side effect of the operation, it MUST signal this to the client as described in (#process-signalling).
 
-### Restore Resource
+### Restore Resource {#restore}
 
 The Restore operation manages the recovery of an object that has entered the Redemption Grace Period (RGP) [@RFC3915]. Restore is modelled as a Process Object with its own lifecycle. The `restoreProcess` object identifier yields the `restoreProcesses` collection segment per Rule 3.
 
-The client MUST use the HTTP POST method to create a new restore process (Rule 4, `create`). The server MUST reject the request with HTTP status code 409 (Conflict) and RPP result code `02304` if the object is not in the `rgpRedemptionPeriod` state. The response MUST include the Location header for the created restore process resource.
+The client MUST use the HTTP POST method to create a new restore process (Rule 4, `create`). The server MUST reject the request with HTTP status code 409 (Conflict) and RPP result code `02304` if the object is not in the `rgpRedemptionPeriod` state. If the server exposes the created restore process resource (see Rule 4), the response MUST include the `Location` header field for that resource.
 
 Example Domain Restore request:
 
@@ -1026,7 +1055,7 @@ Example Restore response:
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 RPP-Svtrid: XYZ-12345
@@ -1034,7 +1063,7 @@ RPP-Cltrid: ABC-12345
 Content-Length: 85
 Location: https://rpp.example/rpp/domainNames/foo.example/processes/restoreProcesses/XYZ-12345
 Content-Type: application/rpp+json
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -1054,7 +1083,7 @@ Content-Length: 180
 
 ```
 
-To retrieve the current state of the restore process, the client MUST use the HTTP GET method (Rule 4, `read`) and MUST NOT add content to the HTTP message body.
+To retrieve the current state of the restore process, the client MUST use the HTTP GET method (Rule 4, `read`) and MUST NOT send content in the request.
 
 ### Renew Resource
 
@@ -1062,7 +1091,7 @@ Renew is modelled as a Process Object with its own lifecycle. The `renewProcess`
 
 The client MUST use the HTTP POST method to create a new renew process (Rule 4, `create`).
 
-Not every object resource includes support for the renew command. The response MUST include the Location header for the created renew process resource.
+Not every object resource includes support for the renew command. If the server exposes the created renew process resource (see Rule 4), the response MUST include the `Location` header field for that resource.
 
 Example Domain Renew request:
 
@@ -1082,7 +1111,7 @@ Example Renew response:
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 RPP-Svtrid: XYZ-12345
@@ -1090,10 +1119,10 @@ RPP-Cltrid: ABC-12345
 Content-Length: 85
 Location: https://rpp.example/rpp/domainNames/foo.example/processes/renewProcesses/XYZ-12345
 Content-Type: application/rpp+json
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
-A> TODO: See https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/195 - read for renew?
+A> TODO: See <https://github.com/ietf-wg-rpp/draft-ietf-rpp-data-objects/issues/195> - read for renew?
 
 
 ### Transfer Resource
@@ -1104,26 +1133,28 @@ The Transfer operation manages the change of sponsoring client for a provisioned
 
 The initiating client MUST use the HTTP POST method to create a new transfer process (Rule 4, `create`).
 
-Example request not using object authorization:
+Example request not using object authorisation:
 
 ```http-message
 POST /domainNames/foo.example/processes/transferProcesses HTTP/1.1
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
+Content-Type: application/rpp+json
 Accept-Language: en
 RPP-Cltrid: ABC-12345
 Content-Length: 320
 
 ```
 
-Example request using object authorization:
+Example request using object authorisation:
 
 ```http-message
 POST /domainNames/foo.example/processes/transferProcesses HTTP/1.1
 Host: rpp.example
 Authorization: Bearer <token>
 Accept: application/rpp+json
+Content-Type: application/rpp+json
 RPP-Cltrid: ABC-12345
 RPP-Authorization: authinfo value=TXkgU2VjcmV0IFRva2Vu
 Accept-Language: en
@@ -1135,19 +1166,21 @@ Example Transfer response:
 
 ```http-message
 HTTP/1.1 201 Created
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Language: en
 Content-Length: 182
 Content-Type: application/rpp+json
 Location: https://rpp.example/rpp/domainNames/foo.example/processes/transferProcesses/latest
-RPP-code: 01001
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
+RPP-Code: 01001
 
 ```
 
 #### Status
 
-A transfer process resource may not exist when no transfer has been initiated for the specified object. The client MUST use the HTTP GET method and MUST NOT add content to the HTTP message body.
+A transfer process resource may not exist when no transfer has been initiated for the specified object. The client MUST use the HTTP GET method and MUST NOT send content in the request.
 
 
 Example domain name Transfer Status request:
@@ -1163,16 +1196,18 @@ RPP-Cltrid: ABC-12345
 ```
 
 
-Example Transfer Query response:
+Example Transfer Status response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 230
 Content-Type: application/rpp+json
 Content-Language: en
-RPP-code: 01000
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
+RPP-Code: 01000
 
 ```
 
@@ -1197,12 +1232,13 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
+Content-Type: application/rpp+json
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -1220,6 +1256,7 @@ Authorization: Bearer <token>
 Accept: application/rpp+json
 Accept-Language: en
 RPP-Cltrid: ABC-12345
+Content-Length: 0
 
 ```
 
@@ -1227,12 +1264,13 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
+Content-Type: application/rpp+json
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
@@ -1258,28 +1296,29 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 80
+Content-Type: application/rpp+json
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-RPP-code: 01000
+RPP-Code: 01000
 
 ```
 
 ## Messages {#messages}
 
-The messages endpoint exposes a server-side durable queue of asynchronous notifications generated for a client, for example to report the completion of an operation that was processed out of band, such as a Transfer request requiring approval from another party. The server MUST retain a message in the queue until it has been explicitly acknowledged by the client. Retrieval and acknowledgement of a message are deliberately separate operations, using a separate resource and HTTP method for each: the client uses the HTTP GET method to retrieve one or more messages, and the HTTP DELETE method, addressed at a specific message, to acknowledge it. A message that is retrieved but never acknowledged MUST remain in the queue and MUST be made available for redelivery, as described below, so that every message is guaranteed to eventually be delivered to, and can be processed by, the client, subject to the server-initiated deletion described below.
+The messages endpoint exposes a server-side durable queue of asynchronous notifications generated for a client, for example to report the completion of an operation that was processed out-of-band, such as a Transfer request requiring approval from another party. The server MUST retain a message in the queue until it has been explicitly acknowledged by the client. Retrieval and acknowledgement of a message are deliberately separate operations, using a separate resource and HTTP method for each: the client uses the HTTP GET method to retrieve one or more messages, and the HTTP DELETE method, addressed at a specific message, to acknowledge it. A message that is retrieved but never acknowledged MUST remain in the queue and MUST be made available for redelivery, as described below, so that every message is guaranteed to eventually be delivered to, and can be processed by, the client, subject to the server-initiated deletion described below.
 
-Each message is linked to a single organisation. Only the organisation to which a message is linked is permitted to retrieve or acknowledge that message; the server MUST NOT return a message to, or accept an acknowledgement of a message from, any other organisation. 
+Each message is linked to a single organisation. Only the organisation to which a message is linked is permitted to retrieve or acknowledge that message; the server MUST NOT return a message to, or accept an acknowledgement of a message from, any other organisation.
 
 Notwithstanding the guarantees described in this section, the server MAY delete a message from the queue at any time, including before it has been acknowledged, for example to enforce a retention policy or reclaim storage. Deletion of unacknowledged messages is therefore a best-effort guarantee and clients SHOULD NOT rely on the eventual delivery of every message for correctness.
 
-The server MAY include the `RPP-Queue-Size` header (see (#response-headers)) in any RPP response, not only in responses to Messages requests, to inform the client of the current number of unacknowledged messages in its queue without requiring a dedicated Retrieve request.
+The server MAY include the `RPP-Queue-Size` header field (see (#response-headers)) in any RPP response, not only in responses to Messages requests, to inform the client of the current number of unacknowledged messages in its queue without requiring a dedicated Retrieve request.
 
-Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either "queued", "delivered" or "removed". A message is "queued" from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to "delivered". The server MUST associate a acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to "delivered". If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to "queued", making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing MUST be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
+Each message follows a lifecycle, as depicted in (#fig-message-lifecycle) below, and has a status of either `queued`, `delivered` or `removed`. A message is `queued` from the moment it is created until it is returned to a client in a Retrieve response, at which point its status changes to `delivered`. The server MUST associate an acknowledge timeout (i.e., the maximum time the client has to acknowledge the message) with a message when its status changes to `delivered`. If the client does not acknowledge the message before this timeout elapses, the server MUST revert its status back to `queued`, making it available again for retrieval, including by a different client or reader, as a retry mechanism for a client that crashed or otherwise failed to acknowledge the message. Because of this retry mechanism, a message may be delivered more than once and client message processing MUST be idempotent. Choosing an appropriate delivery timeout duration is an implementation and deployment decision and is out of scope for this document.
 
-The following diagram illustrates the message state transitions described above, including the deletion of a message by the client or server which is permitted while the message is in either the "queued" or the "delivered" state:
+The following diagram illustrates the message state transitions described above, including the deletion of a message by the client or server which is permitted while the message is in either the `queued` or the `delivered` state:
 
 ```
                                Server
@@ -1291,7 +1330,7 @@ The following diagram illustrates the message state transitions described above,
                  |       |    queued     |-------------------------+
                  |       |               |-------+                 |
                  |       +-------+-------+       |                 |  Ack/Delete
-                 |               |               |                 | 
+                 |               |               |                 |
         Ack      |      Retrieve |               |                 |
         Timeout  |               |               |                 |
                  |               v               |                 |
@@ -1311,9 +1350,9 @@ The following diagram illustrates the message state transitions described above,
 ```
 Figure: Message Data Object lifecycle {#fig-message-lifecycle}
 
-The server MAY support multiple simultaneous readers concurrently retrieving messages from the same queue, for example multiple worker processes operated by the same client. The server MUST NOT return the same "queued" message to more than one Retrieve request at a time; once a message has been returned to a reader and its status changes to "delivered", it MUST NOT be returned again to any reader until its delivery timeout has elapsed and its status has reverted to "queued".
+The server MAY support multiple simultaneous readers concurrently retrieving messages from the same queue, for example multiple worker processes operated by the same client. The server MUST NOT return the same `queued` message to more than one Retrieve request at a time; once a message has been returned to a reader and its status changes to `delivered`, it MUST NOT be returned again to any reader until its delivery timeout has elapsed and its status has reverted to `queued`.
 
-The server MUST return "queued" messages in the order in which they were inserted into the queue, so that the oldest "queued" message is always the next one returned to a Retrieve request. A message that reverts from "delivered" back to "queued" after its delivery timeout has elapsed MUST be treated, for ordering purposes, according to its original insertion order rather than being moved to the end of the queue.
+The server MUST return `queued` messages in the order in which they were inserted into the queue, so that the oldest `queued` message is always the next one returned to a Retrieve request. A message that reverts from `delivered` back to `queued` after its delivery timeout has elapsed MUST be treated, for ordering purposes, according to its original insertion order rather than being moved to the end of the queue.
 
 ### Retrieve
 
@@ -1321,21 +1360,21 @@ The messages endpoint is used for retrieving exactly one message stored on the s
 
 - `type` (OPTIONAL): Restricts the response to messages of the given message type. This parameter MAY be repeated to request messages of more than one type. If omitted, messages of any type MAY be returned.
 
-Every message has a `type`, identifying the kind of notification it represents. When the client uses the `type` query parameter, only "queued" messages matching one of the requested types transition to "delivered" and are included in the response. A "queued" message that does not match the requested type MUST remain in the queue with a status of "queued", even if it is ahead, per the ordering rules above, of a matching message that is returned; the `type` filter does not otherwise change the relative position of a message in the queue.
+Every message has a `type`, identifying the kind of notification it represents. When the client uses the `type` query parameter, only `queued` messages matching one of the requested types transition to `delivered` and are included in the response. A `queued` message that does not match the requested type MUST remain in the queue with a status of `queued`, even if it is ahead, per the ordering rules above, of a matching message that is returned; the `type` filter does not otherwise change the relative position of a message in the queue.
 
-Query parameters are used here for simplicity. A future revision of this document MAY instead, or additionally, define an equivalent request format using the HTTP QUERY method [@!RFC10008], which would allow more expressive filtering to be conveyed in a request body rather than the request URL.
+Query parameters are used here for simplicity. A future revision of this document may instead, or additionally, define an equivalent request format using the HTTP QUERY method [@RFC10008], which would allow more expressive filtering to be conveyed in the request content rather than the request URL.
 
-The server SHOULD return the human-readable content of a message in the language requested by the client's `Accept-Language` header. Not every message type may support every language; if the requested language is not available for a given message, the server MUST fall back to returning that message in its own default language.
+The server SHOULD return the human-readable content of a message in the language requested by the client's `Accept-Language` header field. Not every message type may support every language; if the requested language is not available for a given message, the server MUST fall back to returning that message in its own default language.
 
-Every message returned in the response transitions from "queued" to "delivered" as described above.
+Every message returned in the response transitions from `queued` to `delivered` as described above.
 
 In the EPP Compatibility Profile, the following limitations apply:
 
 * The RPP server always returns the oldest message in the EPP poll queue.
 * Multiple sequential requests from the same client return the same message until the message is acknowledged.
 * The `type` query parameter is ignored. The server always returns the oldest message in the EPP poll queue, regardless of its type.
-* When multiple readers are used, each reader independently receives the oldest message in the EPP poll queue. Consequently, multiple readers may receive the same message,possibly multiple times, until that message is acknowledged.
-* The messages remain in the "queued" state.
+* When multiple readers are used, each reader independently receives the oldest message in the EPP poll queue. Consequently, multiple readers may receive the same message, possibly multiple times, until that message is acknowledged.
+* The messages remain in the `queued` state.
 
 
 Example request for retrieving a new message of the type `transferRequestMessage` only:
@@ -1354,19 +1393,21 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
 Content-Length: 312
 Content-Type: application/rpp+json
 Content-Language: en
-RPP-code: 01301
+RPP-Svtrid: XYZ-12345
+RPP-Cltrid: ABC-12345
+RPP-Code: 01301
 RPP-Queue-Size: 4
 
 ```
 
 ### Acknowledge
 
-The client MUST use the HTTP DELETE method to acknowledge receipt of a single message from the queue. The "id" attribute of a received message MUST be included in the message resource URL, using the {id} path element. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST NOT add content to the HTTP response message body of a successful delete request. When the delete request fails for any reason, the server MUST include a Problem detail object in the message body of the error response.
+The client MUST use the HTTP DELETE method to acknowledge receipt of a single message from the queue. The `id` attribute of a received message MUST be included in the message resource URL, using the `{id}` path element. Once successfully acknowledged, the message MUST be permanently removed from the queue. The server MUST NOT send content in the response to a successful delete request. When the delete request fails for any reason, the server MUST include a Problem Detail document in the content of the error response.
 
 Example request:
 
@@ -1384,14 +1425,13 @@ Example response:
 
 ```http-message
 HTTP/1.1 200 OK
-Date: Wed, 24 Jan 2024 12:00:00 UTC
+Date: Wed, 24 Jan 2024 12:00:00 GMT
 Server: Example RPP server v1.0
-Content-Language: en
-RPP-code: 01000
+RPP-Code: 01000
 RPP-Queue-Size: 0
 RPP-Svtrid: XYZ-12345
 RPP-Cltrid: ABC-12345
-Content-Length: 145
+Content-Length: 0
 
 ```
 
@@ -1399,21 +1439,21 @@ Content-Length: 145
 
 TODO
 
-# Result Codes
+# Result Codes {#result-codes}
 
 RPP result codes are used to indicate the outcome of an RPP request, they are defined to be backwards compatible with the EPP result codes defined in [@!RFC5730] and other EPP specifications and extensions.
 
 Two distinct namespaces are defined for RPP result codes:
 
-- Result codes derived from EPP [@!RFC5730] and other EPP specifications and extensions, which must use a leading digit of "0".
-- RPP specific result codes, which must use a leading digit of "1".
+- Result codes derived from EPP [@!RFC5730] and other EPP specifications and extensions, which use a leading digit of `0`.
+- RPP-specific result codes, which use a leading digit of `1`.
 
-RPP result codes follow the theory of reply codes described in [@!RFC5321, Section 4.2.1]. An RPP result code consists of five decimal digits, each digit has a special significance:
+RPP result codes follow the theory of reply codes described in [@RFC5321, Section 4.2.1]. An RPP result code consists of five decimal digits, each digit has a special significance:
 
-- The first digit identifies the namespace, "1" for RPP specific result codes.
+- The first digit identifies the namespace, `1` for RPP-specific result codes.
 - The second digit denotes the success or failure of the request, see the classes of result codes below.
 - The third digit denotes the category of the result, such as syntax or security.
-- The fourth and fifth digit provide the explicit result detail within the category.
+- The fourth and fifth digits provide the explicit result detail within the category.
 
 The second digit has two possible values:
 
@@ -1429,19 +1469,19 @@ The third digit groups the results into one of six categories:
 - 4: Server system
 - 5: Connection management
 
-For example, the RPP result code "02303" is an EPP derived (0) failure (2) in the data management category (3), with the detail "Object does not exist" (03).
+For example, the RPP result code `02303` is an EPP-derived (0) failure (2) in the data management category (3), with the detail "Object does not exist" (03).
 
-Every RPP result code defined in this document and in future standardized RPP extensions MUST be registered with IANA to ensure uniqueness and avoid conflicts. An IANA registry for RPP result codes is defined in the IANA Considerations section.
+Every RPP result code defined in this document and in future standardised RPP extensions MUST be registered with IANA to ensure uniqueness and avoid conflicts. An IANA registry for RPP result codes is defined in the IANA Considerations section.
 
-Newly defined RPP result codes, for example in future extensions, MUST NOT use the name space reserved for result codes derived from EPP.
+Newly defined RPP result codes, for example in future extensions, MUST NOT use the namespace reserved for result codes derived from EPP.
 
 ## Mapping RPP Result Codes to HTTP Status Codes
 
-RPP result codes are mapped to HTTP status codes, allowing clients to handle responses using common HTTP patterns. The RPP result code, describing the specific outcome of an RPP process, MUST always be returned using the `RPP-Code` HTTP header. This enables the client to take appropriate action based on the detailed result code.
+RPP result codes are mapped to HTTP status codes, allowing clients to handle responses using common HTTP patterns. The RPP result code, describing the specific outcome of an RPP process, MUST always be returned using the `RPP-Code` header field. This enables the client to take appropriate action based on the detailed result code.
 
 The mapping strategy is to map an RPP result code to the most applicable HTTP status code, when no such mapping can be defined then the RPP result code MUST be mapped to a general HTTP status code (e.g. 200, 400, and 500).
 
-The second and third digit of an RPP result code MUST be used to map the result code to a class of HTTP status codes, as defined in Table (#tbl-rpp-result-code-classes). The leading namespace digit and the last two detail digits do not influence the class.
+The second and third digits of an RPP result code MUST be used to map the result code to a class of HTTP status codes, as defined in (#tbl-rpp-result-code-classes). The leading namespace digit and the last two detail digits do not influence the class.
 
 | RPP Result Code | Meaning | HTTP Status Code Class |
 |-----------------|---------|------------------------|
@@ -1457,9 +1497,9 @@ Table: Mapping RPP Result Code classes to HTTP Status Code classes
 
 An RPP server MUST NOT use a 1xx or 3xx HTTP status code to signal an RPP result code. Redirection is handled as described in (#redirection).
 
-Table (#tbl-rpp-result-codes) lists the RPP result codes and their mapping to specific HTTP status codes, any RPP result code not listed in the table MUST be mapped to a generic HTTP status code as defined in Table (#tbl-rpp-unknown-result-codes).
+(#tbl-rpp-result-codes) lists the RPP result codes and their mapping to specific HTTP status codes, any RPP result code not listed in the table MUST be mapped to a generic HTTP status code as defined in (#tbl-rpp-unknown-result-codes).
 
-| RPP Result Code | HTTP Status Code | Description | 
+| RPP Result Code | HTTP Status Code | Description |
 |-----------------|------------------|-------------|
 | x1000           | 200 (OK)           | Request completed successfully |
 | 02002           | 409 (Conflict)     | Command use error |
@@ -1486,9 +1526,9 @@ Table (#tbl-rpp-result-codes) lists the RPP result codes and their mapping to sp
 Table: Mapping RPP Result Codes to specific HTTP Status Codes
 {#tbl-rpp-result-codes}
 
-The generic class-based mapping in Table (#tbl-rpp-unknown-result-codes) is used for all other RPP result codes.
+The generic class-based mapping in (#tbl-rpp-unknown-result-codes) is used for all other RPP result codes.
 
-| RPP Result Code | HTTP Status Code | Description | 
+| RPP Result Code | HTTP Status Code | Description |
 |-----------------|------------------|-------------|
 | x1yzz           | 200 (OK)           | Command completed successfully |
 | x20zz           | 400 (Bad Request)  | Protocol syntax error |
@@ -1500,13 +1540,13 @@ The generic class-based mapping in Table (#tbl-rpp-unknown-result-codes) is used
 Table: Mapping RPP Result Codes to generic HTTP Status Codes
 {#tbl-rpp-unknown-result-codes}
 
-# Authentication and Authorization
+# Authentication and Authorisation
 
-<!--  TODO: this is for now placeholder section and maybe needs to be renamed or split into multiple sections to better fit the content, but for now it is added here to describe authentication and authorization mechanisms -->
+<!--  TODO: this is for now placeholder section and maybe needs to be renamed or split into multiple sections to better fit the content, but for now it is added here to describe authentication and authorisation mechanisms -->
 
 Due to the stateless nature of RPP, the client MUST include the authentication credentials in each HTTP request. This MAY be done by using JSON Web Tokens (JWT) [@!RFC7519] or Basic authentication [@!RFC7617]. The server MUST validate the authentication credentials on each request and reject any request with invalid credentials with an appropriate HTTP status code.
 
-When using JWTs for OAuth 2.0 [@!RFC6749] Access Tokens, the JWT profile described in [@!RFC9068] MUST be used. It is RECOMMENDED to use short-lived tokens and to implement token revocation mechanisms to mitigate the risk of token compromise. If sensitive information is included in the JWT payload, it MUST be encrypted to prevent unauthorized access when the token is persistent to a storage device. Furthermore, the best practices for JWT usage as outlined in [@!RFC8725] MUST be followed.
+When using JWTs for OAuth 2.0 [@!RFC6749] Access Tokens, the JWT profile described in [@!RFC9068] MUST be used. It is RECOMMENDED to use short-lived tokens and to implement token revocation mechanisms to mitigate the risk of token compromise. If sensitive information is included in the JWT payload, it MUST be encrypted to prevent unauthorised access when the token is persisted to a storage device. Furthermore, the best practices for JWT usage as outlined in [@!RFC8725] MUST be followed.
 
 # IANA Considerations
 
@@ -1522,7 +1562,7 @@ Registration procedure: Expert Review
 
 Fields to be registered:
 
-- `code`: The RPP result code, for example "01000".
+- `code`: The RPP result code, for example `01000`.
 - `origin`: The origin of the result code, indicating whether it is derived from EPP or defined specifically for RPP.
 - `description`: A human-readable description of the result code and its intended use.
 
@@ -1579,14 +1619,14 @@ Description:   Identifies a process resource that was implicitly created as a
                which the operation was performed; the target resource is the
                created process instance.  The following target attributes are
                defined for this relation type: "process" (the Process Object
-               Identifier, REQUIRED), "processId" (the server-assigned process
-               instance identifier, OPTIONAL), and "latest" (the boolean value
-               "true", OPTIONAL, indicating the target URL uses the "latest"
+               Identifier, required), "processId" (the server-assigned process
+               instance identifier, optional), and "latest" (the boolean value
+               "true", optional, indicating the target URL uses the "latest"
                mnemonic).
 Reference:     This document
 ```
 
-# Internationalization Considerations
+# Internationalisation Considerations
 
 TODO
 
@@ -1596,33 +1636,44 @@ RPP relies on the security of the underlying HTTP transport, hence the best comm
 
 Data confidentiality and integrity MUST be enforced. Every client and server interaction MUST be encrypted using TLS version 1.3 [@!RFC8446]. Future versions of TLS MAY be used as they become available and are deemed secure.
 
-RPP does not mandate a single data format; media types for RPP messages can use JSON, YAML, or any other data format. Each RPP media type specification MUST document the security considerations applicable to its underlying format (e.g. [@!RFC8259] for JSON), in addition to the considerations described in this section. An implementation that infers the data format or profile of a message from its content, rather than from the `Content-Type` header field, risks processing the message with the wrong parser or feature set; (#media-types) therefore requires both RPP clients and RPP servers to rely on the header field only.
+RPP does not mandate a single data format; media types for RPP messages can use JSON, YAML, or any other data format. Each RPP media type specification MUST document the security considerations applicable to its underlying format (e.g. [@RFC8259] for JSON), in addition to the considerations described in this section. An implementation that infers the data format or profile of a message from its content, rather than from the `Content-Type` header field, risks processing the message with the wrong parser or feature set; (#media-types) therefore requires both RPP clients and RPP servers to rely on the header field only.
 
-An RPP client MUST verify the identity of the RPP server, as described in [@!RFC9205], before sending any request. The client MUST validate the TLS server certificate, including that the certificate chain is trusted and that the certificate matches the host name of the URL used to access the RPP server. If the validation fails, the client must not continue and must not send the request.
+An RPP client MUST verify the identity of the RPP server, as described in [@!HTTP, Section 4.3.4], before sending any request. The client MUST validate the TLS server certificate, including that the certificate chain is trusted and that the certificate matches the host name of the URL used to access the RPP server. If the validation fails, the client MUST NOT continue and MUST NOT send the request.
 
 # Change History
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 
-- Added generic mapping of operation parameter to HTTP query parameter (Issue #135)
-- Added text describing client behavior when handling TLS-certificates and HTTP-redirects (Issue #133)
-- Updated the draft to comply with the HTTP Editorial Style Guide. (Issue #103)
-- Removed all JSON examples, these are now found in the rpp-json draft. (Issue #74)
-- Moved specification of discover and profile data objects to rpp-data-objects and examples to rpp-json (Issue #153)
-- Moved IANA registration requests to rpp-data-objects (Issue #153)
+- Added generic mapping of operation parameters to HTTP query parameters in (#operation-parameters) (Issue #135)
+- Added (#redirection) (Issue #133)
+- Added TLS server certificate validation requirements to (#security-considerations) (Issue #133)
+- Updated the draft to comply with the HTTP Editorial Style Guide (Issue #103)
+- Removed all JSON examples, these are now found in the rpp-json draft (Issue #74)
+- Moved specification of discovery and profile data objects and the related IANA registration requests to rpp-data-objects (Issue #125)
 - Updated the reference for the HTTP specification (Issue #90)
-- Removed hardcoded version segment from examples (Issue #97)
-- Added "profile" and "version" parameters to the RPP media type (Issue #101)
-- Added support for the `links` array in the discovery document (Issue #130)
-- Updated "Request Headers" and "Response Headers" section to use Structured Headers [@!RFC9651] (Issue #95)
-- Added support for Internationalized Domain Names (IDN) (Issue #126)
-- Added text to the "messages" section, describing service messages (Issue #116)
-- Consolidated multiple paragraphs into a single "Result codes" section. (Issue #92)
-- Added Cross-Origin Resource Sharing (CORS) section for browser-based clients (Issue #20)
+- Removed hardcoded version segment from paths and added media type and header field profile signalling in (#profile-signalling) (Issues #97, #98, #101)
+- Updated (#request-headers) and (#response-headers) to use Structured Fields [@!RFC9651] (Issue #95)
+- Added support for Internationalized Domain Names (IDN) in (#idn) (Issue #126)
+- Added description of service messages to (#messages) (Issue #116)
+- Consolidated multiple paragraphs into a single (#result-codes) section (Issue #92)
+- Added (#cors) for browser-based clients (Issue #20)
 - Removed text suggesting HTTP/2 is minimum version required for RPP (Issue #91)
-- Added Redirection section, requiring the use of the 307 and 308 status codes and forbidding clients to change the request method when following a redirect.
-- Added Restore Resource process based on the Restore Process Object (Issue #117)
-- Added paths for availability operation and aligned "Availability for Creation" with the Availability operation defined in rpp-data-objects
+- Added (#restore) based on the Restore Process Object (Issue #117)
+- Added paths for availability operation and aligned (#availability) with the Availability operation defined in rpp-data-objects (Issue #149)
+- Fixed spelling errors and harmonised spelling to British English
+- Fixed inconsistencies in the HTTP examples
+- Updated the requirements language boilerplate to BCP 14, citing RFC 8174, and corrected key word usage
+- Made the `Location` header field in Restore and Renew responses conditional on the process resource being exposed
+- Corrected the DNS HTTPS resource record examples in (#bootstrapping)
+- Corrected the profile signalling ABNF and the `RPP-Profile` Structured Field type in (#profile-signalling)
+- Reframed the Abstract and Introduction to describe this document as the HTTP mapping of the RPP data model
+- Added (#notational-conventions)
+- Added media type negotiation requirements to (#media-types)
+- Added (#signalling-rationale)
+- Updated the bootstrap step of the Discoverability workflow to use DNS HTTPS resource records (Issue #100)
+- Updated the mapping of RPP result codes to HTTP status codes in (#result-codes)
+- Removed the URN sub-namespace and `application/rpp+json` media type registrations from IANA Considerations
+- Reclassified RFC 5321, RFC 8259, RFC 10008, and REST as informative references
 
 ## Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
@@ -1646,7 +1697,7 @@ An RPP client MUST verify the identity of the RPP server, as described in [@!RFC
 - Added IANA request for RPP Result codes registry, and added a table with example RPP result codes. (Issue #39)
 - Added IANA request for URN sub-namespace for RPP. (Issue #39)
 - Added a new "Profiles" section to describe how to define and use profiles. (Issue #43)
-- Added a new section "Authentication and Authorization". (Issue #37)
+- Added a new section "Authentication and Authorisation". (Issue #37)
 - Updated the "Security Considerations" section to include transport security. (Issue #37)
 - Added IANA registration request for the new RPP media type. (Issue #40)
 
@@ -1698,7 +1749,7 @@ The authors would like to thank the following people for their helpful text cont
 	<seriesInfo name="DOI" value="10.17487/RFC9110"/>
 </reference>
 
-<reference anchor="REST" target="http://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm">
+<reference anchor="REST" target="https://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm">
   <front>
     <title>Architectural Styles and the Design of Network-based Software Architectures</title>
     <author initials="R." surname="Fielding" fullname="Roy Fielding">
