@@ -1244,7 +1244,7 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
    resource.
 
    The fixed path segment for such a sub-resource MUST be derived from
-   the Direct Access data element's own Identifier — not from the
+   the Direct Access data element's own Identifier - not from the
    Identifier of the associated object type the element references.
 
    If the Direct Access element's cardinality is 0-1 or 1, the element's
