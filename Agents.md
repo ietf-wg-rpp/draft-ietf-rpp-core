@@ -44,7 +44,7 @@ then to TXT, HTML, and PDF.
   may be absent — do not assume a build will run unless asked.
 - **TOML title block** (between `%%%` fences at the very top of the source):
   `title`, `abbrev`, `area`, `workgroup`, `submissiontype`, `keyword`, `date`,
-  `[seriesInfo]` (note `value = "draft-ietf-rpp-core-01"`), and one
+  `[seriesInfo]` (note `value = "draft-ietf-rpp-core-02"`), and one
   `[[author]]` table per author. Edit document metadata here, never in the XML.
 - **Structure macros:** `.# Abstract` (the abstract), `{mainmatter}` (start of
   body), `{backmatter}` (start of references/appendices). They appear as
@@ -402,10 +402,10 @@ the latest `src/draft-*.md` if no path is given.
 ## Change History
 
 The draft maintains a **Change History** section with one subsection per
-revision (e.g. "Version ietf-rpp-core-00 to ietf-rpp-core-01"). Add an entry there whenever you make a
+revision (e.g. "Version ietf-rpp-core-00 to ietf-rpp-core-02"). Add an entry there whenever you make a
 substantive edit, summarising what changed. The current development version is
-`draft-ietf-rpp-core-01` (see `[seriesInfo] value` in the TOML block), so
-new substantive changes go under the "Version ietf-rpp-core-00 to ietf-rpp-core-01"
+`draft-ietf-rpp-core-02` (see `[seriesInfo] value` in the TOML block), so
+new substantive changes go under the "Version ietf-rpp-core-00 to ietf-rpp-core-02"
 subsection.
 
 ## Pre-Release Review

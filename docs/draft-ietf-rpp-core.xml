@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- name="GENERATOR" content="github.com/mmarkdown/mmark Mmark Markdown Processor - mmark.miek.nl" -->
-<rfc version="3" ipr="trust200902" docName="draft-ietf-rpp-core-01" submissionType="IETF" category="std" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" tocDepth="4">
+<rfc version="3" ipr="trust200902" docName="draft-ietf-rpp-core-02 (editorial)" submissionType="IETF" category="std" xml:lang="en" xmlns:xi="http://www.w3.org/2001/XInclude" indexInclude="true" tocDepth="4">
 
 <front>
-<title abbrev="RESTful Provisioning Protocol">RESTful Provisioning Protocol (RPP)</title><seriesInfo value="draft-ietf-rpp-core-01" stream="IETF" status="standard" name="Internet-Draft"></seriesInfo>
+<title abbrev="RESTful Provisioning Protocol">RESTful Provisioning Protocol (RPP)</title><seriesInfo value="draft-ietf-rpp-core-02 (editorial)" stream="IETF" status="standard" name="Internet-Draft"></seriesInfo>
 <author initials="M." surname="Wullink" fullname="Maarten Wullink"><organization>SIDN Labs</organization><address><postal><street></street>
 </postal><email>maarten.wullink@sidn.nl</email>
 <uri>https://sidn.nl/</uri>
@@ -2259,6 +2259,9 @@ Reference:     This document
 </section>
 
 <section anchor="change-history"><name>Change History</name>
+
+<section anchor="version-ietf-rpp-core-01-to-ietf-rpp-core-02"><name>Version ietf-rpp-core-01 to ietf-rpp-core-02</name>
+</section>
 
 <section anchor="version-ietf-rpp-core-00-to-ietf-rpp-core-01"><name>Version ietf-rpp-core-00 to ietf-rpp-core-01</name>
 

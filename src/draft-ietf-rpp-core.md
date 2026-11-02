@@ -10,7 +10,7 @@ date = 2026-11-02
 
 [seriesInfo]
 name = "Internet-Draft"
-value = "draft-ietf-rpp-core-01"
+value = "draft-ietf-rpp-core-02 (editorial)"
 stream = "IETF"
 status = "standard"
 
@@ -1641,6 +1641,9 @@ RPP does not mandate a single data format; media types for RPP messages can use 
 An RPP client MUST verify the identity of the RPP server, as described in [@!HTTP, Section 4.3.4], before sending any request. The client MUST validate the TLS server certificate, including that the certificate chain is trusted and that the certificate matches the host name of the URL used to access the RPP server. If the validation fails, the client MUST NOT continue and MUST NOT send the request.
 
 # Change History
+
+## Version ietf-rpp-core-01 to ietf-rpp-core-02
+
 
 ## Version ietf-rpp-core-00 to ietf-rpp-core-01
 

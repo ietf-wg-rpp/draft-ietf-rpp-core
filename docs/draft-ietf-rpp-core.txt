@@ -10,7 +10,7 @@ Expires: 6 May 2027                                                DENIC
 
 
                   RESTful Provisioning Protocol (RPP)
-                         draft-ietf-rpp-core-01
+                   draft-ietf-rpp-core-02 (editorial)
 
 Abstract
 
@@ -138,15 +138,16 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
    21. Internationalisation Considerations . . . . . . . . . . . . .  55
    22. Security Considerations . . . . . . . . . . . . . . . . . . .  56
    23. Change History  . . . . . . . . . . . . . . . . . . . . . . .  56
-     23.1.  Version ietf-rpp-core-00 to ietf-rpp-core-01 . . . . . .  56
-     23.2.  Version draft-wullink-rpp-core-05 to
+     23.1.  Version ietf-rpp-core-01 to ietf-rpp-core-02 . . . . . .  56
+     23.2.  Version ietf-rpp-core-00 to ietf-rpp-core-01 . . . . . .  56
+     23.3.  Version draft-wullink-rpp-core-05 to
             draft-ietf-rpp-core-00 . . . . . . . . . . . . . . . . .  57
-     23.3.  Version 04 to 05 . . . . . . . . . . . . . . . . . . . .  58
-     23.4.  Version 03 to 04 . . . . . . . . . . . . . . . . . . . .  58
-     23.5.  Version 02 to 03 . . . . . . . . . . . . . . . . . . . .  58
-     23.6.  Version 01 to 02 . . . . . . . . . . . . . . . . . . . .  58
-     23.7.  Version 00 to 01 . . . . . . . . . . . . . . . . . . . .  59
-     23.8.  Version 00 (draft-rpp-core) to 00
+     23.4.  Version 04 to 05 . . . . . . . . . . . . . . . . . . . .  58
+     23.5.  Version 03 to 04 . . . . . . . . . . . . . . . . . . . .  58
+     23.6.  Version 02 to 03 . . . . . . . . . . . . . . . . . . . .  58
+     23.7.  Version 01 to 02 . . . . . . . . . . . . . . . . . . . .  59
+     23.8.  Version 00 to 01 . . . . . . . . . . . . . . . . . . . .  59
+     23.9.  Version 00 (draft-rpp-core) to 00
             (draft-wullink-rpp-core) . . . . . . . . . . . . . . . .  59
    24. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  59
    25. References  . . . . . . . . . . . . . . . . . . . . . . . . .  59
@@ -161,7 +162,6 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
    Conforming to the REST constraints is generally referred to as being
    "RESTful".  Hence the API is dubbed: "RESTful Provisioning Protocol"
    or "RPP" for short.
-
 
 
 
@@ -3114,7 +3114,9 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
 
 23.  Change History
 
-23.1.  Version ietf-rpp-core-00 to ietf-rpp-core-01
+23.1.  Version ietf-rpp-core-01 to ietf-rpp-core-02
+
+23.2.  Version ietf-rpp-core-00 to ietf-rpp-core-01
 
    -  Added generic mapping of operation parameters to HTTP query
       parameters in Section 16.1.7 (Issue #135)
@@ -3128,8 +3130,6 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
    -  Moved specification of discovery and profile data objects and the
       related IANA registration requests to rpp-data-objects (Issue
       #125)
-   -  Updated the reference for the HTTP specification (Issue #90)
-
 
 
 
@@ -3138,6 +3138,7 @@ Wullink & Kowalik          Expires 6 May 2027                  [Page 56]
 Internet-Draft        RESTful Provisioning Protocol        November 2026
 
 
+   -  Updated the reference for the HTTP specification (Issue #90)
    -  Removed hardcoded version segment from paths and added media type
       and header field profile signalling in Section 14 (Issues #97,
       #98, #101)
@@ -3179,13 +3180,12 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
    -  Reclassified RFC 5321, RFC 8259, RFC 10008, and REST as
       informative references
 
-23.2.  Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
+23.3.  Version draft-wullink-rpp-core-05 to draft-ietf-rpp-core-00
 
    -  Renamed the document name to "draft-ietf-rpp-core" and reset
       version number to 00 (Issue #80)
    -  Added Organisation and User resource type, with create, read,
       update and delete operations.  (Issue #67)
-   -  Added section about Mapping to EPP.  (Issue #55)
 
 
 
@@ -3194,6 +3194,7 @@ Wullink & Kowalik          Expires 6 May 2027                  [Page 57]
 Internet-Draft        RESTful Provisioning Protocol        November 2026
 
 
+   -  Added section about Mapping to EPP.  (Issue #55)
    -  Described full and partial update operations, using HTTP PUT and
       PATCH methods respectively.  (Issue #21)
    -  Added support for embedding process data in uniform interface
@@ -3212,7 +3213,7 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
       the {process-collection}/{process-id} naming used in the Endpoints
       section; removed the unused process_name variable.
 
-23.3.  Version 04 to 05
+23.4.  Version 04 to 05
 
    -  Added Bootstrap and Discovery sections to the document, describing
       how a client can discover the location and capabilities of an RPP
@@ -3220,7 +3221,7 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
    -  Added IANA Considerations section with a request for new RPP
       discovery URLs, extensions and profile URLs.
 
-23.4.  Version 03 to 04
+23.5.  Version 03 to 04
 
    -  Added a new section on versioning, describing how versioning is
       applied to different RPP elements.  (Issue #39)
@@ -3236,11 +3237,10 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
    -  Added IANA registration request for the new RPP media type.
       (Issue #40)
 
-23.5.  Version 02 to 03
+23.6.  Version 02 to 03
 
    -  Added use of Problem Detail [RFC9457] for error responses
 
-23.6.  Version 01 to 02
 
 
 
@@ -3249,6 +3249,8 @@ Wullink & Kowalik          Expires 6 May 2027                  [Page 58]
 
 Internet-Draft        RESTful Provisioning Protocol        November 2026
 
+
+23.7.  Version 01 to 02
 
    -  Updated the examples, changed from "_.example.org" to "_.example"
    -  Merged the RPP-EPP-Code and RPP-Code headers into a single RPP-
@@ -3259,13 +3261,13 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
    -  Updated the Check request to now use an "availability" path
       segment and support both GET and HEAD methods
 
-23.7.  Version 00 to 01
+23.8.  Version 00 to 01
 
    -  Updated "Request Headers" and "Response Headers" section
    -  Changed transfer resource URL and HTTP method for reject, approve
       and cancel, in order to make the API easier to use
 
-23.8.  Version 00 (draft-rpp-core) to 00 (draft-wullink-rpp-core)
+23.9.  Version 00 (draft-rpp-core) to 00 (draft-wullink-rpp-core)
 
    -  Renamed the document name to "draft-wullink-rpp-core"
    -  Removed sections: Design Considerations, Resource Naming
@@ -3293,8 +3295,6 @@ Internet-Draft        RESTful Provisioning Protocol        November 2026
               Ed., "HTTP Semantics", STD 97, RFC 9110,
               DOI 10.17487/RFC9110, June 2022,
               <https://www.rfc-editor.org/info/rfc9110>.
-
-
 
 
 
